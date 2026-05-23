@@ -1,0 +1,19 @@
+name: f1tenth-gym
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - pip<24
+  - setuptools<66
+  - wheel<0.40
+  - numpy=1.21
+  - scipy
+  - numba
+  - pillow
+  - pyyaml
+  - cython
+  - matplotlib
+  - pandas
+  - pyopengl
+  - cloudpickle=1.6
