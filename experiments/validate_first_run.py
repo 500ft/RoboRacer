@@ -15,7 +15,9 @@ import gym  # noqa: F401
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
 METADATA_PATH = REPO_ROOT / "runs" / "first_lap" / "metadata.json"
-FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "first_integrator_comparison.png"
+TRAJECTORY_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_trajectory_overlay.png"
+TRACKING_ERROR_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_tracking_error_vs_progress.png"
+SUMMARY_METRICS_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_summary_metrics.png"
 REPORT_PATH = REPO_ROOT / "reports" / "first_run.md"
 
 EXPECTED_COLUMNS = [
@@ -58,7 +60,14 @@ def require(condition: bool, message: str) -> None:
 
 
 def main() -> None:
-    for path in (TELEMETRY_PATH, METADATA_PATH, FIGURE_PATH, REPORT_PATH):
+    for path in (
+        TELEMETRY_PATH,
+        METADATA_PATH,
+        TRAJECTORY_FIGURE_PATH,
+        TRACKING_ERROR_FIGURE_PATH,
+        SUMMARY_METRICS_FIGURE_PATH,
+        REPORT_PATH,
+    ):
         require(path.exists(), f"Missing artifact: {path}")
         require(path.stat().st_size > 0, f"Empty artifact: {path}")
 

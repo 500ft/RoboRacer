@@ -1,77 +1,444 @@
 #!/usr/bin/env python
-"""Plot the first RK4 vs Euler integrator comparison."""
+"""Create a report-quality RK4 vs Euler integrator sensitivity figure."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
 TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
-FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "first_integrator_comparison.png"
-TITLE = "First Dynamics Sanity Check: RK4 vs Euler Trajectory Overlay"
+METADATA_PATH = REPO_ROOT / "runs" / "first_lap" / "metadata.json"
+CONFIG_PATH = REPO_ROOT / "examples" / "config_example_map.yaml"
+WAYPOINTS_PATH = REPO_ROOT / "examples" / "example_waypoints.csv"
+TRAJECTORY_PATH = REPO_ROOT / "reports" / "figures" / "integrator_trajectory_overlay.png"
+TRACKING_ERROR_PATH = REPO_ROOT / "reports" / "figures" / "integrator_tracking_error_vs_progress.png"
+SUMMARY_METRICS_PATH = REPO_ROOT / "reports" / "figures" / "integrator_summary_metrics.png"
+SUMMARY_TITLE = "Summary Metrics"
 
 
-def final_summary(group: pd.DataFrame) -> pd.Series:
-    final = group.iloc[-1]
-    return pd.Series(
-        {
-            "lap_time_s": float(final["lap_time_s"]),
-            "collision": int(final["collision"]),
-            "termination_reason": final["termination_reason"],
-            "rms_cte_m": float((group["cte_m"] ** 2).mean() ** 0.5),
-            "max_abs_cte_m": float(group["abs_cte_m"].max()),
-            "mean_speed_mps": float(group["speed_mps"].mean()),
+def ensure_exists(path: Path, description: str) -> None:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing {description}: {path}")
+
+
+def load_metadata(path: Path) -> dict[str, Any]:
+    ensure_exists(path, "metadata file")
+    with path.open("r", encoding="utf-8") as file:
+        metadata = json.load(file)
+    if not isinstance(metadata, dict):
+        raise ValueError(f"Metadata did not load as a dictionary: {path}")
+    return metadata
+
+
+def load_telemetry(path: Path) -> pd.DataFrame:
+    ensure_exists(path, "telemetry file")
+    df = pd.read_csv(path)
+    required = [
+        "integrator",
+        "time_s",
+        "x_m",
+        "y_m",
+        "speed_mps",
+        "cte_m",
+        "abs_cte_m",
+        "progress_m",
+        "collision",
+        "termination_reason",
+    ]
+    missing = [column for column in required if column not in df.columns]
+    if missing:
+        raise ValueError(
+            f"Telemetry missing required columns: {missing}\n"
+            f"Available columns: {list(df.columns)}"
+        )
+
+    for column in ["time_s", "x_m", "y_m", "speed_mps", "cte_m", "abs_cte_m", "progress_m", "collision"]:
+        df[column] = pd.to_numeric(df[column], errors="raise")
+    df["integrator"] = df["integrator"].astype(str)
+    return df
+
+
+def load_map_config(path: Path) -> dict[str, Any]:
+    ensure_exists(path, "map config")
+    with path.open("r", encoding="utf-8") as file:
+        config = yaml.safe_load(file)
+    if not isinstance(config, dict):
+        raise ValueError(f"Map config did not load as a dictionary: {path}")
+    return config
+
+
+def config_value(config: dict[str, Any], candidates: list[str]) -> Any | None:
+    lower_map = {str(key).lower(): value for key, value in config.items()}
+    for key in candidates:
+        if key.lower() in lower_map:
+            return lower_map[key.lower()]
+    return None
+
+
+def normalize_delimiter(delimiter: Any | None) -> str | None:
+    if delimiter is None:
+        return None
+    value = str(delimiter)
+    if value.lower() in {"whitespace", "space", r"\s+", "regex_whitespace"}:
+        return r"\s+"
+    return value
+
+
+def read_waypoint_csv(path: Path, delimiter_hint: Any | None) -> tuple[pd.DataFrame, bool]:
+    delimiter = normalize_delimiter(delimiter_hint)
+    f1tenth_style = False
+
+    with path.open("r", encoding="utf-8") as file:
+        first_data_line = ""
+        for line in file:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            first_data_line = stripped
+            break
+
+    if not first_data_line:
+        raise ValueError(f"Waypoint file has no data rows after comments: {path}")
+
+    if delimiter is None:
+        delimiter = ";" if ";" in first_data_line else None
+    if delimiter == ";":
+        f1tenth_style = True
+
+    read_kwargs: dict[str, Any] = {"comment": "#"}
+    if delimiter == r"\s+":
+        read_kwargs.update({"sep": delimiter, "engine": "python"})
+    elif delimiter is not None:
+        read_kwargs["sep"] = delimiter
+
+    # F1TENTH waypoint examples are comment-headered and data-only; keep the
+    # first numeric row as data instead of accidentally treating it as headers.
+    if f1tenth_style:
+        waypoint_df = pd.read_csv(path, header=None, **read_kwargs)
+        waypoint_df.columns = list(range(waypoint_df.shape[1]))
+        return waypoint_df, True
+
+    waypoint_df = pd.read_csv(path, **read_kwargs)
+    if waypoint_df.shape[1] >= 2:
+        return waypoint_df, False
+
+    waypoint_df = pd.read_csv(path, header=None, **read_kwargs)
+    waypoint_df.columns = list(range(waypoint_df.shape[1]))
+    return waypoint_df, False
+
+
+def load_waypoints(path: Path, config: dict[str, Any]) -> tuple[pd.DataFrame, bool]:
+    ensure_exists(path, "waypoint file")
+    delimiter_hint = config_value(
+        config,
+        [
+            "wpt_delim",
+            "waypoint_delimiter",
+            "waypoints_delimiter",
+            "waypoint_sep",
+            "waypoints_sep",
+            "csv_delimiter",
+            "delimiter",
+            "sep",
+        ],
+    )
+    waypoints, f1tenth_style = read_waypoint_csv(path, delimiter_hint)
+    if waypoints.shape[1] < 2:
+        raise ValueError(
+            f"Waypoint file has fewer than 2 columns after parsing: {path}\n"
+            f"Columns found: {list(waypoints.columns)}"
+        )
+    return waypoints, f1tenth_style
+
+
+def infer_xy_columns(waypoints: pd.DataFrame, config: dict[str, Any], f1tenth_style: bool) -> tuple[Any, Any]:
+    x_hint = config_value(config, ["wpt_xind", "waypoint_x_col", "x_col", "x_column", "waypoints_x_col", "waypoints_x"])
+    y_hint = config_value(config, ["wpt_yind", "waypoint_y_col", "y_col", "y_column", "waypoints_y_col", "waypoints_y"])
+
+    if x_hint is not None and y_hint is not None:
+        x_column = int(x_hint) if f1tenth_style and str(x_hint).isdigit() else x_hint
+        y_column = int(y_hint) if f1tenth_style and str(y_hint).isdigit() else y_hint
+        if x_column in waypoints.columns and y_column in waypoints.columns:
+            return x_column, y_column
+        raise ValueError(
+            "Waypoint x/y columns were specified in config but were not found in CSV.\n"
+            f"x_hint={x_hint}, y_hint={y_hint}, available={list(waypoints.columns)}"
+        )
+
+    possible_x = ["x", "x_m", "pos_x", "waypoint_x", "x_pos"]
+    possible_y = ["y", "y_m", "pos_y", "waypoint_y", "y_pos"]
+    cols_lower = {str(column).lower(): column for column in waypoints.columns}
+
+    for x_name in possible_x:
+        for y_name in possible_y:
+            if x_name in cols_lower and y_name in cols_lower:
+                return cols_lower[x_name], cols_lower[y_name]
+
+    numeric_cols = list(waypoints.select_dtypes(include=[np.number]).columns)
+    if f1tenth_style and len(numeric_cols) >= 3:
+        # Known F1TENTH format: s, x, y, psi, kappa, vx, ax.
+        return numeric_cols[1], numeric_cols[2]
+
+    raise ValueError(
+        "Could not infer waypoint x/y columns from CSV or config.\n"
+        f"Available columns: {list(waypoints.columns)}"
+    )
+
+
+def summarize_run(telemetry: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    for integrator, group in telemetry.groupby("integrator"):
+        group = group.sort_values("time_s").reset_index(drop=True)
+        collision = bool(pd.to_numeric(group["collision"], errors="coerce").fillna(0).max() > 0)
+        termination_series = group["termination_reason"].dropna()
+        termination = str(termination_series.iloc[-1]) if not termination_series.empty else "unknown"
+
+        rows.append(
+            {
+                "Integrator": str(integrator).upper(),
+                "Termination": termination,
+                "Final time [s]": float(group["time_s"].iloc[-1]),
+                "Collision": collision,
+                "RMS CTE [m]": float(np.sqrt(np.mean(group["cte_m"] ** 2))),
+                "Max CTE [m]": float(group["abs_cte_m"].max()),
+                "Mean speed [m/s]": float(group["speed_mps"].mean()),
+            }
+        )
+
+    summary = pd.DataFrame(rows)
+    order = ["RK4", "EULER"]
+    if not summary.empty:
+        summary["order"] = summary["Integrator"].map(lambda value: order.index(value) if value in order else 999)
+        summary = summary.sort_values("order").drop(columns="order").reset_index(drop=True)
+    return summary
+
+
+def trajectory_group(telemetry: pd.DataFrame, integrator: str) -> pd.DataFrame:
+    group = telemetry[telemetry["integrator"].str.lower() == integrator].sort_values("time_s")
+    if group.empty:
+        raise ValueError(f"No {integrator.upper()} rows found in telemetry.")
+    return group
+
+
+def format_summary_for_table(summary: pd.DataFrame) -> pd.DataFrame:
+    table_df = summary.copy()
+    for column in ["Final time [s]", "RMS CTE [m]", "Max CTE [m]", "Mean speed [m/s]"]:
+        table_df[column] = table_df[column].map(lambda value: f"{value:.3f}")
+    table_df["Collision"] = table_df["Collision"].map(lambda value: "Yes" if value else "No")
+    return table_df.rename(
+        columns={
+            "Final time [s]": "Final\nTime [s]",
+            "RMS CTE [m]": "RMS\nCTE [m]",
+            "Max CTE [m]": "Max\nCTE [m]",
+            "Mean speed [m/s]": "Mean Speed\n[m/s]",
         }
     )
 
 
-def main() -> None:
-    if not TELEMETRY_PATH.exists():
-        raise FileNotFoundError(f"Telemetry not found: {TELEMETRY_PATH}")
+def save_trajectory_overlay(
+    waypoints: pd.DataFrame,
+    x_col: Any,
+    y_col: Any,
+    rk4: pd.DataFrame,
+    euler: pd.DataFrame,
+    output_path: Path,
+) -> None:
+    fig, ax = plt.subplots(figsize=(10, 8), constrained_layout=True)
 
-    df = pd.read_csv(TELEMETRY_PATH)
-    summary = df.groupby("integrator", sort=False).apply(final_summary)
+    ax.plot(
+        waypoints[x_col],
+        waypoints[y_col],
+        linestyle="--",
+        linewidth=1.8,
+        color="0.55",
+        label="Reference path",
+        zorder=1,
+    )
+    ax.plot(rk4["x_m"], rk4["y_m"], linewidth=2.3, color="#1f77b4", label="RK4 trajectory", zorder=2)
+    ax.plot(euler["x_m"], euler["y_m"], linewidth=2.3, color="#d62728", label="Euler trajectory", zorder=2)
 
-    FIGURE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5), gridspec_kw={"width_ratios": [1.35, 1.0]})
-    fig.suptitle(TITLE, fontsize=14, fontweight="bold")
+    start = rk4.iloc[0]
+    rk4_finish = rk4.iloc[-1]
+    euler_end = euler.iloc[-1]
 
-    ax = axes[0]
-    for integrator, group in df.groupby("integrator", sort=False):
-        ax.plot(group["x_m"], group["y_m"], linewidth=1.8, label=integrator.upper())
-        ax.scatter(group["x_m"].iloc[0], group["y_m"].iloc[0], s=28)
-    ax.set_xlabel("x position (m)")
-    ax.set_ylabel("y position (m)")
+    ax.scatter(start["x_m"], start["y_m"], marker="o", s=85, color="#2ca02c", label="Start", zorder=3)
+    ax.scatter(
+        rk4_finish["x_m"],
+        rk4_finish["y_m"],
+        marker="s",
+        s=85,
+        color="#1f77b4",
+        label="RK4 finish",
+        zorder=3,
+    )
+    ax.scatter(
+        euler_end["x_m"],
+        euler_end["y_m"],
+        marker="x",
+        s=140,
+        linewidths=2.6,
+        color="#d62728",
+        label="Euler collision",
+        zorder=4,
+    )
+
+    ax.annotate(
+        "Start / RK4 finish",
+        xy=(start["x_m"], start["y_m"]),
+        xytext=(-125, 18),
+        textcoords="offset points",
+        arrowprops={"arrowstyle": "->", "lw": 0.8, "color": "0.25"},
+        fontsize=10,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.85},
+    )
+    ax.annotate(
+        f"Euler collision\n"
+        f"t = {euler_end['time_s']:.2f} s\n"
+        f"s = {euler_end['progress_m']:.1f} m",
+        xy=(euler_end["x_m"], euler_end["y_m"]),
+        xytext=(18, -42),
+        textcoords="offset points",
+        arrowprops={"arrowstyle": "->", "lw": 0.8, "color": "#d62728"},
+        fontsize=10,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.9},
+    )
+
     ax.set_title("Trajectory Overlay")
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
     ax.axis("equal")
     ax.grid(True, alpha=0.3)
-    ax.legend()
+    ax.legend(loc="upper right", framealpha=0.95)
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
 
-    ax = axes[1]
-    metrics = summary[["lap_time_s", "rms_cte_m", "max_abs_cte_m", "mean_speed_mps"]]
-    normalized = metrics / metrics.max(axis=0).replace(0, 1)
-    normalized.plot(kind="bar", ax=ax, width=0.75)
-    ax.set_title("Normalized Summary Metrics")
-    ax.set_ylabel("relative value")
-    ax.set_ylim(0, 1.15)
-    ax.grid(True, axis="y", alpha=0.3)
-    ax.legend(fontsize=8)
 
-    text_lines = ["Summary"]
-    for integrator, row in summary.iterrows():
-        text_lines.append(
-            f"{integrator.upper()}: lap={row.lap_time_s:.2f}s, "
-            f"collision={int(row.collision)}, rms_cte={row.rms_cte_m:.3f}m, "
-            f"max_cte={row.max_abs_cte_m:.3f}m, mean_v={row.mean_speed_mps:.2f}m/s, "
-            f"end={row.termination_reason}"
-        )
-    fig.text(0.08, 0.01, "\n".join(text_lines), fontsize=9, va="bottom")
-    fig.tight_layout(rect=[0, 0.12, 1, 0.93])
-    fig.savefig(FIGURE_PATH, dpi=180)
-    print(f"Wrote {FIGURE_PATH}")
+def save_tracking_error_plot(rk4: pd.DataFrame, euler: pd.DataFrame, output_path: Path) -> None:
+    fig, ax = plt.subplots(figsize=(10, 5.8), constrained_layout=True)
+    euler_end = euler.iloc[-1]
+
+    ax.plot(rk4["progress_m"], rk4["abs_cte_m"], linewidth=2.2, color="#1f77b4", label="RK4")
+    ax.plot(euler["progress_m"], euler["abs_cte_m"], linewidth=2.2, color="#d62728", label="Euler")
+    ax.scatter(
+        euler_end["progress_m"],
+        euler_end["abs_cte_m"],
+        marker="x",
+        s=110,
+        linewidths=2.4,
+        color="#d62728",
+        label="Euler collision",
+        zorder=4,
+    )
+    ax.annotate(
+        f"Euler collision\n"
+        f"t = {euler_end['time_s']:.2f} s",
+        xy=(euler_end["progress_m"], euler_end["abs_cte_m"]),
+        xytext=(-110, -58),
+        textcoords="offset points",
+        arrowprops={"arrowstyle": "->", "lw": 0.8, "color": "#d62728"},
+        fontsize=10,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.9},
+    )
+
+    ax.set_title("Tracking Error vs Progress")
+    ax.set_xlabel("Progress along path [m]")
+    ax.set_ylabel("|CTE| [m]")
+    ax.set_xlim(left=0)
+    ax.set_ylim(bottom=0)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), borderaxespad=0.0, framealpha=0.95)
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_summary_metrics_table(summary: pd.DataFrame, output_path: Path) -> None:
+    table_df = format_summary_for_table(summary)
+    fig, ax = plt.subplots(figsize=(12, 3.8), constrained_layout=True)
+    ax.axis("off")
+
+    col_widths = [0.12, 0.2, 0.13, 0.11, 0.13, 0.13, 0.18]
+    table = ax.table(
+        cellText=table_df.values,
+        colLabels=table_df.columns,
+        loc="center",
+        cellLoc="center",
+        colLoc="center",
+        colWidths=col_widths,
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1.0, 2.0)
+
+    for (row, _), cell in table.get_celld().items():
+        cell.set_edgecolor("0.25")
+        if row == 0:
+            cell.set_facecolor("0.92")
+            cell.set_text_props(weight="bold")
+
+    ax.set_title(SUMMARY_TITLE, fontsize=16, fontweight="bold", pad=18)
+    fig.text(
+        0.5,
+        0.04,
+        "Closed-loop pure pursuit integrator sensitivity check inside F1TENTH Gym.",
+        ha="center",
+        fontsize=10,
+    )
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_integrator_comparison(
+    telemetry: pd.DataFrame,
+    waypoints: pd.DataFrame,
+    config: dict[str, Any],
+    f1tenth_style_waypoints: bool,
+) -> None:
+    x_col, y_col = infer_xy_columns(waypoints, config, f1tenth_style_waypoints)
+    print(f"Using waypoint columns: x={x_col}, y={y_col}")
+
+    rk4 = trajectory_group(telemetry, "rk4")
+    euler = trajectory_group(telemetry, "euler")
+    summary = summarize_run(telemetry)
+
+    plt.rcParams.update(
+        {
+            "font.size": 11,
+            "axes.titlesize": 14,
+            "axes.labelsize": 12,
+            "legend.fontsize": 10,
+        }
+    )
+
+    TRAJECTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    save_trajectory_overlay(waypoints, x_col, y_col, rk4, euler, TRAJECTORY_PATH)
+    save_tracking_error_plot(rk4, euler, TRACKING_ERROR_PATH)
+    save_summary_metrics_table(summary, SUMMARY_METRICS_PATH)
+
+
+def main() -> None:
+    metadata = load_metadata(METADATA_PATH)
+    telemetry = load_telemetry(TELEMETRY_PATH)
+    config = load_map_config(CONFIG_PATH)
+    waypoints, f1tenth_style_waypoints = load_waypoints(WAYPOINTS_PATH, config)
+    print(f"Loaded metadata for control={metadata.get('control', 'unknown')}")
+
+    plot_integrator_comparison(
+        telemetry=telemetry,
+        waypoints=waypoints,
+        config=config,
+        f1tenth_style_waypoints=f1tenth_style_waypoints,
+    )
+    print(f"Wrote trajectory figure to {TRAJECTORY_PATH}")
+    print(f"Wrote tracking error figure to {TRACKING_ERROR_PATH}")
+    print(f"Wrote summary metrics figure to {SUMMARY_METRICS_PATH}")
 
 
 if __name__ == "__main__":

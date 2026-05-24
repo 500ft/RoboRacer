@@ -16,3 +16,6 @@ runs/*
 !runs/first_lap/**
 reports/figures/*
 !reports/figures/first_integrator_comparison.png
+!reports/figures/integrator_trajectory_overlay.png
+!reports/figures/integrator_tracking_error_vs_progress.png
+!reports/figures/integrator_summary_metrics.png

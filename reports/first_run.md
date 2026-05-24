@@ -28,7 +28,19 @@ python experiments/validate_first_run.py
 
 - Telemetry: `runs/first_lap/telemetry.csv`
 - Metadata: `runs/first_lap/metadata.json`
-- Figure: `reports/figures/first_integrator_comparison.png`
+- Trajectory figure: `reports/figures/integrator_trajectory_overlay.png`
+- Tracking error figure: `reports/figures/integrator_tracking_error_vs_progress.png`
+- Summary metrics figure: `reports/figures/integrator_summary_metrics.png`
+
+### Improved integrator comparison figure
+
+![RK4 vs Euler trajectory overlay](figures/integrator_trajectory_overlay.png)
+
+![RK4 vs Euler tracking error vs progress](figures/integrator_tracking_error_vs_progress.png)
+
+![RK4 vs Euler summary metrics](figures/integrator_summary_metrics.png)
+
+Closed-loop pure pursuit integrator sensitivity check on examples/example_map. RK4 completed one lap, while Euler collided early under the same baseline controller. This figure compares numerical integrator behavior inside F1TENTH Gym and is not a derived bicycle-model comparison.
 
 ## First Results
 
