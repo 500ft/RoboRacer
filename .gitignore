@@ -14,8 +14,12 @@ flycheck_*
 runs/*
 !runs/first_lap/
 !runs/first_lap/**
+!runs/integrator_convergence/
+!runs/integrator_convergence/**
 reports/figures/*
 !reports/figures/first_integrator_comparison.png
 !reports/figures/integrator_trajectory_overlay.png
 !reports/figures/integrator_tracking_error_vs_progress.png
 !reports/figures/integrator_summary_metrics.png
+!reports/figures/integrator_convergence_position_error.png
+!reports/figures/integrator_convergence_metrics.png
