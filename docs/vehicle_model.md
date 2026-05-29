@@ -204,13 +204,13 @@ B =
 
 The continuous-time model will be discretized using the RK4 timestep selected by the integrator convergence study.
 
-Until that experiment is complete:
+The selected RK4 simulation timestep from `reports/integrator_convergence.md` is:
 
 \[
-\Delta t = \Delta t_{\mathrm{conv}}
+\Delta t_{\mathrm{conv}} = 0.002~\mathrm{s}
 \]
 
-where \(\Delta t_{\mathrm{conv}}\) is selected in `reports/integrator_convergence.md` using the predeclared pairwise refinement-change criterion.
+This timestep was selected using the predeclared pairwise refinement-change criterion.
 
 ## Future SysID Use
 
