@@ -18,6 +18,7 @@ TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
 METADATA_PATH = REPO_ROOT / "runs" / "first_lap" / "metadata.json"
 CONFIG_PATH = REPO_ROOT / "examples" / "config_example_map.yaml"
 WAYPOINTS_PATH = REPO_ROOT / "examples" / "example_waypoints.csv"
+COMBINED_PATH = REPO_ROOT / "reports" / "figures" / "first_integrator_comparison.png"
 TRAJECTORY_PATH = REPO_ROOT / "reports" / "figures" / "integrator_trajectory_overlay.png"
 TRACKING_ERROR_PATH = REPO_ROOT / "reports" / "figures" / "integrator_tracking_error_vs_progress.png"
 SUMMARY_METRICS_PATH = REPO_ROOT / "reports" / "figures" / "integrator_summary_metrics.png"
@@ -233,13 +234,35 @@ def format_summary_for_table(summary: pd.DataFrame) -> pd.DataFrame:
     for column in ["Final time [s]", "RMS CTE [m]", "Max CTE [m]", "Mean speed [m/s]"]:
         table_df[column] = table_df[column].map(lambda value: f"{value:.3f}")
     table_df["Collision"] = table_df["Collision"].map(lambda value: "Yes" if value else "No")
+    table_df["Termination"] = table_df["Termination"].map(lambda value: str(value).replace("completed_lap", "completed"))
     return table_df.rename(
         columns={
+            "Integrator": "Int.",
+            "Termination": "End",
             "Final time [s]": "Final\nTime [s]",
+            "Collision": "Hit?",
             "RMS CTE [m]": "RMS\nCTE [m]",
             "Max CTE [m]": "Max\nCTE [m]",
-            "Mean speed [m/s]": "Mean Speed\n[m/s]",
+            "Mean speed [m/s]": "Mean\nSpeed [m/s]",
         }
+    )
+
+
+def endpoint_label(group: pd.DataFrame, integrator: str) -> str:
+    end = group.iloc[-1]
+    collision = bool(pd.to_numeric(group["collision"], errors="coerce").fillna(0).max() > 0)
+    termination = str(end["termination_reason"])
+    if collision:
+        return f"{integrator} collision"
+    return f"{integrator} {termination.replace('_', ' ')}"
+
+
+def endpoint_annotation(group: pd.DataFrame, integrator: str) -> str:
+    end = group.iloc[-1]
+    return (
+        f"{endpoint_label(group, integrator)}\n"
+        f"t = {end['time_s']:.2f} s\n"
+        f"s = {end['progress_m']:.1f} m"
     )
 
 
@@ -268,6 +291,7 @@ def save_trajectory_overlay(
     start = rk4.iloc[0]
     rk4_finish = rk4.iloc[-1]
     euler_end = euler.iloc[-1]
+    euler_label = endpoint_label(euler, "Euler")
 
     ax.scatter(start["x_m"], start["y_m"], marker="o", s=85, color="#2ca02c", label="Start", zorder=3)
     ax.scatter(
@@ -286,7 +310,7 @@ def save_trajectory_overlay(
         s=140,
         linewidths=2.6,
         color="#d62728",
-        label="Euler collision",
+        label=euler_label,
         zorder=4,
     )
 
@@ -300,9 +324,7 @@ def save_trajectory_overlay(
         bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.85},
     )
     ax.annotate(
-        f"Euler collision\n"
-        f"t = {euler_end['time_s']:.2f} s\n"
-        f"s = {euler_end['progress_m']:.1f} m",
+        endpoint_annotation(euler, "Euler"),
         xy=(euler_end["x_m"], euler_end["y_m"]),
         xytext=(18, -42),
         textcoords="offset points",
@@ -324,6 +346,7 @@ def save_trajectory_overlay(
 def save_tracking_error_plot(rk4: pd.DataFrame, euler: pd.DataFrame, output_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(10, 5.8), constrained_layout=True)
     euler_end = euler.iloc[-1]
+    euler_label = endpoint_label(euler, "Euler")
 
     ax.plot(rk4["progress_m"], rk4["abs_cte_m"], linewidth=2.2, color="#1f77b4", label="RK4")
     ax.plot(euler["progress_m"], euler["abs_cte_m"], linewidth=2.2, color="#d62728", label="Euler")
@@ -334,11 +357,11 @@ def save_tracking_error_plot(rk4: pd.DataFrame, euler: pd.DataFrame, output_path
         s=110,
         linewidths=2.4,
         color="#d62728",
-        label="Euler collision",
+        label=euler_label,
         zorder=4,
     )
     ax.annotate(
-        f"Euler collision\n"
+        f"{euler_label}\n"
         f"t = {euler_end['time_s']:.2f} s",
         xy=(euler_end["progress_m"], euler_end["abs_cte_m"]),
         xytext=(-110, -58),
@@ -395,6 +418,140 @@ def save_summary_metrics_table(summary: pd.DataFrame, output_path: Path) -> None
     plt.close(fig)
 
 
+def save_combined_integrator_comparison(
+    waypoints: pd.DataFrame,
+    x_col: Any,
+    y_col: Any,
+    rk4: pd.DataFrame,
+    euler: pd.DataFrame,
+    summary: pd.DataFrame,
+    output_path: Path,
+) -> None:
+    fig = plt.figure(figsize=(16, 9), constrained_layout=False)
+    grid = fig.add_gridspec(2, 2, width_ratios=[1.45, 1.0], height_ratios=[1.0, 1.0], wspace=0.28, hspace=0.36)
+    ax_traj = fig.add_subplot(grid[:, 0])
+    ax_cte = fig.add_subplot(grid[0, 1])
+    ax_table = fig.add_subplot(grid[1, 1])
+
+    start = rk4.iloc[0]
+    rk4_finish = rk4.iloc[-1]
+    euler_end = euler.iloc[-1]
+    euler_label = endpoint_label(euler, "Euler")
+
+    ax_traj.plot(
+        waypoints[x_col],
+        waypoints[y_col],
+        linestyle="--",
+        linewidth=1.6,
+        color="0.55",
+        label="Reference path",
+        zorder=1,
+    )
+    ax_traj.plot(rk4["x_m"], rk4["y_m"], linewidth=2.2, color="#1f77b4", label="RK4 trajectory", zorder=2)
+    ax_traj.plot(euler["x_m"], euler["y_m"], linewidth=2.2, color="#d62728", label="Euler trajectory", zorder=2)
+    ax_traj.scatter(start["x_m"], start["y_m"], marker="o", s=80, color="#2ca02c", label="Start", zorder=3)
+    ax_traj.scatter(
+        rk4_finish["x_m"],
+        rk4_finish["y_m"],
+        marker="s",
+        s=80,
+        color="#1f77b4",
+        label="RK4 finish",
+        zorder=3,
+    )
+    ax_traj.scatter(
+        euler_end["x_m"],
+        euler_end["y_m"],
+        marker="x",
+        s=130,
+        linewidths=2.5,
+        color="#d62728",
+        label=euler_label,
+        zorder=4,
+    )
+    ax_traj.annotate(
+        "Start / RK4 finish",
+        xy=(start["x_m"], start["y_m"]),
+        xytext=(-125, 20),
+        textcoords="offset points",
+        arrowprops={"arrowstyle": "->", "lw": 0.8, "color": "0.25"},
+        fontsize=9,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.88},
+    )
+    ax_traj.annotate(
+        endpoint_annotation(euler, "Euler"),
+        xy=(euler_end["x_m"], euler_end["y_m"]),
+        xytext=(16, -40),
+        textcoords="offset points",
+        arrowprops={"arrowstyle": "->", "lw": 0.8, "color": "#d62728"},
+        fontsize=9,
+        bbox={"boxstyle": "round,pad=0.25", "fc": "white", "ec": "0.8", "alpha": 0.9},
+    )
+    ax_traj.set_title("Trajectory Overlay")
+    ax_traj.set_xlabel("x [m]")
+    ax_traj.set_ylabel("y [m]")
+    ax_traj.axis("equal")
+    ax_traj.grid(True, alpha=0.3)
+    ax_traj.legend(loc="upper right", framealpha=0.95)
+
+    ax_cte.plot(rk4["progress_m"], rk4["abs_cte_m"], linewidth=2.0, color="#1f77b4", label="RK4")
+    ax_cte.plot(euler["progress_m"], euler["abs_cte_m"], linewidth=2.0, color="#d62728", label="Euler")
+    ax_cte.scatter(
+        euler_end["progress_m"],
+        euler_end["abs_cte_m"],
+        marker="x",
+        s=95,
+        linewidths=2.2,
+        color="#d62728",
+        label=euler_label,
+        zorder=4,
+    )
+    ax_cte.set_title("Tracking Error vs Progress")
+    ax_cte.set_xlabel("Progress along path [m]")
+    ax_cte.set_ylabel("|CTE| [m]")
+    ax_cte.set_xlim(left=0)
+    ax_cte.set_ylim(bottom=0)
+    ax_cte.grid(True, alpha=0.3)
+    ax_cte.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), borderaxespad=0.0, framealpha=0.95)
+
+    table_df = format_summary_for_table(summary)
+    ax_table.axis("off")
+    table = ax_table.table(
+        cellText=table_df.values,
+        colLabels=table_df.columns,
+        loc="center",
+        cellLoc="center",
+        colLoc="center",
+        colWidths=[0.11, 0.17, 0.14, 0.10, 0.14, 0.14, 0.20],
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(8.2)
+    table.scale(1.0, 1.65)
+    for (row, _), cell in table.get_celld().items():
+        cell.set_edgecolor("0.25")
+        if row == 0:
+            cell.set_facecolor("0.92")
+            cell.set_text_props(weight="bold")
+    ax_table.set_title("Summary Metrics", fontsize=14, fontweight="bold", pad=12)
+
+    fig.suptitle(
+        "First Dynamics Sanity Check: RK4 vs Euler Trajectory Overlay",
+        fontsize=18,
+        fontweight="bold",
+        y=0.975,
+    )
+    fig.text(
+        0.5,
+        0.018,
+        "Closed-loop pure pursuit integrator sensitivity check inside F1TENTH Gym. "
+        "This is not yet a derived bicycle-model comparison.",
+        ha="center",
+        fontsize=10,
+    )
+    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 def plot_integrator_comparison(
     telemetry: pd.DataFrame,
     waypoints: pd.DataFrame,
@@ -418,6 +575,7 @@ def plot_integrator_comparison(
     )
 
     TRAJECTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    save_combined_integrator_comparison(waypoints, x_col, y_col, rk4, euler, summary, COMBINED_PATH)
     save_trajectory_overlay(waypoints, x_col, y_col, rk4, euler, TRAJECTORY_PATH)
     save_tracking_error_plot(rk4, euler, TRACKING_ERROR_PATH)
     save_summary_metrics_table(summary, SUMMARY_METRICS_PATH)
@@ -436,6 +594,7 @@ def main() -> None:
         config=config,
         f1tenth_style_waypoints=f1tenth_style_waypoints,
     )
+    print(f"Wrote combined figure to {COMBINED_PATH}")
     print(f"Wrote trajectory figure to {TRAJECTORY_PATH}")
     print(f"Wrote tracking error figure to {TRACKING_ERROR_PATH}")
     print(f"Wrote summary metrics figure to {SUMMARY_METRICS_PATH}")
