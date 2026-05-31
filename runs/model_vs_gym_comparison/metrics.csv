@@ -1,0 +1,14 @@
+metric,value,units,description
+rmse_position_m,66.79909987234736,m,RMSE position error between kinematic replay and Gym trajectory.
+max_position_error_m,98.66175619747922,m,Maximum position error over replay.
+final_position_error_m,41.54115416082581,m,Position drift at final replay sample.
+rmse_yaw_rad,2.5383261127113292,rad,RMSE wrapped yaw error.
+max_abs_yaw_error_rad,3.140568174397181,rad,Maximum absolute wrapped yaw error.
+rmse_speed_mps,0.08416879147735046,m/s,RMSE speed error after integrating logged acceleration.
+final_speed_error_mps,0.083437335659994,m/s,Speed error at final replay sample.
+duration_replayed_s,33.28,s,Elapsed replay duration covered by RK4 telemetry.
+num_samples,3329.0,count,Number of RK4 telemetry samples replayed.
+dt_min_s,0.00999999999999801,s,Minimum telemetry timestep.
+dt_max_s,0.010000000000005116,s,Maximum telemetry timestep.
+dt_mean_s,0.01,s,Mean telemetry timestep.
+dt_ratio,1.0000000000007105,unitless,Maximum timestep divided by minimum timestep.
