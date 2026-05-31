@@ -1,74 +1,103 @@
 # Vehicle Model Derivation
 
-## Purpose
+## Purpose and Scope
 
-This document defines the vehicle model basis for later Gym-vs-derived-model comparison and parameter-identification work. It is not a fitted model result yet.
+This document defines the vehicle-model structure used for later F1TENTH Gym comparison and parameter-identification work. It is a derivation document only: it does not fit vehicle parameters, tune a controller, run a new simulation, or claim physical model fidelity.
 
-## Coordinate Frames and Notation
+The kinematic bicycle model describes planar pose evolution using position, heading, speed, acceleration, and steering angle. The dynamic bicycle model below is a lateral-yaw perturbation model at constant longitudinal speed. Its states are lateral velocity and yaw rate. It is not a full pose propagation model and does not estimate tire parameters.
 
-- Inertial/global frame: fixed map frame used by F1TENTH Gym for position.
-- Vehicle/body frame: frame attached to the vehicle, with the x-axis forward and y-axis lateral.
-- \(x, y\): vehicle position in the global frame.
-- \(\psi\): yaw angle from the global x-axis to the vehicle heading.
-- \(v_x\): longitudinal velocity in the vehicle body frame.
-- \(v_y\): lateral velocity in the vehicle body frame.
-- \(r = \dot{\psi}\): yaw rate.
-- \(\delta\): front steering angle input.
-- \(a\): longitudinal acceleration input, or an equivalent speed-tracking command in simulator experiments.
+## Coordinate Frames and Sign Convention
 
-## Parameters
+- Inertial/global frame: fixed map frame used for vehicle position \(X, Y\).
+- Vehicle/body frame: frame attached to the vehicle center of gravity, with positive body \(x\) forward and positive body \(y\) to the left.
+- Positive yaw angle \(\psi\): counterclockwise rotation from the global \(X\)-axis to the vehicle body \(x\)-axis.
+- Positive yaw rate \(r = \dot{\psi}\): counterclockwise yaw.
+- Positive lateral velocity \(v_y\): velocity in the positive body \(y\) direction.
+- Positive steering angle \(\delta\): front wheel steered toward positive body \(y\).
 
-- \(m\): vehicle mass.
-- \(I_z\): yaw moment of inertia about the vertical axis.
-- \(l_f\): distance from center of gravity to front axle.
-- \(l_r\): distance from center of gravity to rear axle.
-- \(L = l_f + l_r\): wheelbase.
-- \(C_{\alpha f}\): front cornering stiffness.
-- \(C_{\alpha r}\): rear cornering stiffness.
+For the dynamic model, the front and rear slip angles are defined as:
 
-## Assumptions
+\[
+\alpha_f = \delta - \frac{v_y + l_f r}{v_x}
+\]
+
+\[
+\alpha_r = -\frac{v_y - l_r r}{v_x}
+\]
+
+The linear lateral tire-force convention is:
+
+\[
+F_{yf} = C_{\alpha f}\alpha_f
+\]
+
+\[
+F_{yr} = C_{\alpha r}\alpha_r
+\]
+
+where \(C_{\alpha f} > 0\) and \(C_{\alpha r} > 0\). With this convention, a positive slip angle produces a positive lateral tire force.
+
+## Notation and Parameters
+
+| Symbol | Meaning | Units |
+| --- | --- | --- |
+| \(X, Y\) | vehicle center-of-gravity position in the global frame | m |
+| \(\psi\) | vehicle yaw angle | rad |
+| \(v\) | scalar speed in the kinematic model | m/s |
+| \(v_x\) | body-frame longitudinal velocity | m/s |
+| \(v_y\) | body-frame lateral velocity | m/s |
+| \(r\) | yaw rate | rad/s |
+| \(a\) | longitudinal acceleration input | m/s\(^2\) |
+| \(\delta\) | front steering angle input | rad |
+| \(m\) | vehicle mass | kg |
+| \(I_z\) | yaw moment of inertia about the vertical axis | kg m\(^2\) |
+| \(l_f\) | distance from center of gravity to front axle | m |
+| \(l_r\) | distance from center of gravity to rear axle | m |
+| \(L = l_f + l_r\) | wheelbase | m |
+| \(C_{\alpha f}\) | front cornering stiffness | N/rad |
+| \(C_{\alpha r}\) | rear cornering stiffness | N/rad |
+
+## Modeling Assumptions
 
 - Motion is planar.
-- Roll and pitch dynamics are ignored.
-- Load transfer is ignored in the first model.
-- Slip angles are small for the linear dynamic bicycle model.
-- \(v_x\) is constant or slowly varying for linearization.
-- Tire saturation is ignored in the first linear model.
+- Roll, pitch, suspension, and load-transfer dynamics are ignored.
+- Tire slip angles are small enough for linear tire forces.
+- Tire saturation and combined slip are ignored.
+- The lateral-yaw dynamic model is linearized at constant \(v_x = v_{x0} > 0\).
+- Longitudinal acceleration is omitted from the lateral-yaw linear model because the operating point assumes constant longitudinal speed.
 
 ## Kinematic Bicycle Model
 
-Use state:
+The kinematic model uses pose and scalar speed as the state:
 
 \[
-\mathbf{x}
-=
+x_k =
 \begin{bmatrix}
-x \\
-y \\
+X \\
+Y \\
 \psi \\
 v
 \end{bmatrix}
 \]
 
-Use input:
+with input:
 
 \[
-\mathbf{u}
-=
+u_k =
 \begin{bmatrix}
 a \\
 \delta
 \end{bmatrix}
 \]
 
-The kinematic bicycle equations are:
+The slip-free kinematic bicycle equations are:
 
 \[
-\dot{x} = v\cos(\psi + \beta)
+\dot{X} = v\cos(\psi + \beta)
 \]
 
 \[
-\dot{y} = v\sin(\psi + \beta)
+\dot{Y} = v\sin(\psi + \beta)
 \]
 
 \[
@@ -79,73 +108,51 @@ The kinematic bicycle equations are:
 \dot{v} = a
 \]
 
-with:
+where:
 
 \[
 \beta = \tan^{-1}\left(\frac{l_r}{l_f + l_r}\tan\delta\right)
 \]
 
-This model is useful for low-slip trajectory propagation and as the first derived-model comparison against Gym.
+This model is appropriate for low-slip pose propagation. It does not represent lateral tire-force dynamics.
 
 ## Dynamic Bicycle Model With Linear Tires
 
-At fixed \(v_x\), use lateral-yaw state:
+The dynamic bicycle model uses lateral velocity and yaw rate as the state:
 
 \[
-\mathbf{x}
-=
+x_d =
 \begin{bmatrix}
 v_y \\
 r
 \end{bmatrix}
 \]
 
-with steering input \(\delta\).
-
-Slip angles:
+with steering input:
 
 \[
-\alpha_f
-=
-\delta
--
-\frac{v_y + l_f r}{v_x}
+u_d = \delta
 \]
+
+The model is derived at constant longitudinal speed:
 
 \[
-\alpha_r
-=
--
-\frac{v_y - l_r r}{v_x}
+v_x = v_{x0} > 0
 \]
 
-Linear tire forces:
+The lateral force balance is:
 
 \[
-F_{yf} = C_{\alpha f}\alpha_f
+m(\dot{v}_y + v_x r) = F_{yf} + F_{yr}
 \]
+
+The yaw moment balance is:
 
 \[
-F_{yr} = C_{\alpha r}\alpha_r
+I_z\dot{r} = l_f F_{yf} - l_r F_{yr}
 \]
 
-Lateral dynamics:
-
-\[
-m(\dot{v}_y + v_x r)
-=
-F_{yf} + F_{yr}
-\]
-
-Yaw dynamics:
-
-\[
-I_z\dot{r}
-=
-l_f F_{yf} - l_r F_{yr}
-\]
-
-Substituting the linear tire forces gives:
+Substituting the stated slip-angle and tire-force convention gives:
 
 \[
 \dot{v}_y
@@ -170,24 +177,26 @@ Substituting the linear tire forces gives:
 \frac{l_f C_{\alpha f}}{I_z}\delta
 \]
 
-State-space form:
+## Linearization and Continuous-Time State-Space Form
+
+The lateral-yaw model is already linear in \(v_y\), \(r\), and \(\delta\) after assuming constant \(v_x = v_{x0}\) and linear tire forces. The continuous-time perturbation model is:
 
 \[
-\dot{\mathbf{x}} = A\mathbf{x} + B\delta
+\dot{x}_d = A x_d + B u_d
 \]
 
-where:
+with:
 
 \[
 A =
 \begin{bmatrix}
--\frac{C_{\alpha f} + C_{\alpha r}}{m v_x}
+-\frac{C_{\alpha f} + C_{\alpha r}}{m v_{x0}}
 &
-\frac{-l_f C_{\alpha f} + l_r C_{\alpha r}}{m v_x} - v_x
+\frac{-l_f C_{\alpha f} + l_r C_{\alpha r}}{m v_{x0}} - v_{x0}
 \\
-\frac{-l_f C_{\alpha f} + l_r C_{\alpha r}}{I_z v_x}
+\frac{-l_f C_{\alpha f} + l_r C_{\alpha r}}{I_z v_{x0}}
 &
--\frac{l_f^2 C_{\alpha f} + l_r^2 C_{\alpha r}}{I_z v_x}
+-\frac{l_f^2 C_{\alpha f} + l_r^2 C_{\alpha r}}{I_z v_{x0}}
 \end{bmatrix}
 \]
 
@@ -200,24 +209,118 @@ B =
 \end{bmatrix}
 \]
 
+These signs follow directly from the slip-angle and tire-force convention stated above. A different slip-angle convention requires re-deriving the matrix signs.
+
+## Controllability
+
+For the two-state dynamic model, the controllability matrix is:
+
+\[
+\mathcal{C} =
+\begin{bmatrix}
+B & AB
+\end{bmatrix}
+\]
+
+The model is controllable when:
+
+\[
+\operatorname{rank}(\mathcal{C}) = 2
+\]
+
+Equivalently, for this two-state system:
+
+\[
+\det(\mathcal{C})
+=
+\frac{C_{\alpha f}^2}
+{I_z^2 m^2 v_{x0}}
+\left[
+I_z C_{\alpha r}(l_f + l_r)
+- m C_{\alpha r}l_f l_r(l_f + l_r)
++ m^2 l_f^2 v_{x0}^2
+\right]
+\neq 0
+\]
+
+This rank condition assumes physically meaningful parameters:
+
+\[
+C_{\alpha f} > 0,\quad C_{\alpha r} > 0,\quad m > 0,\quad I_z > 0,\quad v_{x0} > 0
+\]
+
+and nondegenerate vehicle geometry with positive axle distances. Degenerate parameter choices, such as zero front cornering stiffness, or special parameter-speed cancellations that make \(\det(\mathcal{C}) = 0\), reduce rank and are outside a controllable operating-point claim.
+
+## Observability
+
+Use the measurement model:
+
+\[
+y =
+\begin{bmatrix}
+v_y \\
+r
+\end{bmatrix}
+\]
+
+Then:
+
+\[
+C = I_2,\qquad D = 0
+\]
+
+The observability matrix is:
+
+\[
+\mathcal{O} =
+\begin{bmatrix}
+C \\
+CA
+\end{bmatrix}
+\]
+
+Because \(C = I_2\), the two-state lateral-yaw model is trivially observable:
+
+\[
+\operatorname{rank}(\mathcal{O}) = 2
+\]
+
+This observability claim applies only to \(x_d = [v_y,\ r]^T\). It does not claim observability of a larger path-tracking or full-pose state from the same measurements.
+
 ## Discrete-Time Form
 
-The continuous-time model will be discretized using the RK4 timestep selected by the integrator convergence study.
+For a zero-order-hold discretization with steering held constant over one timestep, the discrete-time model is:
 
-The selected RK4 simulation timestep from `reports/integrator_convergence.md` is:
+\[
+x_d[k + 1] = A_d x_d[k] + B_d u_d[k]
+\]
+
+where:
+
+\[
+A_d = e^{A\Delta t}
+\]
+
+\[
+B_d = \int_0^{\Delta t} e^{A\tau}B\,d\tau
+\]
+
+The zero-order-hold assumption matches the intended simulator interpretation that the steering command is held constant over the integration interval.
+
+The RK4 convergence study in `reports/integrator_convergence.md` selected the numerical simulation timestep:
 
 \[
 \Delta t_{\mathrm{conv}} = 0.002~\mathrm{s}
 \]
 
-This timestep was selected using the predeclared pairwise refinement-change criterion.
+This timestep is a convergence-selected discretization choice. It is not a fitted vehicle parameter and does not prove physical model fidelity.
 
-## Future SysID Use
+## What This Derivation Does Not Claim
 
-The later sysID experiment will excite the simulator using prescribed steering inputs, record response data, and fit a subset of the dynamic bicycle model parameters. Candidate fitted parameters include:
+This document derives model structure only. It does not identify:
 
 \[
-C_{\alpha f},\quad C_{\alpha r},\quad I_z
+C_{\alpha f},\quad C_{\alpha r},\quad m,\quad I_z,\quad l_f,\quad l_r
 \]
 
-This document defines the model basis only. It does not claim fitted parameter values yet.
+Later system-identification work must estimate or validate parameter values before using this model for quantitative prediction, LQR design, MPC design, or simulator-vs-derived-model claims.
