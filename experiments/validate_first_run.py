@@ -15,6 +15,7 @@ import gym  # noqa: F401
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
 METADATA_PATH = REPO_ROOT / "runs" / "first_lap" / "metadata.json"
+COMBINED_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "first_integrator_comparison.png"
 TRAJECTORY_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_trajectory_overlay.png"
 TRACKING_ERROR_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_tracking_error_vs_progress.png"
 SUMMARY_METRICS_FIGURE_PATH = REPO_ROOT / "reports" / "figures" / "integrator_summary_metrics.png"
@@ -63,6 +64,7 @@ def main() -> None:
     for path in (
         TELEMETRY_PATH,
         METADATA_PATH,
+        COMBINED_FIGURE_PATH,
         TRAJECTORY_FIGURE_PATH,
         TRACKING_ERROR_FIGURE_PATH,
         SUMMARY_METRICS_FIGURE_PATH,
