@@ -62,11 +62,23 @@ The replay trace is written to `runs/model_vs_gym_comparison/replay_trace.csv`. 
 
 Large drift that grows with speed, steering magnitude, or lateral acceleration is expected evidence of missing tire dynamics in the kinematic model. Drift at low speed and low steering should be treated as a possible sign-convention, geometry, or replay-mapping issue, except during the launch-from-rest regime noted below.
 
+## Closing Diagnostic: Kinematic Yaw-Rate Limitation
+
+The remaining yaw-rate discrepancy is a model-scope limitation, not an open replay bookkeeping bug. Three checks support that conclusion:
+
+- Below `0.5 m/s`, where Gym falls back to its kinematic model, the instantaneous kinematic yaw law matches the Gym yaw-rate signal with median ratio `0.999`. This rules out the main convention, wheelbase, steering-unit, and timestep hypotheses for the replay.
+- Above `0.5 m/s`, Gym uses `vehicle_dynamics_st`, and the kinematic/Gym yaw-rate ratio varies with speed and operating condition. The observed 2x-ish average is not a fixed scale bug.
+- Near `t = 2.0 s`, the achieved steering passes near zero while Gym still carries nonzero yaw rate. The kinematic model ties yaw rate directly to speed and steering, so it cannot reproduce yaw-rate memory from lateral-yaw dynamics.
+
+This closes the kinematic replay as a structural comparison: the implemented kinematic equations are coherent with Gym in the fallback regime, but the next model comparison must include lateral velocity, slip angle, yaw-rate state, and tire-force dynamics.
+
 ## Figures
 
 ![Kinematic replay trajectory error](figures/model_vs_gym_trajectory_error.png)
 
 ![Kinematic replay state errors](figures/model_vs_gym_state_errors.png)
+
+![Kinematic yaw-rate diagnostic](figures/kinematic_yaw_rate_diagnostic.png)
 
 ## Limitations
 
