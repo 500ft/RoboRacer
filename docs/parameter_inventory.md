@@ -28,6 +28,53 @@ This document tracks parameter values, sources, and status before model-vs-Gym c
 | Vehicle width | `width` | 0.31 | m | default `F110Env.params` | known default |
 | Vehicle length | `length` | 0.58 | m | default `F110Env.params` | known default |
 
+## Gym Nonlinear Single-Track Oracle Parameters
+
+These parameters are the known default values used by the local F1TENTH Gym nonlinear single-track model. They are treated as oracle/reference parameters for dynamic replay, not as identified values. The default values are defined in `F110Env.params` in `gym/f110_gym/envs/f110_env.py`; the consuming nonlinear model is `vehicle_dynamics_st` in `gym/f110_gym/envs/dynamic_models.py`.
+
+| Parameter | Symbol / code key | Value | Units | Source | Status | Used for |
+| --- | --- | ---: | --- | --- | --- | --- |
+| Friction coefficient | `mu` | 1.0489 | unitless | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | tire-force limits |
+| Front cornering stiffness coefficient | `C_Sf` | 4.718 | Gym coefficient | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | front lateral force |
+| Rear cornering stiffness coefficient | `C_Sr` | 5.4562 | Gym coefficient | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | rear lateral force |
+| Front axle distance from CG | `lf` | 0.15875 | m | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | slip-angle geometry |
+| Rear axle distance from CG | `lr` | 0.17145 | m | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | slip-angle geometry |
+| CG height | `h` | 0.074 | m | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | load-transfer term in dynamic model |
+| Vehicle mass | `m` | 3.74 | kg | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | force balance |
+| Yaw inertia | `I` / \(I_z\) | 0.04712 | kg m^2 | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default, not fitted | yaw dynamics |
+| Steering angle minimum | `s_min` | -0.4189 | rad | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | steering constraint |
+| Steering angle maximum | `s_max` | 0.4189 | rad | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | steering constraint |
+| Steering velocity minimum | `sv_min` | -3.2 | rad/s | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | input constraint |
+| Steering velocity maximum | `sv_max` | 3.2 | rad/s | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | input constraint |
+| Velocity minimum | `v_min` | -5.0 | m/s | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | speed constraint |
+| Velocity maximum | `v_max` | 20.0 | m/s | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | speed constraint |
+| Acceleration maximum | `a_max` | 9.51 | m/s^2 | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | acceleration constraint |
+| Switching velocity | `v_switch` | 7.319 | m/s | `gym/f110_gym/envs/f110_env.py` default `F110Env.params` | known default | acceleration constraint / model behavior |
+
+### Nonlinear Model State and Input Convention
+
+The nonlinear single-track model uses the state order:
+
+\[
+x =
+\begin{bmatrix}
+X & Y & \delta & v & \psi & r & \beta
+\end{bmatrix}^T
+\]
+
+where \(X,Y\) are global position, \(\delta\) is steering angle, \(v\) is speed, \(\psi\) is yaw angle, \(r\) is yaw rate, and \(\beta\) is slip angle at the vehicle center.
+
+The input order is:
+
+\[
+u =
+\begin{bmatrix}
+\dot{\delta} & a_x
+\end{bmatrix}^T
+\]
+
+where \(\dot{\delta}\) is steering velocity and \(a_x\) is longitudinal acceleration. `vehicle_dynamics_st` applies steering, velocity, and acceleration constraints internally through `steering_constraint` and `accl_constraints`; replay code should call the same function rather than duplicating those limits externally.
+
 ## Experiment and Controller Parameters
 
 | Parameter | Symbol / code key | Value | Units | Source | Status |
