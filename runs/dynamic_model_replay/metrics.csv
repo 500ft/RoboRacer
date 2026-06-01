@@ -1,0 +1,19 @@
+metric,value,units,description
+rmse_x_m,0.6178646792690774,m,RMSE global x position error.
+rmse_y_m,0.5751880961874352,m,RMSE global y position error.
+rmse_position_m,0.8441552629013255,m,RMSE position error.
+max_position_error_m,1.819090923344186,m,Maximum position error.
+final_position_error_m,1.7416539949386804,m,Final position error.
+rmse_yaw_rad,0.02702626880237768,rad,RMSE wrapped yaw error.
+max_abs_yaw_error_rad,0.05739500753389848,rad,Maximum absolute wrapped yaw error.
+rmse_yaw_rate_radps,0.026379127634749797,rad/s,RMSE yaw-rate error for dynamic replay.
+max_abs_yaw_rate_error_radps,0.1544874324696417,rad/s,Maximum absolute yaw-rate error.
+final_yaw_rate_error_radps,-0.0030801241838851467,rad/s,Final yaw-rate error.
+rmse_speed_mps,0.08416879147735046,m/s,RMSE speed error.
+max_abs_speed_error_mps,0.12237362303999433,m/s,Maximum absolute speed error.
+num_samples,3329.0,count,Number of RK4 telemetry samples replayed.
+duration_s,33.28,s,Elapsed replay duration.
+kinematic_yaw_rate_rmse_radps,1.3238943244820882,rad/s,Kinematic yaw-rate RMSE baseline from the same telemetry.
+dynamic_yaw_rate_rmse_radps,0.026379127634749797,rad/s,Dynamic replay yaw-rate RMSE.
+yaw_rate_rmse_improvement_percent,98.00745972341339,%,Percent improvement in yaw-rate RMSE relative to kinematic yaw law.
+initial_slip_angle_rad,0.0,rad,0.0 because slip angle is not logged
