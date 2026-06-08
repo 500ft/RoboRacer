@@ -3,15 +3,15 @@
 
 from __future__ import annotations
 
-import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TELEMETRY_PATH = REPO_ROOT / "runs" / "sysid_steering_excitation" / "telemetry.csv"
-QUALITY_PATH = REPO_ROOT / "runs" / "sysid_steering_excitation" / "quality_metrics.csv"
+DEFAULT_TELEMETRY_PATH = REPO_ROOT / "runs" / "sysid_steering_excitation" / "telemetry.csv"
+DEFAULT_QUALITY_PATH = REPO_ROOT / "runs" / "sysid_steering_excitation" / "quality_metrics.csv"
 
 S_MAX_RAD = 0.4189
 SATURATION_THRESHOLD = 0.95 * S_MAX_RAD
@@ -55,11 +55,32 @@ def fail(message: str) -> None:
     raise SystemExit(f"FAIL: {message}")
 
 
-def main() -> None:
-    if not TELEMETRY_PATH.exists():
-        fail(f"missing telemetry file: {TELEMETRY_PATH}")
+def parse_args() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--telemetry",
+        type=Path,
+        default=DEFAULT_TELEMETRY_PATH,
+        help="Telemetry CSV to validate.",
+    )
+    parser.add_argument(
+        "--quality",
+        type=Path,
+        default=DEFAULT_QUALITY_PATH,
+        help="Optional quality metrics CSV to echo when present.",
+    )
+    return parser
 
-    df = pd.read_csv(TELEMETRY_PATH)
+
+def main() -> None:
+    args = parse_args().parse_args()
+    telemetry_path = args.telemetry
+    quality_path = args.quality
+
+    if not telemetry_path.exists():
+        fail(f"missing telemetry file: {telemetry_path}")
+
+    df = pd.read_csv(telemetry_path)
     missing = [column for column in REQUIRED_COLUMNS if column not in df.columns]
     if missing:
         fail(f"missing required columns: {missing}")
@@ -113,8 +134,8 @@ def main() -> None:
             {"metric": "max_saturation_segment_s", "value": max_saturation_segment_s},
         ]
     )
-    if QUALITY_PATH.exists():
-        quality = pd.read_csv(QUALITY_PATH)
+    if quality_path.exists():
+        quality = pd.read_csv(quality_path)
         print("Saved quality metrics:")
         print(quality.to_string(index=False))
     print("\nValidation summary:")
