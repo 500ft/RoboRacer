@@ -1,0 +1,30 @@
+{
+  "python_version": "3.9.23",
+  "f1tenth_gym_commit": "611d78856e81969c3a46702bb06fd4aa6e4d0757",
+  "telemetry_source": "generated",
+  "experiment": "sysid_steering_excitation",
+  "integrator": "rk4",
+  "control": "speed_hold_plus_steering_chirp",
+  "map": "generated open occupancy map in runs/sysid_steering_excitation",
+  "steering_command": "zero-centered steering chirp; no pure-pursuit feedback",
+  "target_speed_mps": 2.0,
+  "frequency_start_hz": 0.2,
+  "frequency_end_hz": 2.0,
+  "selected_profile": {
+    "amplitude_rad": 0.04,
+    "duration_s": 20.0,
+    "passed_quality_gates": true,
+    "attempts": [
+      {
+        "amplitude_rad": 0.04,
+        "duration_s": 20.0,
+        "passed_quality_gates": true
+      }
+    ]
+  },
+  "state_source": "env.sim.agents[0].state",
+  "command_convention": "[command_steer_rad, command_speed_mps] passed to env.step",
+  "future_sysid_input_convention": "[steer_vel_radps, accel_x_mps2] reconstructed from achieved state",
+  "saturation_threshold_rad": 0.397955,
+  "no_parameter_fitting": true
+}
