@@ -4,6 +4,62 @@
 
 This is the repository of the F1TENTH Gym environment.
 
+## Project Modeling Workflow
+
+This fork keeps F1TENTH Gym as the offline modeling and validation baseline:
+
+```text
+Gym experiment
+-> CSV telemetry
+-> kinematic/dynamic replay
+-> validation metrics
+-> reports and figures
+```
+
+The current modeling work includes integrator comparison, vehicle-model derivation, kinematic replay, known-parameter dynamic replay, and SysID steering-excitation data collection. Tire-parameter fitting is intentionally separate from the ROS 2 compatibility work.
+
+## ROS 2 / RoboRacer Compatibility
+
+RoboRacer is the current continuation of the F1TENTH ecosystem. This repository adds a ROS 2 sidecar package at:
+
+```text
+ros2_ws/src/f1tenth_modeling
+```
+
+Build from a ROS 2 environment:
+
+```bash
+cd ros2_ws
+colcon build --symlink-install
+source install/setup.bash
+```
+
+Run the ROS 2 Gym bridge and SysID excitation node:
+
+```bash
+ros2 launch f1tenth_modeling sysid_excitation.launch.py
+```
+
+Convert a ROS 2 bag using standard RoboRacer-style topics:
+
+```bash
+python experiments/rosbag_to_telemetry.py \
+  --bag path/to/rosbag \
+  --output runs/ros2_sysid_steering_excitation/telemetry.csv \
+  --metadata runs/ros2_sysid_steering_excitation/metadata.json \
+  --quality runs/ros2_sysid_steering_excitation/quality_metrics.csv
+```
+
+Validate the converted telemetry:
+
+```bash
+python experiments/validate_sysid_excitation.py \
+  --telemetry runs/ros2_sysid_steering_excitation/telemetry.csv \
+  --quality runs/ros2_sysid_steering_excitation/quality_metrics.csv
+```
+
+The converter uses `/ego_racecar/odom` and `/drive` as the primary standard topics. The project-specific `/f1tenth/internal_state` topic is optional enrichment for achieved steering and slip angle.
+
 This project is still under heavy developement.
 
 You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.

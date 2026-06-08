@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The current project remains a Python/F1TENTH Gym evidence pipeline. The ROS 2 migration adds a runtime layer beside that pipeline so commands, vehicle state, and excitation data can move through topics before the same offline validation and fitting logic is reused.
+The current project remains a Python/F1TENTH Gym evidence pipeline. The ROS 2 migration adds a runtime layer beside that pipeline so commands, vehicle state, and excitation data can move through standard ROS 2 topics or bags before the same offline validation and fitting logic is reused.
 
 This is not a wholesale rewrite. The existing Gym scripts remain the reference baseline.
 
@@ -16,6 +16,7 @@ It contains:
 - `sysid_excitation_node`: publishes chirp-steering commands and logs excitation telemetry.
 - `sysid_excitation.launch.py`: launches the bridge and excitation node together.
 - `sysid_excitation.yaml`: records runtime parameters and topic names.
+- `experiments/rosbag_to_telemetry.py`: converts standard-topic ROS 2 bags into the existing SysID CSV schema.
 
 ## Topic Contract
 
@@ -38,7 +39,19 @@ Fields used:
 
 These are commands passed to the environment. They are not treated as internal dynamic-model inputs for future fitting.
 
-### Internal State Topic
+### Odometry Topic
+
+`/ego_racecar/odom`
+
+Message type:
+
+```text
+nav_msgs/Odometry
+```
+
+This is the primary standard state topic for RoboRacer compatibility. The bag converter derives pose, speed, body-frame velocity, yaw rate, and slip angle from odometry when no project-specific internal state topic is present.
+
+### Optional Internal State Topic
 
 `/f1tenth/internal_state`
 
@@ -66,6 +79,8 @@ Telemetry mapping:
 | `r` | `yaw_rate_radps` |
 | `beta` | `slip_angle_rad` |
 
+This topic is project-specific enrichment, not an upstream RoboRacer standard. It should be used when available because it exposes achieved steering and slip angle directly.
+
 Derived columns:
 
 | Column | Definition |
@@ -74,18 +89,6 @@ Derived columns:
 | `vy_mps` | `speed_mps * sin(slip_angle_rad)` |
 | `steer_vel_radps` | finite difference of achieved `steer_rad` |
 | `accel_x_mps2` | finite difference of achieved `speed_mps` |
-
-### Odometry Topic
-
-`/ego_racecar/odom`
-
-Message type:
-
-```text
-nav_msgs/Odometry
-```
-
-This topic is for standard ROS consumers. The SysID data logger uses `/f1tenth/internal_state` because the slip angle and steering state are required for fitting.
 
 ## Build
 
@@ -118,7 +121,7 @@ Generated runtime outputs remain ignored by git unless explicitly staged.
 
 ## Quality Gate
 
-The ROS 2 logger preserves the same telemetry schema as the offline SysID excitation script. After a ROS 2 run, the existing validation logic can be adapted to point at:
+The ROS 2 logger and bag converter preserve the same telemetry schema as the offline SysID excitation script. After a ROS 2 run or bag conversion, validate the output CSV:
 
 ```text
 runs/ros2_sysid_steering_excitation/telemetry.csv
@@ -129,6 +132,16 @@ Run the shared validator with:
 ```bash
 python experiments/validate_sysid_excitation.py \
   --telemetry runs/ros2_sysid_steering_excitation/telemetry.csv \
+  --quality runs/ros2_sysid_steering_excitation/quality_metrics.csv
+```
+
+Convert a standard-topic ROS 2 bag first with:
+
+```bash
+python experiments/rosbag_to_telemetry.py \
+  --bag path/to/rosbag \
+  --output runs/ros2_sysid_steering_excitation/telemetry.csv \
+  --metadata runs/ros2_sysid_steering_excitation/metadata.json \
   --quality runs/ros2_sysid_steering_excitation/quality_metrics.csv
 ```
 
@@ -149,7 +162,7 @@ The gate should continue to enforce:
 
 1. Run the ROS 2 bridge and excitation nodes locally.
 2. Point a validator at `runs/ros2_sysid_steering_excitation/telemetry.csv`.
-3. Add a `bag_to_telemetry.py` converter if the workflow moves from direct CSV logging to rosbag logging.
+3. Use `experiments/rosbag_to_telemetry.py` for standard-topic bag ingestion.
 4. Keep parameter fitting in a separate branch after ROS 2 excitation quality passes.
 
 ## Not In Scope Yet
