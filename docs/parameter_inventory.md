@@ -103,6 +103,17 @@ where \(\dot{\delta}\) is steering velocity and \(a_x\) is longitudinal accelera
 | Dynamic-model operating speed | \(v_{x0}\) | TBD | m/s | future operating-point selection | TBD |
 | Kinematic replay initial state | \(X_0, Y_0, \psi_0, v_0\) | TBD | mixed | first row of selected Gym telemetry | TBD |
 
+## Identified Gym Dynamic Coefficients
+
+The controlled Gym steering-excitation dataset is used to verify that the identification pipeline can recover the nonlinear simulator coefficients. These are Gym model coefficients, not physical cornering stiffnesses in N/rad and not measurements from a physical RoboRacer vehicle.
+
+| Parameter | Identified value | Units | Dataset | Validation status |
+| --- | ---: | --- | --- | --- |
+| `C_Sf` | 4.718000 | Gym coefficient | `runs/sysid_steering_excitation/telemetry.csv` | held-out validation passed |
+| `C_Sr` | 5.456200 | Gym coefficient | `runs/sysid_steering_excitation/telemetry.csv` | held-out validation passed |
+
+The identification result and validation evidence are recorded in `runs/dynamic_parameter_identification/` and `reports/dynamic_parameter_identification.md`. Physical \(C_{\alpha f}\) and \(C_{\alpha r}\) remain not fitted.
+
 ## Interpretation Rules
 
 - Simulator defaults are valid references to what F1TENTH Gym uses when `params` is not supplied.
