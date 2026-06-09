@@ -19,7 +19,6 @@ setup(
     maintainer_email="redhose@example.com",
     description="ROS 2 runtime layer for F1TENTH model validation and SysID excitation.",
     license="MIT",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "gym_bridge_node = f1tenth_modeling.gym_bridge_node:main",
