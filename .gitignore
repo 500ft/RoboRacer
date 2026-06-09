@@ -1,4 +1,6 @@
 build/
+ros2_ws/install/
+ros2_ws/log/
 gym/f110_gym.egg-info
 __pycache__
 *.pyc
@@ -17,6 +19,7 @@ runs/*
 !runs/integrator_convergence/
 !runs/integrator_convergence/**
 reports/figures/*
+reports/ros2_sysid_steering_excitation.md
 !reports/figures/first_integrator_comparison.png
 !reports/figures/integrator_trajectory_overlay.png
 !reports/figures/integrator_tracking_error_vs_progress.png

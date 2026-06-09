@@ -117,7 +117,7 @@ class SysidExcitationNode(Node):
         self.create_timer(self.timestep_s, self.command_timer)
 
         self.rows: list[dict[str, str | float | int]] = []
-        self.start_time = self.get_clock().now()
+        self.start_time = None
         self.last_state: list[float] | None = None
         self.previous_steer: float | None = None
         self.previous_speed: float | None = None
@@ -133,6 +133,8 @@ class SysidExcitationNode(Node):
         )
 
     def elapsed_s(self) -> float:
+        if self.start_time is None:
+            return 0.0
         elapsed = self.get_clock().now() - self.start_time
         return float(elapsed.nanoseconds) * 1e-9
 
@@ -169,6 +171,9 @@ class SysidExcitationNode(Node):
         if len(message.data) < 7:
             self.get_logger().warn("Ignoring internal state with fewer than 7 entries")
             return
+
+        if self.start_time is None:
+            self.start_time = self.get_clock().now()
 
         x, y, steer, speed, theta, yaw_rate, slip_angle = [float(value) for value in message.data[:7]]
         if self.previous_steer is None:
@@ -319,11 +324,13 @@ def main(args: list[str] | None = None) -> None:
     rclpy.init(args=args)
     node = SysidExcitationNode()
     try:
-        rclpy.spin(node)
+        while rclpy.ok() and not node.done:
+            rclpy.spin_once(node, timeout_sec=0.1)
     finally:
         node.finish()
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

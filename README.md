@@ -60,6 +60,12 @@ python experiments/validate_sysid_excitation.py \
 
 The converter uses `/ego_racecar/odom` and `/drive` as the primary standard topics. The project-specific `/f1tenth/internal_state` topic is optional enrichment for achieved steering and slip angle.
 
+Verified ROS 2 environment guides:
+
+- [RoboStack Humble on macOS](docs/ros2_verification_robostack_macos.md)
+- [Official ROS 2 Humble on Ubuntu 22.04](docs/ros2_verification_ubuntu_humble.md)
+- [Environment comparison and switching guide](docs/ros2_verification_summary.md)
+
 This project is still under heavy developement.
 
 You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.

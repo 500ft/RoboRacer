@@ -105,14 +105,18 @@ class GymBridgeNode(Node):
             map_stem = resolve_repo_path(str(self.get_parameter("map_path").value))
             map_ext = str(self.get_parameter("map_ext").value)
 
-        self.env = gym.make(
+        registered_env = gym.make(
             "f110_gym:f110-v0",
             map=str(map_stem),
             map_ext=map_ext,
             num_agents=1,
             timestep=self.timestep_s,
             integrator=Integrator.RK4,
+            disable_env_checker=True,
         )
+        # F1TENTH Gym implements the pre-0.26 reset/step API. Use the registered
+        # environment without modern Gym's order/API wrappers.
+        self.env = registered_env.unwrapped
         start_pose = np.array(
             [
                 [
@@ -184,9 +188,12 @@ def main(args: list[str] | None = None) -> None:
     node = GymBridgeNode()
     try:
         rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":
