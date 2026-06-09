@@ -16,7 +16,16 @@ Gym experiment
 -> reports and figures
 ```
 
-The current modeling work includes integrator comparison, vehicle-model derivation, kinematic replay, known-parameter dynamic replay, and SysID steering-excitation data collection. Tire-parameter fitting is intentionally separate from the ROS 2 compatibility work.
+The current modeling work includes integrator comparison, vehicle-model derivation, kinematic replay, known-parameter dynamic replay, SysID steering excitation, and held-out identification of Gym's nonlinear `C_Sf` and `C_Sr` coefficients.
+
+Run and validate the controlled Gym parameter identification:
+
+```bash
+python experiments/fit_dynamic_parameters.py
+python experiments/validate_dynamic_parameter_identification.py
+```
+
+The fitting report is at `reports/dynamic_parameter_identification.md`. LQR, MPC, and controller tuning remain outside this identification workflow. A physical RoboRacer vehicle requires its own excitation dataset and held-out validation before its identified parameters are accepted.
 
 ## ROS 2 / RoboRacer Compatibility
 
