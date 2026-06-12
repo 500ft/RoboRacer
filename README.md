@@ -1,5 +1,5 @@
-![Python 3.8 3.9](https://github.com/f1tenth/f1tenth_gym/actions/workflows/ci.yml/badge.svg)
-![Docker](https://github.com/f1tenth/f1tenth_gym/actions/workflows/docker.yml/badge.svg)
+![Python 3.8 3.9](https://github.com/500ft/F1TENTH/actions/workflows/ci.yml/badge.svg)
+![Docker](https://github.com/500ft/F1TENTH/actions/workflows/docker.yml/badge.svg)
 # The F1TENTH Gym environment
 
 This is the repository of the F1TENTH Gym environment.
@@ -75,7 +75,7 @@ Verified ROS 2 environment guides:
 - [Official ROS 2 Humble on Ubuntu 22.04](docs/ros2_verification_ubuntu_humble.md)
 - [Environment comparison and switching guide](docs/ros2_verification_summary.md)
 
-This project is still under heavy developement.
+This project is still under heavy development.
 
 You can find the [documentation](https://f1tenth-gym.readthedocs.io/en/latest/) of the environment here.
 

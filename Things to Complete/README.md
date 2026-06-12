@@ -21,6 +21,8 @@ This roadmap turns the current F1TENTH simulator baseline into a robotics and me
 
 The current baseline is a headless pure-pursuit run in F1TENTH Gym comparing built-in RK4 and Euler integrators. RK4 completes the lap; Euler collides. This is an integrator sensitivity result, not yet a comparison against a derived vehicle model.
 
+**Status:** Done — see `reports/first_run.md`.
+
 Baseline artifacts:
 
 - `runs/first_lap/telemetry.csv`
@@ -30,12 +32,14 @@ Baseline artifacts:
 
 Baseline tasks:
 
-- [ ] Preserve RK4 as the default completed-lap reference.
-- [ ] Treat Euler collision as a controlled failure case to explain.
-- [ ] Keep all new studies reproducible from scripts.
-- [ ] Add every generated figure to the report with units and assumptions.
+- [x] Preserve RK4 as the default completed-lap reference.
+- [x] Treat Euler collision as a controlled failure case to explain.
+- [x] Keep all new studies reproducible from scripts.
+- [x] Add every generated figure to the report with units and assumptions.
 
 ## 1. RK4 vs Euler Integrator Sensitivity
+
+**Status:** Partial — `reports/first_run.md` covers RK4 vs Euler at the baseline timestep; `reports/integrator_convergence.md` sweeps RK4 across timesteps but does not re-run Euler at multiple timesteps or explain its failure mechanism.
 
 ### Goal
 
@@ -62,11 +66,13 @@ A report-quality plot showing success/failure, RMS CTE, and collision point for 
 ### Done when
 
 - [ ] RK4 and Euler are run at multiple timestep values.
-- [ ] Each run logs termination reason.
+- [x] Each run logs termination reason.
 - [ ] Collision point is marked on the trajectory plot.
 - [ ] The report explains why Euler fails under the tested settings.
 
 ## 2. Timestep, Speed, and Lookahead Sweep
+
+**Status:** Partial — `reports/integrator_convergence.md` sweeps RK4 timestep only (selects `dt = 0.002 s`); the speed/lookahead grid and Euler comparison from this section are not yet run.
 
 ### Goal
 
@@ -100,6 +106,8 @@ A sweep table and figure titled `Closed-loop integrator sensitivity: success rat
 
 ## 3. Kinematic Bicycle Model
 
+**Status:** Partial — equations derived in `docs/vehicle_model.md` and exercised in `reports/model_vs_gym_comparison.md`; the standalone controlled-input tests (straight-line/step/sine/chirp) below have not been run independently of the Gym overlay.
+
 ### Goal
 
 Derive and implement a simple kinematic bicycle model that can be compared against Gym RK4 under controlled inputs.
@@ -124,12 +132,14 @@ A derivation section plus a script that simulates the kinematic bicycle model fo
 
 ### Done when
 
-- [ ] Equations are written with units and assumptions.
-- [ ] Model script runs without Gym.
+- [x] Equations are written with units and assumptions.
+- [x] Model script runs without Gym.
 - [ ] Straight-line test preserves heading.
 - [ ] Constant-steer test matches expected turning radius.
 
 ## 4. Gym RK4 vs Derived Bicycle Model Overlay
+
+**Status:** Done — see `reports/model_vs_gym_comparison.md`.
 
 ### Goal
 
@@ -154,12 +164,14 @@ Overlay plots comparing `x(t)`, `y(t)`, heading, yaw rate, and position error.
 
 ### Done when
 
-- [ ] Controlled Gym telemetry is generated.
-- [ ] Bicycle model consumes the same input sequence.
-- [ ] Overlay plot uses the same time base for both systems.
-- [ ] Report states where the simple model matches and fails.
+- [x] Controlled Gym telemetry is generated.
+- [x] Bicycle model consumes the same input sequence.
+- [x] Overlay plot uses the same time base for both systems.
+- [x] Report states where the simple model matches and fails.
 
 ## 5. System Identification
+
+**Status:** Done — see `reports/sysid_steering_excitation.md` (excitation) and `reports/dynamic_parameter_identification.md` (fit + held-out validation, 100% VAF).
 
 ### Goal
 
@@ -186,10 +198,10 @@ A system identification table comparing kinematic, dynamic, and identified model
 
 ### Done when
 
-- [ ] Excitation inputs are generated and logged.
-- [ ] Fit script estimates at least one model parameter.
-- [ ] Holdout validation is separate from fitting data.
-- [ ] Report includes NRMSE and VAF table.
+- [x] Excitation inputs are generated and logged.
+- [x] Fit script estimates at least one model parameter.
+- [x] Holdout validation is separate from fitting data.
+- [x] Report includes NRMSE and VAF table.
 
 ## 6. Pure Pursuit Tuning Study
 
