@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
-import types
 from pathlib import Path
 
 import matplotlib
@@ -18,6 +16,14 @@ import pandas as pd
 from scipy.optimize import least_squares
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GYM_ROOT = REPO_ROOT / "gym"
+if str(GYM_ROOT) not in sys.path:
+    sys.path.insert(0, str(GYM_ROOT))
+
+from roboracer.dynamics import DEFAULT_DYNAMIC_PARAMS, dynamic_rk4_step, load_vehicle_dynamics_st
+from roboracer.numerics import nrmse, rmse, vaf_percent, wrap_angle
+from roboracer.telemetry import validate_numeric_telemetry
+
 TELEMETRY_PATH = REPO_ROOT / "runs" / "sysid_steering_excitation" / "telemetry.csv"
 RUN_DIR = REPO_ROOT / "runs" / "dynamic_parameter_identification"
 FIGURE_DIR = REPO_ROOT / "reports" / "figures"
@@ -36,22 +42,7 @@ UPPER_BOUND = np.array([20.0, 20.0], dtype=float)
 INITIAL_GUESS = np.array([3.0, 3.0], dtype=float)
 ORACLE = np.array([4.718, 5.4562], dtype=float)
 
-PARAMS = {
-    "mu": 1.0489,
-    "lf": 0.15875,
-    "lr": 0.17145,
-    "h": 0.074,
-    "m": 3.74,
-    "I": 0.04712,
-    "s_min": -0.4189,
-    "s_max": 0.4189,
-    "sv_min": -3.2,
-    "sv_max": 3.2,
-    "v_switch": 7.319,
-    "a_max": 9.51,
-    "v_min": -5.0,
-    "v_max": 20.0,
-}
+PARAMS = DEFAULT_DYNAMIC_PARAMS
 
 REQUIRED_COLUMNS = [
     "time_s",
@@ -77,70 +68,12 @@ ACCEPTANCE_LIMITS = {
 }
 
 
-def load_vehicle_dynamics():
-    if importlib.util.find_spec("numba") is None:
-        numba_stub = types.ModuleType("numba")
-
-        def njit(*args, **kwargs):
-            if args and callable(args[0]):
-                return args[0]
-            return lambda function: function
-
-        numba_stub.njit = njit
-        sys.modules["numba"] = numba_stub
-
-    path = REPO_ROOT / "gym" / "f110_gym" / "envs" / "dynamic_models.py"
-    spec = importlib.util.spec_from_file_location("sysid_dynamic_models", path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Could not load dynamic model source: {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["sysid_dynamic_models"] = module
-    spec.loader.exec_module(module)
-    return module.vehicle_dynamics_st
-
-
-vehicle_dynamics_st = load_vehicle_dynamics()
-
-
-def wrap_angle(value: np.ndarray | float) -> np.ndarray | float:
-    return (value + np.pi) % (2.0 * np.pi) - np.pi
-
-
-def rmse(values: np.ndarray) -> float:
-    return float(np.sqrt(np.mean(np.asarray(values, dtype=float) ** 2)))
-
-
-def nrmse(error: np.ndarray, measured: np.ndarray) -> float:
-    signal_range = float(np.ptp(np.asarray(measured, dtype=float)))
-    return rmse(error) / signal_range if signal_range > 0.0 else float("inf")
-
-
-def vaf_percent(error: np.ndarray, measured: np.ndarray) -> float:
-    measured_variance = float(np.var(np.asarray(measured, dtype=float)))
-    if measured_variance <= 0.0:
-        return float("-inf")
-    return 100.0 * (1.0 - float(np.var(np.asarray(error, dtype=float))) / measured_variance)
+vehicle_dynamics_st = load_vehicle_dynamics_st(REPO_ROOT, module_name="sysid_dynamic_models")
 
 
 def load_telemetry() -> pd.DataFrame:
     telemetry = pd.read_csv(TELEMETRY_PATH)
-    missing = [column for column in REQUIRED_COLUMNS if column not in telemetry.columns]
-    if missing:
-        raise ValueError(f"Telemetry missing required columns: {missing}")
-
-    for column in REQUIRED_COLUMNS:
-        telemetry[column] = pd.to_numeric(telemetry[column], errors="raise")
-    values = telemetry[REQUIRED_COLUMNS].to_numpy(dtype=float)
-    if not np.isfinite(values).all():
-        raise ValueError("Telemetry contains non-finite values.")
-
-    telemetry = telemetry.sort_values("time_s").reset_index(drop=True)
-    dt = np.diff(telemetry["time_s"].to_numpy(dtype=float))
-    if dt.size == 0 or np.any(dt <= 0.0):
-        raise ValueError("Telemetry time_s must be strictly increasing.")
-    if float(np.max(dt) / np.min(dt)) > 1.2:
-        raise ValueError("Telemetry timestep variation is too large for this fit.")
-    return telemetry
+    return validate_numeric_telemetry(telemetry, required_columns=REQUIRED_COLUMNS, context="Telemetry", ratio_limit=1.2)
 
 
 def state_matrix(telemetry: pd.DataFrame) -> np.ndarray:
@@ -161,37 +94,15 @@ def input_matrix(telemetry: pd.DataFrame) -> np.ndarray:
     return telemetry[["steer_vel_radps", "accel_x_mps2"]].to_numpy(dtype=float)
 
 
-def derivative(state: np.ndarray, control: np.ndarray, coefficients: np.ndarray) -> np.ndarray:
-    return vehicle_dynamics_st(
+def rk4_step(state: np.ndarray, control: np.ndarray, dt: float, coefficients: np.ndarray) -> np.ndarray:
+    return dynamic_rk4_step(
+        vehicle_dynamics_st,
         state,
         control,
-        PARAMS["mu"],
-        float(coefficients[0]),
-        float(coefficients[1]),
-        PARAMS["lf"],
-        PARAMS["lr"],
-        PARAMS["h"],
-        PARAMS["m"],
-        PARAMS["I"],
-        PARAMS["s_min"],
-        PARAMS["s_max"],
-        PARAMS["sv_min"],
-        PARAMS["sv_max"],
-        PARAMS["v_switch"],
-        PARAMS["a_max"],
-        PARAMS["v_min"],
-        PARAMS["v_max"],
+        dt,
+        PARAMS,
+        coefficients=coefficients,
     )
-
-
-def rk4_step(state: np.ndarray, control: np.ndarray, dt: float, coefficients: np.ndarray) -> np.ndarray:
-    k1 = derivative(state, control, coefficients)
-    k2 = derivative(state + 0.5 * dt * k1, control, coefficients)
-    k3 = derivative(state + 0.5 * dt * k2, control, coefficients)
-    k4 = derivative(state + dt * k3, control, coefficients)
-    result = state + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
-    result[4] = float(wrap_angle(result[4]))
-    return result
 
 
 def split_intervals(states: np.ndarray) -> tuple[np.ndarray, np.ndarray, int]:

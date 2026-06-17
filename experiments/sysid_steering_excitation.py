@@ -9,6 +9,7 @@ import math
 import os
 import platform
 import subprocess
+import sys
 from argparse import Namespace
 from pathlib import Path
 
@@ -22,9 +23,14 @@ import pandas as pd
 import yaml
 from PIL import Image
 
-from f110_gym.envs.base_classes import Integrator
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GYM_ROOT = REPO_ROOT / "gym"
+if str(GYM_ROOT) not in sys.path:
+    sys.path.insert(0, str(GYM_ROOT))
+
+from f110_gym.envs.base_classes import Integrator
+from roboracer.track import scalar
+
 EXAMPLES_DIR = REPO_ROOT / "examples"
 RUN_DIR = REPO_ROOT / "runs" / "sysid_steering_excitation"
 FIGURE_DIR = REPO_ROOT / "reports" / "figures"
@@ -104,10 +110,6 @@ def load_config() -> Namespace:
         config = yaml.load(file, Loader=yaml.FullLoader)
     config["map_path"] = str(create_open_map().resolve())
     return Namespace(**config)
-
-
-def scalar(obs: dict, key: str, index: int = 0) -> float:
-    return float(obs[key][index])
 
 
 def chirp_steer(time_s: float, amplitude_rad: float, duration_s: float) -> float:

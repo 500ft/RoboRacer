@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -13,6 +14,13 @@ import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GYM_ROOT = REPO_ROOT / "gym"
+if str(GYM_ROOT) not in sys.path:
+    sys.path.insert(0, str(GYM_ROOT))
+
+from roboracer.dynamics import kinematic_bicycle_rk4_step
+from roboracer.numerics import dt_summary, rmse, wrap_angle
+from roboracer.telemetry import load_rk4_telemetry
 
 TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
 RUN_DIR = REPO_ROOT / "runs" / "model_vs_gym_comparison"
@@ -42,101 +50,14 @@ REQUIRED_COLUMNS = [
 ]
 
 
-def ensure_exists(path: Path, description: str) -> None:
-    if not path.exists():
-        raise FileNotFoundError(f"Missing {description}: {path}")
-
-
-def wrap_angle(angle: np.ndarray | float) -> np.ndarray | float:
-    return (angle + np.pi) % (2.0 * np.pi) - np.pi
-
-
-def load_rk4_telemetry(path: Path) -> pd.DataFrame:
-    ensure_exists(path, "first-lap telemetry")
-    telemetry = pd.read_csv(path)
-    missing = [column for column in REQUIRED_COLUMNS if column not in telemetry.columns]
-    if missing:
-        raise ValueError(
-            f"Telemetry missing required columns: {missing}\n"
-            f"Available columns: {list(telemetry.columns)}"
-        )
-
-    rk4 = telemetry[telemetry["integrator"].astype(str).str.lower().eq("rk4")].copy()
-    if rk4.empty:
-        raise ValueError("No RK4 rows found in first-lap telemetry.")
-
-    numeric_columns = [
-        "time_s",
-        "x_m",
-        "y_m",
-        "theta_rad",
-        "speed_mps",
-        "accel_x_mps2",
-        "steer_rad",
-        "command_steer_rad",
-        "accel_y_mps2",
-    ]
-    for column in numeric_columns:
-        rk4[column] = pd.to_numeric(rk4[column], errors="raise")
-
-    return rk4.sort_values("time_s").reset_index(drop=True)
-
-
-def dt_summary(time_s: np.ndarray) -> dict[str, float]:
-    dt = np.diff(time_s)
-    if dt.size == 0:
-        raise ValueError("Need at least two telemetry samples for replay.")
-    if np.any(dt <= 0.0):
-        raise ValueError("Telemetry time_s must be strictly increasing.")
-
-    dt_min = float(np.min(dt))
-    dt_max = float(np.max(dt))
-    dt_mean = float(np.mean(dt))
-    dt_median = float(np.median(dt))
-    ratio = dt_max / dt_min
-
-    if ratio > DT_RATIO_LIMIT or dt_max > DT_GAP_FACTOR_LIMIT * dt_median:
-        raise ValueError(
-            "Telemetry dt has a large gap or jitter: "
-            f"dt_min={dt_min:.9f}, dt_max={dt_max:.9f}, ratio={ratio:.6f}"
-        )
-
-    return {
-        "dt_min_s": dt_min,
-        "dt_max_s": dt_max,
-        "dt_mean_s": dt_mean,
-        "dt_median_s": dt_median,
-        "dt_ratio": float(ratio),
-    }
-
-
-def kinematic_derivative(state: np.ndarray, accel: float, steer: float) -> np.ndarray:
-    x, y, psi, velocity = state
-    beta = np.arctan((LR_M / (LF_M + LR_M)) * np.tan(steer))
-    return np.array(
-        [
-            velocity * np.cos(psi + beta),
-            velocity * np.sin(psi + beta),
-            (velocity / LR_M) * np.sin(beta),
-            accel,
-        ],
-        dtype=float,
-    )
-
-
-def rk4_step(state: np.ndarray, accel: float, steer: float, dt: float) -> np.ndarray:
-    k1 = kinematic_derivative(state, accel, steer)
-    k2 = kinematic_derivative(state + 0.5 * dt * k1, accel, steer)
-    k3 = kinematic_derivative(state + 0.5 * dt * k2, accel, steer)
-    k4 = kinematic_derivative(state + dt * k3, accel, steer)
-    next_state = state + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
-    next_state[2] = float(wrap_angle(next_state[2]))
-    return next_state
-
-
 def replay_kinematic_model(rk4: pd.DataFrame) -> pd.DataFrame:
     time_s = rk4["time_s"].to_numpy(dtype=float)
-    summary = dt_summary(time_s)
+    summary = dt_summary(
+        time_s,
+        ratio_limit=DT_RATIO_LIMIT,
+        gap_factor_limit=DT_GAP_FACTOR_LIMIT,
+        context="Telemetry",
+    )
     dt = np.diff(time_s)
 
     model = np.zeros((len(rk4), 4), dtype=float)
@@ -145,7 +66,7 @@ def replay_kinematic_model(rk4: pd.DataFrame) -> pd.DataFrame:
     for idx, step_dt in enumerate(dt):
         accel = float(rk4.loc[idx, "accel_x_mps2"])
         steer = float(rk4.loc[idx, "steer_rad"])
-        model[idx + 1] = rk4_step(model[idx], accel, steer, float(step_dt))
+        model[idx + 1] = kinematic_bicycle_rk4_step(model[idx], accel, steer, float(step_dt), lf=LF_M, lr=LR_M)
 
     trace = pd.DataFrame(
         {
@@ -181,7 +102,7 @@ def metric_rows(trace: pd.DataFrame) -> list[dict[str, str | float]]:
     rows: list[dict[str, str | float]] = [
         {
             "metric": "rmse_position_m",
-            "value": float(np.sqrt(np.mean(trace["error_position_m"] ** 2))),
+            "value": rmse(trace["error_position_m"]),
             "units": "m",
             "description": "RMSE position error between kinematic replay and Gym trajectory.",
         },
@@ -199,7 +120,7 @@ def metric_rows(trace: pd.DataFrame) -> list[dict[str, str | float]]:
         },
         {
             "metric": "rmse_yaw_rad",
-            "value": float(np.sqrt(np.mean(trace["error_yaw_rad"] ** 2))),
+            "value": rmse(trace["error_yaw_rad"]),
             "units": "rad",
             "description": "RMSE wrapped yaw error.",
         },
@@ -211,7 +132,7 @@ def metric_rows(trace: pd.DataFrame) -> list[dict[str, str | float]]:
         },
         {
             "metric": "rmse_speed_mps",
-            "value": float(np.sqrt(np.mean(trace["error_speed_mps"] ** 2))),
+            "value": rmse(trace["error_speed_mps"]),
             "units": "m/s",
             "description": "RMSE speed error after integrating logged acceleration.",
         },
@@ -407,11 +328,23 @@ The replay trace is written to `runs/model_vs_gym_comparison/replay_trace.csv`. 
 
 Large drift that grows with speed, steering magnitude, or lateral acceleration is expected evidence of missing tire dynamics in the kinematic model. Drift at low speed and low steering should be treated as a possible sign-convention, geometry, or replay-mapping issue, except during the launch-from-rest regime noted below.
 
+## Closing Diagnostic: Kinematic Yaw-Rate Limitation
+
+The remaining yaw-rate discrepancy is a model-scope limitation, not an open replay bookkeeping bug. Three checks support that conclusion:
+
+- Below `0.5 m/s`, where Gym falls back to its kinematic model, the instantaneous kinematic yaw law matches the Gym yaw-rate signal with median ratio `0.999`. This rules out the main convention, wheelbase, steering-unit, and timestep hypotheses for the replay.
+- Above `0.5 m/s`, Gym uses `vehicle_dynamics_st`, and the kinematic/Gym yaw-rate ratio varies with speed and operating condition. The observed 2x-ish average is not a fixed scale bug.
+- Near `t = 2.0 s`, the achieved steering passes near zero while Gym still carries nonzero yaw rate. The kinematic model ties yaw rate directly to speed and steering, so it cannot reproduce yaw-rate memory from lateral-yaw dynamics.
+
+This closes the kinematic replay as a structural comparison: the implemented kinematic equations are coherent with Gym in the fallback regime, but the next model comparison must include lateral velocity, slip angle, yaw-rate state, and tire-force dynamics.
+
 ## Figures
 
 ![Kinematic replay trajectory error](figures/model_vs_gym_trajectory_error.png)
 
 ![Kinematic replay state errors](figures/model_vs_gym_state_errors.png)
+
+![Kinematic yaw-rate diagnostic](figures/kinematic_yaw_rate_diagnostic.png)
 
 ## Limitations
 
@@ -432,7 +365,22 @@ def main() -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
-    rk4 = load_rk4_telemetry(TELEMETRY_PATH)
+    rk4 = load_rk4_telemetry(
+        TELEMETRY_PATH,
+        required_columns=REQUIRED_COLUMNS,
+        numeric_columns=[
+            "time_s",
+            "x_m",
+            "y_m",
+            "theta_rad",
+            "speed_mps",
+            "accel_x_mps2",
+            "steer_rad",
+            "command_steer_rad",
+            "accel_y_mps2",
+        ],
+        description="first-lap telemetry",
+    )
     trace = replay_kinematic_model(rk4)
     metrics = pd.DataFrame(metric_rows(trace), columns=["metric", "value", "units", "description"])
 

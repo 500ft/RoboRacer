@@ -6,8 +6,6 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-import importlib.util
-import types
 
 import matplotlib
 
@@ -17,30 +15,15 @@ import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+GYM_ROOT = REPO_ROOT / "gym"
+if str(GYM_ROOT) not in sys.path:
+    sys.path.insert(0, str(GYM_ROOT))
 
-if importlib.util.find_spec("numba") is None:
-    numba_stub = types.ModuleType("numba")
+from roboracer.dynamics import DEFAULT_DYNAMIC_PARAMS, dynamic_rk4_step, kinematic_yaw_rate, load_vehicle_dynamics_st
+from roboracer.numerics import rmse, validate_uniform_time, wrap_angle
+from roboracer.telemetry import load_rk4_telemetry
 
-    def njit(*args, **kwargs):
-        if args and callable(args[0]):
-            return args[0]
-
-        def decorator(func):
-            return func
-
-        return decorator
-
-    numba_stub.njit = njit
-    sys.modules["numba"] = numba_stub
-
-dynamic_models_path = REPO_ROOT / "gym" / "f110_gym" / "envs" / "dynamic_models.py"
-dynamic_models_spec = importlib.util.spec_from_file_location("dynamic_models", dynamic_models_path)
-if dynamic_models_spec is None or dynamic_models_spec.loader is None:
-    raise ImportError(f"Could not load dynamic model source: {dynamic_models_path}")
-dynamic_models = importlib.util.module_from_spec(dynamic_models_spec)
-sys.modules["dynamic_models"] = dynamic_models
-dynamic_models_spec.loader.exec_module(dynamic_models)
-vehicle_dynamics_st = dynamic_models.vehicle_dynamics_st
+vehicle_dynamics_st = load_vehicle_dynamics_st(REPO_ROOT, module_name="dynamic_models")
 
 TELEMETRY_PATH = REPO_ROOT / "runs" / "first_lap" / "telemetry.csv"
 KINEMATIC_TRACE_PATH = REPO_ROOT / "runs" / "model_vs_gym_comparison" / "replay_trace.csv"
@@ -53,24 +36,7 @@ REPORT_PATH = REPO_ROOT / "reports" / "dynamic_model_replay.md"
 YAW_RATE_FIGURE_PATH = FIGURE_DIR / "dynamic_replay_yaw_rate_overlay.png"
 STATE_ERRORS_FIGURE_PATH = FIGURE_DIR / "dynamic_replay_state_errors.png"
 
-PARAMS = {
-    "mu": 1.0489,
-    "C_Sf": 4.718,
-    "C_Sr": 5.4562,
-    "lf": 0.15875,
-    "lr": 0.17145,
-    "h": 0.074,
-    "m": 3.74,
-    "I": 0.04712,
-    "s_min": -0.4189,
-    "s_max": 0.4189,
-    "sv_min": -3.2,
-    "sv_max": 3.2,
-    "v_switch": 7.319,
-    "a_max": 9.51,
-    "v_min": -5.0,
-    "v_max": 20.0,
-}
+PARAMS = DEFAULT_DYNAMIC_PARAMS
 
 REQUIRED_COLUMNS = [
     "integrator",
@@ -85,79 +51,8 @@ REQUIRED_COLUMNS = [
 ]
 
 
-def wrap_angle(angle: np.ndarray | float) -> np.ndarray | float:
-    return (angle + np.pi) % (2.0 * np.pi) - np.pi
-
-
-def load_rk4_telemetry(path: Path) -> pd.DataFrame:
-    if not path.exists():
-        raise FileNotFoundError(f"Missing telemetry: {path}")
-    telemetry = pd.read_csv(path)
-    missing = [column for column in REQUIRED_COLUMNS if column not in telemetry.columns]
-    if missing:
-        raise ValueError(f"Telemetry missing required columns: {missing}")
-
-    rk4 = telemetry[telemetry["integrator"].astype(str).str.lower().eq("rk4")].copy()
-    if rk4.empty:
-        raise ValueError("No RK4 telemetry rows found.")
-
-    numeric_columns = [column for column in REQUIRED_COLUMNS if column != "integrator"]
-    for column in numeric_columns:
-        rk4[column] = pd.to_numeric(rk4[column], errors="raise")
-
-    return rk4.sort_values("time_s").reset_index(drop=True)
-
-
 def validate_dt(time_s: np.ndarray) -> np.ndarray:
-    dt = np.diff(time_s)
-    if dt.size == 0:
-        raise ValueError("Need at least two telemetry samples.")
-    if np.any(dt <= 0.0):
-        raise ValueError("Telemetry time_s must be strictly increasing.")
-    ratio = float(np.max(dt) / np.min(dt))
-    if ratio > 1.2:
-        raise ValueError(f"Telemetry dt is not sufficiently uniform: ratio={ratio:.6f}")
-    return dt
-
-
-def dynamics_derivative(state: np.ndarray, steering_velocity: float, accel_x: float) -> np.ndarray:
-    return vehicle_dynamics_st(
-        state,
-        np.array([steering_velocity, accel_x], dtype=float),
-        PARAMS["mu"],
-        PARAMS["C_Sf"],
-        PARAMS["C_Sr"],
-        PARAMS["lf"],
-        PARAMS["lr"],
-        PARAMS["h"],
-        PARAMS["m"],
-        PARAMS["I"],
-        PARAMS["s_min"],
-        PARAMS["s_max"],
-        PARAMS["sv_min"],
-        PARAMS["sv_max"],
-        PARAMS["v_switch"],
-        PARAMS["a_max"],
-        PARAMS["v_min"],
-        PARAMS["v_max"],
-    )
-
-
-def rk4_step(state: np.ndarray, steering_velocity: float, accel_x: float, dt: float) -> np.ndarray:
-    k1 = dynamics_derivative(state, steering_velocity, accel_x)
-    k2 = dynamics_derivative(state + 0.5 * dt * k1, steering_velocity, accel_x)
-    k3 = dynamics_derivative(state + 0.5 * dt * k2, steering_velocity, accel_x)
-    k4 = dynamics_derivative(state + dt * k3, steering_velocity, accel_x)
-    next_state = state + (dt / 6.0) * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
-    next_state[4] = float(wrap_angle(next_state[4]))
-    return next_state
-
-
-def kinematic_yaw_rate(speed: np.ndarray, steer: np.ndarray) -> np.ndarray:
-    lf = PARAMS["lf"]
-    lr = PARAMS["lr"]
-    beta = np.arctan((lr / (lf + lr)) * np.tan(steer))
-    return (speed / lr) * np.sin(beta)
+    return validate_uniform_time(time_s, ratio_limit=1.2, context="Telemetry")
 
 
 def replay_dynamic_model(rk4: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str]]:
@@ -191,11 +86,12 @@ def replay_dynamic_model(rk4: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
     )
 
     for idx, step_dt in enumerate(dt):
-        states[idx + 1] = rk4_step(
+        states[idx + 1] = dynamic_rk4_step(
+            vehicle_dynamics_st,
             states[idx],
-            float(steering_velocity[idx]),
-            float(rk4.loc[idx, "accel_x_mps2"]),
+            np.array([float(steering_velocity[idx]), float(rk4.loc[idx, "accel_x_mps2"])], dtype=float),
             float(step_dt),
+            PARAMS,
         )
 
     trace = pd.DataFrame(
@@ -219,7 +115,12 @@ def replay_dynamic_model(rk4: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
             "dynamic_slip_angle_rad": states[:, 6],
         }
     )
-    trace["kinematic_yaw_rate_radps"] = kinematic_yaw_rate(trace["gym_speed_mps"].to_numpy(), trace["gym_steer_rad"].to_numpy())
+    trace["kinematic_yaw_rate_radps"] = kinematic_yaw_rate(
+        trace["gym_speed_mps"].to_numpy(),
+        trace["gym_steer_rad"].to_numpy(),
+        lf=PARAMS["lf"],
+        lr=PARAMS["lr"],
+    )
     trace["error_x_m"] = trace["dynamic_x_m"] - trace["gym_x_m"]
     trace["error_y_m"] = trace["dynamic_y_m"] - trace["gym_y_m"]
     trace["error_position_m"] = np.sqrt(trace["error_x_m"] ** 2 + trace["error_y_m"] ** 2)
@@ -232,11 +133,6 @@ def replay_dynamic_model(rk4: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, str
         "slip_angle_column": slip_angle_column or "",
     }
     return trace, metadata
-
-
-def rmse(values: pd.Series | np.ndarray) -> float:
-    arr = np.asarray(values, dtype=float)
-    return float(np.sqrt(np.mean(arr**2)))
 
 
 def metric_rows(trace: pd.DataFrame, metadata: dict[str, str]) -> list[dict[str, str | float]]:
@@ -440,7 +336,7 @@ def main() -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
-    rk4 = load_rk4_telemetry(TELEMETRY_PATH)
+    rk4 = load_rk4_telemetry(TELEMETRY_PATH, required_columns=REQUIRED_COLUMNS)
     trace, metadata = replay_dynamic_model(rk4)
     metrics = pd.DataFrame(metric_rows(trace, metadata), columns=["metric", "value", "units", "description"])
 
