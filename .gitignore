@@ -18,6 +18,14 @@ runs/*
 !runs/first_lap/**
 !runs/integrator_convergence/
 !runs/integrator_convergence/**
+!runs/pure_pursuit_sweep/
+!runs/pure_pursuit_sweep/**
+!runs/lqr_controller/
+!runs/lqr_controller/**
+!runs/mpc_controller/
+!runs/mpc_controller/**
+!runs/controller_comparison/
+!runs/controller_comparison/**
 reports/figures/*
 reports/ros2_sysid_steering_excitation.md
 !reports/figures/first_integrator_comparison.png
@@ -26,3 +34,9 @@ reports/ros2_sysid_steering_excitation.md
 !reports/figures/integrator_summary_metrics.png
 !reports/figures/integrator_convergence_position_error.png
 !reports/figures/integrator_convergence_metrics.png
+!reports/figures/pure_pursuit_sweep_rms_cte_heatmap.png
+!reports/figures/pure_pursuit_sweep_lap_time_heatmap.png
+!reports/figures/pure_pursuit_sweep_regions.png
+!reports/figures/lqr_controller_cte_cases.png
+!reports/figures/mpc_solver_runtime.png
+!reports/figures/mpc_controller_cte.png

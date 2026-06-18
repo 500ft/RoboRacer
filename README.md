@@ -16,7 +16,7 @@ Gym experiment
 -> reports and figures
 ```
 
-The current modeling work includes integrator comparison, vehicle-model derivation, kinematic replay, known-parameter dynamic replay, SysID steering excitation, and held-out identification of Gym's nonlinear `C_Sf` and `C_Sr` coefficients.
+The current modeling work includes integrator comparison, vehicle-model derivation, kinematic replay, known-parameter dynamic replay, SysID steering excitation, held-out identification of Gym's nonlinear `C_Sf` and `C_Sr` coefficients, and controller studies for pure pursuit, LQR, and constrained MPC.
 
 Run and validate the controlled Gym parameter identification:
 
@@ -25,7 +25,7 @@ python experiments/fit_dynamic_parameters.py
 python experiments/validate_dynamic_parameter_identification.py
 ```
 
-The fitting report is at `reports/dynamic_parameter_identification.md`. LQR, MPC, and controller tuning remain outside this identification workflow. A physical RoboRacer vehicle requires its own excitation dataset and held-out validation before its identified parameters are accepted.
+The fitting report is at `reports/dynamic_parameter_identification.md`. Controller reports are at `reports/pure_pursuit_sweep.md`, `reports/lqr_controller.md`, `reports/mpc_controller.md`, and `reports/controller_comparison.md`. A physical RoboRacer vehicle requires its own excitation dataset and held-out validation before its identified parameters are accepted.
 
 ## ROS 2 / RoboRacer Compatibility
 

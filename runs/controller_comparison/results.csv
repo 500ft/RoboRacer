@@ -1,0 +1,4 @@
+controller,case,completed_lap,collision,lap_time_s,rms_cte_m,max_abs_cte_m,steering_effort_rad,mean_abs_command_steer_rad,max_abs_command_steer_rad,mpc_p95_solve_time_s,mpc_meets_100hz_budget,mpc_meets_50hz_budget
+pure_pursuit,selected_baseline,True,False,38.042,0.1578923401655767,0.403061587,8.198534063,0.0399022004515009,0.200098701,,,
+lqr,nominal,True,False,38.064,0.1786277043483081,0.497708149,8.987771984,0.0425835175403005,0.220905679,,,
+mpc,nominal,True,False,37.86,0.1692375188765875,0.476650087,8.677098873,0.0407754693718964,0.213302797,0.0013264369999985,True,True

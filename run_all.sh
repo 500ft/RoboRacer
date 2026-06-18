@@ -24,4 +24,19 @@ python experiments/validate_sysid_excitation.py
 python experiments/fit_dynamic_parameters.py
 python experiments/validate_dynamic_parameter_identification.py
 
+# Controller tuning and comparison at RK4 dt=0.002 s with 100 Hz zero-order-held commands.
+python experiments/pure_pursuit_sweep.py
+python experiments/validate_pure_pursuit_sweep.py
+python experiments/lqr_controller.py
+python experiments/validate_lqr_controller.py
+
+if [[ "${RUN_FULL_MPC:-0}" == "1" ]]; then
+  python experiments/mpc_controller.py
+  python experiments/validate_mpc_controller.py
+  python experiments/controller_comparison.py
+  python experiments/validate_controller_comparison.py
+else
+  echo "Skipping full MPC/controller comparison. Set RUN_FULL_MPC=1 to run."
+fi
+
 echo "All experiments completed."

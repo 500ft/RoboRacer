@@ -9,9 +9,9 @@ This folder tracks the post-review action list for the F1TENTH/RoboRacer portfol
 | 1 | Tag milestone and clean remote branches | Partial | Git tag exists; remote branches deleted; GitHub release page still needed |
 | 2 | Clean up local folders | Done | Stale checkout archived; VLM paper folder renamed |
 | 3 | Factor shared code into a module | Done | `gym/roboracer/` shared utilities |
-| 4 | Pure pursuit sweep | Next | Lookahead x speed grid, metrics table, stability plot |
-| 5 | LQR controller | Pending | Linearized model, gain, eigenvalues, comparison |
-| 6 | MPC controller | Pending | Constrained controller and runtime budget report |
+| 4 | Pure pursuit sweep | Done | `reports/pure_pursuit_sweep.md` |
+| 5 | LQR controller | Done | `reports/lqr_controller.md` |
+| 6 | MPC controller | Done | `reports/mpc_controller.md`, `reports/controller_comparison.md` |
 | 7 | EKF study | Pending | Dead reckoning vs EKF under noise/dropout |
 | 8 | Failure-mode FMEA | Pending | At least five reproduced failures with mitigations |
 | 9 | Noise robustness of parameter ID | Pending | Parameter degradation under noise/latency/quantization |
@@ -76,7 +76,7 @@ Key files:
 
 ## 4. Pure Pursuit Sweep
 
-**Status:** Next.
+**Status:** Done.
 
 Goal:
 
@@ -88,16 +88,23 @@ Deliverables:
 - Plot identifying stable, oscillatory, corner-cutting, and collision regions.
 - Justified baseline lookahead and speed/gain pair for later LQR/MPC comparison.
 
-Suggested artifacts:
+Completed artifacts:
 
 - `experiments/pure_pursuit_sweep.py`
 - `runs/pure_pursuit_sweep/results.csv`
 - `reports/pure_pursuit_sweep.md`
 - `reports/figures/pure_pursuit_sweep_regions.png`
+- `reports/figures/pure_pursuit_sweep_lap_time_heatmap.png`
+- `reports/figures/pure_pursuit_sweep_rms_cte_heatmap.png`
+
+Result:
+
+- Selected baseline: lookahead `1.2 m`, velocity gain `1.2`.
+- Baseline completed one lap at RK4 integration `dt = 0.002 s` with a 100 Hz zero-order-held controller update.
 
 ## 5. LQR Controller
 
-**Status:** Pending.
+**Status:** Done.
 
 Goal:
 
@@ -111,9 +118,23 @@ Deliverables:
 - Comparison against tuned pure pursuit on the same map.
 - Off-nominal tests for input delay and bad initial offset.
 
+Completed artifacts:
+
+- `experiments/lqr_controller.py`
+- `experiments/validate_lqr_controller.py`
+- `runs/lqr_controller/results.csv`
+- `runs/lqr_controller/linear_model.json`
+- `reports/lqr_controller.md`
+- `reports/figures/lqr_controller_cte_cases.png`
+
+Result:
+
+- Nominal, `+0.5 m` initial offset, and `30 ms` input-delay cases complete on the example map.
+- The implementation uses the tuned pure-pursuit command as feedforward and applies a bounded LQR correction from the local path-error model.
+
 ## 6. MPC Controller
 
-**Status:** Pending.
+**Status:** Done.
 
 Goal:
 
@@ -125,9 +146,23 @@ Deliverables:
 - PP/LQR/MPC comparison table.
 - Solver runtime measured against a 50-100 Hz real-time budget.
 
-Preferred starting point:
+Completed artifacts:
 
-- Use `cvxpy` for a linear MPC unless nonlinear constraints require CasADi.
+- `experiments/mpc_controller.py`
+- `experiments/validate_mpc_controller.py`
+- `experiments/controller_comparison.py`
+- `experiments/validate_controller_comparison.py`
+- `runs/mpc_controller/results.csv`
+- `runs/controller_comparison/results.csv`
+- `reports/mpc_controller.md`
+- `reports/controller_comparison.md`
+- `reports/figures/mpc_solver_runtime.png`
+- `reports/figures/mpc_controller_cte.png`
+
+Result:
+
+- MPC completed the nominal lap using SciPy SLSQP, analytic objective gradient, and linear input-rate constraints.
+- Runtime is measured against 100 Hz and 50 Hz budgets in `reports/mpc_controller.md`.
 
 ## 7. EKF Study
 
@@ -246,4 +281,4 @@ Deliverables:
 
 ## Recommended Next Work
 
-Start with item 4, the pure pursuit sweep. It creates the tuned baseline needed for LQR and MPC and should reuse the shared utilities now available in `gym/roboracer/`.
+Start with item 7, the EKF study. Items 4-6 now provide the tuned pure-pursuit baseline, model-based LQR cases, constrained MPC runtime report, and a controller comparison table.
