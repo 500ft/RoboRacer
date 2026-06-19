@@ -8,8 +8,8 @@
   "heldout_start_index": 1402,
   "heldout_start_time_s": 14.03,
   "fitted": {
-    "C_Sf": 4.717999997547865,
-    "C_Sr": 5.4562000035612765
+    "C_Sf": 4.717999997547852,
+    "C_Sr": 5.4562000035612845
   },
   "known_oracle_for_synthetic_recovery_check": {
     "C_Sf": 4.718,
@@ -29,7 +29,7 @@
     "success": true,
     "message": "`xtol` termination condition is satisfied.",
     "function_evaluations": 6,
-    "cost": 1.0390271991557108e-12
+    "cost": 1.0390271991505918e-12
   },
   "acceptance_limits": {
     "max_oracle_relative_error_fraction": 0.1,

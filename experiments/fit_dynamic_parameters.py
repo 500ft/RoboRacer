@@ -21,6 +21,10 @@ if str(GYM_ROOT) not in sys.path:
     sys.path.insert(0, str(GYM_ROOT))
 
 from roboracer.dynamics import DEFAULT_DYNAMIC_PARAMS, dynamic_rk4_step, load_vehicle_dynamics_st
+from roboracer.identification import (
+    IdentificationResult,
+    identify_from_telemetry as shared_identify_from_telemetry,
+)
 from roboracer.numerics import nrmse, rmse, vaf_percent, wrap_angle
 from roboracer.telemetry import validate_numeric_telemetry
 
@@ -309,12 +313,12 @@ def acceptance(metrics: pd.DataFrame) -> dict[str, bool]:
 
 
 def write_parameters(
-    coefficients: np.ndarray,
-    result: object,
-    split_interval: int,
+    identified: IdentificationResult,
     telemetry: pd.DataFrame,
-    checks: dict[str, bool],
 ) -> None:
+    coefficients = identified.coefficients
+    split_interval = identified.split_interval
+    checks = identified.acceptance_checks
     payload = {
         "model": "Gym vehicle_dynamics_st",
         "telemetry_source": "runs/sysid_steering_excitation/telemetry.csv",
@@ -337,10 +341,10 @@ def write_parameters(
             "C_Sr": [float(LOWER_BOUND[1]), float(UPPER_BOUND[1])],
         },
         "optimizer": {
-            "success": bool(result.success),
-            "message": str(result.message),
-            "function_evaluations": int(result.nfev),
-            "cost": float(result.cost),
+            "success": bool(identified.optimizer_success),
+            "message": str(identified.optimizer_message),
+            "function_evaluations": int(identified.optimizer_evaluations),
+            "cost": float(identified.optimizer_cost),
         },
         "acceptance_limits": ACCEPTANCE_LIMITS,
         "acceptance_checks": checks,
@@ -461,21 +465,17 @@ def main() -> int:
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
 
     telemetry = load_telemetry()
-    states = state_matrix(telemetry)
-    controls = input_matrix(telemetry)
-    dt = np.diff(telemetry["time_s"].to_numpy(dtype=float))
-    train, heldout, split_interval = split_intervals(states)
-    coefficients, result, _ = fit_coefficients(states, controls, dt, train)
-
-    fit_trace = build_fit_trace(telemetry, states, controls, dt, train, heldout, coefficients)
-    validation_trace = heldout_rollout(telemetry, states, controls, dt, split_interval, coefficients)
-    metrics = create_metrics(fit_trace, validation_trace, coefficients, result, train, heldout)
-    checks = acceptance(metrics)
+    identified = shared_identify_from_telemetry(telemetry, repo_root=REPO_ROOT)
+    coefficients = identified.coefficients
+    fit_trace = identified.fit_trace
+    validation_trace = identified.validation_trace
+    metrics = identified.metrics
+    checks = identified.acceptance_checks
 
     fit_trace.to_csv(FIT_TRACE_PATH, index=False)
     validation_trace.to_csv(VALIDATION_TRACE_PATH, index=False)
     metrics.to_csv(METRICS_PATH, index=False)
-    write_parameters(coefficients, result, split_interval, telemetry, checks)
+    write_parameters(identified, telemetry)
     create_figures(fit_trace, validation_trace)
     write_report(metrics, checks)
 

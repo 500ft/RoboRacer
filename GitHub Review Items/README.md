@@ -12,9 +12,9 @@ This folder tracks the post-review action list for the F1TENTH/RoboRacer portfol
 | 4 | Pure pursuit sweep | Done | `reports/pure_pursuit_sweep.md` |
 | 5 | LQR controller | Done | `reports/lqr_controller.md` |
 | 6 | MPC controller | Done | `reports/mpc_controller.md`, `reports/controller_comparison.md` |
-| 7 | EKF study | Pending | Dead reckoning vs EKF under noise/dropout |
-| 8 | Failure-mode FMEA | Pending | At least five reproduced failures with mitigations |
-| 9 | Noise robustness of parameter ID | Pending | Parameter degradation under noise/latency/quantization |
+| 7 | EKF study | Done | `reports/ekf_study.md` |
+| 8 | Failure-mode FMEA | Done | `reports/failure_mode_fmea.md` |
+| 9 | Noise robustness of parameter ID | Done | `reports/parameter_id_robustness.md` |
 | 10 | LiDAR mast mechanical package | Pending | 4g load case, FEA, modal, tolerance page (now the first structural artifact of item 16) |
 | 11 | Real rosbag through pipeline | Pending | Design-only scope: `f1tenth_gym_ros` fallback bag now; real-hardware rerun deferred to the post-build milestone (item 17) |
 | 12 | Final portfolio report | Pending | 10-20 page report and README results gallery |
@@ -173,7 +173,7 @@ Result:
 
 ## 7. EKF Study
 
-**Status:** Pending.
+**Status:** Done.
 
 Goal:
 
@@ -186,9 +186,28 @@ Deliverables:
 - RMSE over time against Gym ground truth.
 - Summary table showing when EKF improves over dead reckoning.
 
+Completed artifacts:
+
+- `gym/roboracer/noise.py`
+- `gym/roboracer/estimation.py`
+- `experiments/ekf_study.py`
+- `experiments/validate_ekf_study.py`
+- `runs/ekf_study/summary.csv`
+- `runs/ekf_study/trace.csv`
+- `runs/ekf_study/metadata.json`
+- `reports/ekf_study.md`
+- `reports/figures/ekf_position_error_over_time.png`
+- `reports/figures/ekf_rmse_summary.png`
+- `reports/figures/ekf_dropout_zoom.png`
+
+Result:
+
+- EKF uses scenario-specific `R` from the injected measurement noise and a fixed documented process covariance `Q`.
+- Dead reckoning is intentionally initialized with pose/state error so the estimator comparison measures drift recovery, not oracle replay.
+
 ## 8. Failure-Mode FMEA
 
-**Status:** Pending.
+**Status:** Done.
 
 Goal:
 
@@ -208,9 +227,24 @@ Deliverable:
 
 - FMEA table with cause, effect, detection signal, and mitigation.
 
+Completed artifacts:
+
+- `gym/roboracer/failures.py`
+- `experiments/failure_mode_fmea.py`
+- `experiments/validate_failure_mode_fmea.py`
+- `runs/failure_mode_fmea/results.csv`
+- `reports/failure_mode_fmea.md`
+- `reports/figures/fmea_rpn_bar.png`
+- `reports/figures/fmea_detection_signals.png`
+
+Result:
+
+- Seven failure cases are reproduced or quantified: Euler instability, too-small lookahead, too-large lookahead, 100 ms latency, high sensor noise, 3 s dropout, and steering saturation.
+- Each row records detection signal, effect, mitigation, severity, occurrence, detectability, and RPN.
+
 ## 9. Noise Robustness of Parameter Identification
 
-**Status:** Pending.
+**Status:** Done.
 
 Goal:
 
@@ -228,6 +262,24 @@ Deliverables:
 - Parameter degradation table.
 - Condition number degradation table.
 - Interpretation of when the fit stops being credible.
+
+Completed artifacts:
+
+- `gym/roboracer/identification.py`
+- `experiments/parameter_id_robustness.py`
+- `experiments/validate_parameter_id_robustness.py`
+- `runs/parameter_id_robustness/results.csv`
+- `runs/parameter_id_robustness/metrics.csv`
+- `runs/parameter_id_robustness/metadata.json`
+- `reports/parameter_id_robustness.md`
+- `reports/figures/parameter_id_noise_degradation.png`
+- `reports/figures/parameter_id_latency_degradation.png`
+- `reports/figures/parameter_id_condition_number.png`
+
+Result:
+
+- The nominal dynamic-ID script and robustness sweep now share `roboracer.identification`, including the same named acceptance gates.
+- The tested data-quality perturbations show latency as the dominant failure path for `C_Sf`/`C_Sr` recovery.
 
 ## 10. LiDAR Mast Mechanical Package
 
@@ -375,7 +427,7 @@ Deliverables:
 
 Two parallel tracks from here:
 
-- **Simulation / controls (hardware-independent):** item 7 (EKF) next, then item 8 (FMEA) and item 9 (noise-robustness). This is the validated quantitative core — do not block it on the vehicle design.
+- **Simulation / data credibility:** item 11 next using a ROS-backed `f1tenth_gym_ros` bag through `rosbag_to_telemetry.py`, quality gates, and the shared dynamic-ID pipeline.
 - **Vehicle design package (items 13-17):** start with item 13 (requirements + architecture); 14-17 depend on it. Item 16 absorbs the old item 10 (LiDAR mast FEA).
 
 Item 11 (real rosbag) uses the `f1tenth_gym_ros` fallback under the current design-only scope; a real-hardware rerun is the deferred build milestone defined in item 17. Item 12 (final report) closes both tracks.

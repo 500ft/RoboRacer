@@ -26,6 +26,12 @@ runs/*
 !runs/mpc_controller/**
 !runs/controller_comparison/
 !runs/controller_comparison/**
+!runs/ekf_study/
+!runs/ekf_study/**
+!runs/failure_mode_fmea/
+!runs/failure_mode_fmea/**
+!runs/parameter_id_robustness/
+!runs/parameter_id_robustness/**
 reports/figures/*
 reports/ros2_sysid_steering_excitation.md
 !reports/figures/first_integrator_comparison.png
@@ -40,3 +46,11 @@ reports/ros2_sysid_steering_excitation.md
 !reports/figures/lqr_controller_cte_cases.png
 !reports/figures/mpc_solver_runtime.png
 !reports/figures/mpc_controller_cte.png
+!reports/figures/ekf_position_error_over_time.png
+!reports/figures/ekf_rmse_summary.png
+!reports/figures/ekf_dropout_zoom.png
+!reports/figures/fmea_rpn_bar.png
+!reports/figures/fmea_detection_signals.png
+!reports/figures/parameter_id_noise_degradation.png
+!reports/figures/parameter_id_latency_degradation.png
+!reports/figures/parameter_id_condition_number.png

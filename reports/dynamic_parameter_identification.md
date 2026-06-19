@@ -26,7 +26,7 @@ Validation status: **passed**
 | Metric | Value |
 | --- | ---: |
 | Held-out rollout yaw-rate RMSE | 3.028881e-10 rad/s |
-| Held-out rollout yaw-rate NRMSE | 5.346679e-10 of measured range |
+| Held-out rollout yaw-rate NRMSE | 5.346680e-10 of measured range |
 | Held-out rollout yaw-rate VAF | 100.000000000% |
 | Held-out rollout slip-angle RMSE | 2.877898e-10 rad |
 | Held-out rollout slip-angle NRMSE | 1.024499e-08 of measured range |
