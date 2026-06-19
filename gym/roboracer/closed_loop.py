@@ -99,6 +99,20 @@ def summarize_run(frame: pd.DataFrame) -> dict[str, object]:
     command_steer = frame["command_steer_rad"].to_numpy(dtype=float)
     steer = frame["steer_rad"].to_numpy(dtype=float)
     steering_effort = float(np.sum(np.abs(np.diff(command_steer)))) if len(command_steer) > 1 else 0.0
+
+    lat_accel = frame["accel_y_mps2"].to_numpy(dtype=float)
+    long_accel = frame["accel_x_mps2"].to_numpy(dtype=float)
+    time_s = frame["time_s"].to_numpy(dtype=float)
+    if lat_accel.size > 1:
+        dt = np.diff(time_s)
+        dt[dt <= 0.0] = np.nan
+        lat_jerk = np.diff(lat_accel) / dt
+        lat_jerk = lat_jerk[np.isfinite(lat_jerk)]
+    else:
+        lat_jerk = np.empty(0, dtype=float)
+    rms_lat_jerk = rmse(lat_jerk) if lat_jerk.size else 0.0
+    max_abs_lat_jerk = float(np.max(np.abs(lat_jerk))) if lat_jerk.size else 0.0
+
     return {
         "run_id": str(frame["run_id"].iloc[0]),
         "controller": str(frame["controller"].iloc[0]),
@@ -119,6 +133,11 @@ def summarize_run(frame: pd.DataFrame) -> dict[str, object]:
         "mean_abs_command_steer_rad": float(np.mean(np.abs(command_steer))),
         "max_abs_command_steer_rad": float(np.max(np.abs(command_steer))),
         "steering_effort_rad": steering_effort,
+        "mean_abs_lat_accel_mps2": float(np.mean(np.abs(lat_accel))),
+        "max_abs_lat_accel_mps2": float(np.max(np.abs(lat_accel))),
+        "max_abs_long_accel_mps2": float(np.max(np.abs(long_accel))),
+        "rms_lat_jerk_mps3": rms_lat_jerk,
+        "max_abs_lat_jerk_mps3": max_abs_lat_jerk,
         "termination_reason": str(frame["termination_reason"].iloc[-1]),
     }
 
@@ -265,3 +284,24 @@ def run_closed_loop(
 
     frame = normalize_rows(rows)
     return frame, summarize_run(frame)
+
+
+def race_and_report(
+    controller: Controller,
+    conf: Namespace,
+    waypoints: np.ndarray,
+    *,
+    return_trace: bool = False,
+    **kwargs: object,
+) -> dict[str, object] | tuple[dict[str, object], pd.DataFrame]:
+    """Race a controller closed-loop and return its summary metrics in one call.
+
+    Convenience wrapper over :func:`run_closed_loop` for callers that only need
+    the per-race metrics (lap time, RMS/max CTE, steering effort, lateral
+    accel/jerk, ...). Accepts the same keyword arguments as ``run_closed_loop``.
+    Set ``return_trace=True`` to also get the per-step telemetry frame.
+    """
+    trace, summary = run_closed_loop(controller, conf, waypoints, **kwargs)
+    if return_trace:
+        return summary, trace
+    return summary
