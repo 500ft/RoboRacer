@@ -15,9 +15,16 @@ This folder tracks the post-review action list for the F1TENTH/RoboRacer portfol
 | 7 | EKF study | Pending | Dead reckoning vs EKF under noise/dropout |
 | 8 | Failure-mode FMEA | Pending | At least five reproduced failures with mitigations |
 | 9 | Noise robustness of parameter ID | Pending | Parameter degradation under noise/latency/quantization |
-| 10 | LiDAR mast mechanical package | Pending | 4g load case, FEA, modal, tolerance page |
-| 11 | Real rosbag through pipeline | Pending | Real or ROS-backed bag through telemetry and fit pipeline |
+| 10 | LiDAR mast mechanical package | Pending | 4g load case, FEA, modal, tolerance page (now the first structural artifact of item 16) |
+| 11 | Real rosbag through pipeline | Pending | Design-only scope: `f1tenth_gym_ros` fallback bag now; real-hardware rerun deferred to the post-build milestone (item 17) |
 | 12 | Final portfolio report | Pending | 10-20 page report and README results gallery |
+| 13 | Vehicle requirements & architecture | Pending | Requirements table + system block diagram (sensing/compute/actuation/power) |
+| 14 | Chassis, drivetrain & actuator selection | Pending | Platform choice; geometry locked to sim wheelbase 0.3302 m; motor/ESC/servo sizing |
+| 15 | Sensor, compute & power package | Pending | LiDAR/IMU/encoders, compute sized to MPC budget, battery/power budget, wiring diagram |
+| 16 | Mechanical design & analysis | Pending | Chassis/sensor-deck CAD, mass & CG budget, FEA (absorbs item 10), mesh convergence, modal |
+| 17 | Pipeline integration & build-readiness | Pending | Topic map to existing ROS2 pipeline, BOM/cost, assembly plan, deferred build+bring-up milestone |
+
+Items 13-17 form the **Vehicle Design Package** — a *parallel*, *design-only* workstream (no fabrication) added because NYU has no RoboRacer car, so the real-hardware path (item 11) requires designing the platform from scratch. It does not block the simulation items (7-9).
 
 ## 1. Tag Milestone and Clean Remote Branches
 
@@ -226,6 +233,8 @@ Deliverables:
 
 **Status:** Pending.
 
+**Note:** Now executed as the first structural artifact inside the Vehicle Design Package (item 16), rather than as a standalone deliverable.
+
 Goal:
 
 - Add a mechanical engineering artifact that differentiates the portfolio from a pure simulation/control project.
@@ -245,14 +254,16 @@ Deliverables:
 
 **Status:** Pending.
 
+**Note:** Under the current design-only scope, this is satisfied with the `f1tenth_gym_ros` fallback (ROS-backed, still simulated). A true physical-RoboRacer bag is gated on actually building the car and is therefore part of the deferred build+bring-up milestone defined in item 17.
+
 Goal:
 
-- Run non-synthetic telemetry through the existing pipeline.
+- Run non-synthetic (or at least ROS-backed) telemetry through the existing pipeline.
 
 Preferred data sources:
 
-- Physical RoboRacer bag, such as NYU/community data.
-- At minimum, an `f1tenth_gym_ros` bag.
+- `f1tenth_gym_ros` bag (current target under design-only scope).
+- Physical RoboRacer bag from the future build (deferred milestone).
 
 Pipeline:
 
@@ -279,6 +290,92 @@ Deliverables:
 - Failure-mode/FMEA summary.
 - Mechanical design page.
 
-## Recommended Next Work
+# Vehicle Design Package (Items 13-17)
 
-Start with item 7, the EKF study. Items 4-6 now provide the tuned pure-pursuit baseline, model-based LQR cases, constrained MPC runtime report, and a controller comparison table.
+**Track type:** Parallel. Runs alongside the simulation items (7-9) and does not block them.
+
+**Scope:** Design-only — CAD, analysis, architecture, and BOM sufficient to hand off to a build, with **no fabrication**. Physical build and on-car bring-up (which would turn item 11 into a real-hardware result) are a **deferred optional milestone**, defined in item 17, to commit to later.
+
+**Why this exists:** NYU has no RoboRacer car, so the real-hardware validation path requires designing the platform from scratch. This package is the MechE-differentiating centerpiece of the portfolio. It must stay consistent with the already-identified dynamic model — in particular the wheelbase of **0.3302 m** used throughout the simulation (`WHEELBASE_M = 0.15875 + 0.17145` in `gym/roboracer/closed_loop.py`) and the speed/steering-rate envelope exercised by the controllers.
+
+**Internal order:** 13 -> 14 -> 15/16 (can overlap) -> 17. Item 16 absorbs the existing item 10.
+
+## 13. Vehicle Requirements and System Architecture
+
+**Status:** Pending.
+
+Goal:
+
+- Define what the car must do and how its subsystems connect, before any part selection.
+
+Deliverables:
+
+- Requirements table: target speed, sensor payload, onboard compute, runtime, scale, and mass budget.
+- System block diagram: sensing -> compute -> actuation -> power.
+- Traceability back to the validated simulation envelope (speeds and steering rates used in experiments 4-6).
+
+## 14. Chassis, Drivetrain, and Actuator Selection
+
+**Status:** Pending.
+
+Goal:
+
+- Choose the rolling platform and actuation, geometry-locked to the identified model.
+
+Deliverables:
+
+- Base-platform decision (1/10-scale RC class vs custom chassis) with rationale.
+- Wheelbase and track set to match the sim model (wheelbase 0.3302 m); any deviation documented with its effect on the identified `C_Sf`/`C_Sr` parameters.
+- Motor/ESC and steering-servo sizing against the target speed/acceleration and the steering-rate limits used by the controllers.
+
+## 15. Sensor, Compute, and Power Package
+
+**Status:** Pending.
+
+Goal:
+
+- Specify the sensing, compute, and power stack.
+
+Deliverables:
+
+- LiDAR, IMU, and wheel/motor encoders selected so they produce the topics the pipeline already consumes (`/ego_racecar/odom`, `/drive`).
+- Onboard compute (e.g., Jetson-class) sized against the measured MPC runtime budget (p95 1.33 ms at 100 Hz).
+- Battery sizing, power budget, and a wiring/power-distribution diagram.
+
+## 16. Mechanical Design and Analysis
+
+**Status:** Pending.
+
+Goal:
+
+- Mechanical design and structural validation of the chassis and sensor deck.
+
+Deliverables:
+
+- CAD of the chassis plate and sensor deck; mass and CG budget.
+- LiDAR mast structural analysis (item 10) as the first artifact: 4g load case, FBD + hand calc, FEA vs hand calc, mesh convergence under 5 percent, modal analysis, and tolerance stack -> LiDAR angular error.
+- One polished design page per major part.
+
+## 17. Pipeline Integration and Build-Readiness
+
+**Status:** Pending.
+
+Goal:
+
+- Make the design build-ready and provably compatible with the existing software pipeline.
+
+Deliverables:
+
+- Mapping from the designed sensor suite to the existing ROS2 topics so the current sysID/identification/control stack runs unchanged on a future build.
+- Full BOM with cost and lead times.
+- Assembly sequence / build plan.
+- Explicit definition of the deferred build + bring-up milestone (what "validated on real hardware" means), feeding item 11.
+
+# Recommended Next Work
+
+Two parallel tracks from here:
+
+- **Simulation / controls (hardware-independent):** item 7 (EKF) next, then item 8 (FMEA) and item 9 (noise-robustness). This is the validated quantitative core — do not block it on the vehicle design.
+- **Vehicle design package (items 13-17):** start with item 13 (requirements + architecture); 14-17 depend on it. Item 16 absorbs the old item 10 (LiDAR mast FEA).
+
+Item 11 (real rosbag) uses the `f1tenth_gym_ros` fallback under the current design-only scope; a real-hardware rerun is the deferred build milestone defined in item 17. Item 12 (final report) closes both tracks.
