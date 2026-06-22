@@ -69,6 +69,8 @@ python experiments/validate_sysid_excitation.py \
 
 The converter uses `/ego_racecar/odom` and `/drive` as the primary standard topics. The project-specific `/f1tenth/internal_state` topic is optional enrichment for achieved steering and slip angle.
 
+Item 11 ROS-backed validation results are in [`evidence/item11/report.md`](evidence/item11/report.md). The enriched bridge recovered Gym's known lateral coefficients from native achieved-state samples, while stock `f1tenth_gym_ros` was intentionally limited to a standard-topic ingestion claim because it does not expose achieved steering.
+
 Verified ROS 2 environment guides:
 
 - [RoboStack Humble on macOS](docs/ros2_verification_robostack_macos.md)

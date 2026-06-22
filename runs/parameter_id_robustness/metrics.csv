@@ -1,9 +1,12 @@
 scenario,metric,value,units,partition,description
 nominal,fitted_C_Sf,4.717999997547852,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 nominal,fitted_C_Sr,5.4562000035612845,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-nominal,C_Sf_oracle_relative_error,5.197430729403866e-10,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-nominal,C_Sr_oracle_relative_error,6.527041898300296e-10,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+nominal,C_Sf_oracle_relative_error,5.197430729403866e-10,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+nominal,C_Sr_oracle_relative_error,6.527041898300296e-10,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 nominal,jacobian_condition_number,1.3401395117691883,unitless,fit,Condition number of the normalized residual Jacobian.
+nominal,raw_jacobian_condition_number,2.947657486309123,unitless,fit,Condition number after undoing response and log-parameter scaling.
+nominal,parameter_correlation,0.09072084880544605,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+nominal,sensitivity_column_cosine,-0.09072084880544605,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 nominal,train_one_step_yaw_rate_rmse,3.3521249998415075e-10,rad/s,train,One-step yaw-rate RMSE.
 nominal,train_one_step_slip_angle_rmse,3.615293278690588e-10,rad,train,One-step slip-angle RMSE.
 nominal,heldout_one_step_yaw_rate_rmse,3.5597293544629724e-10,rad/s,heldout,One-step yaw-rate RMSE.
@@ -22,9 +25,12 @@ nominal,optimizer_cost,1.0390271991505918e-12,unitless,fit,Least-squares objecti
 nominal,optimizer_evaluations,6.0,count,fit,Optimizer function evaluations.
 noise_low,fitted_C_Sf,4.712180319286493,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 noise_low,fitted_C_Sr,5.458652698583598,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-noise_low,C_Sf_oracle_relative_error,0.0012335058739946358,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-noise_low,C_Sr_oracle_relative_error,0.00044952505106080764,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+noise_low,C_Sf_oracle_relative_error,0.0012335058739946358,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+noise_low,C_Sr_oracle_relative_error,0.00044952505106080764,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 noise_low,jacobian_condition_number,1.3396912330466277,unitless,fit,Condition number of the normalized residual Jacobian.
+noise_low,raw_jacobian_condition_number,2.9422217220279707,unitless,fit,Condition number after undoing response and log-parameter scaling.
+noise_low,parameter_correlation,0.09061348123342927,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+noise_low,sensitivity_column_cosine,-0.09061348123342927,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 noise_low,train_one_step_yaw_rate_rmse,0.0025063149799108473,rad/s,train,One-step yaw-rate RMSE.
 noise_low,train_one_step_slip_angle_rmse,5.1068827356401976e-05,rad,train,One-step slip-angle RMSE.
 noise_low,heldout_one_step_yaw_rate_rmse,0.0027139315728443372,rad/s,heldout,One-step yaw-rate RMSE.
@@ -43,9 +49,12 @@ noise_low,optimizer_cost,0.14480562590619872,unitless,fit,Least-squares objectiv
 noise_low,optimizer_evaluations,11.0,count,fit,Optimizer function evaluations.
 noise_medium,fitted_C_Sf,4.597003470018535,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 noise_medium,fitted_C_Sr,5.546687475546889,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-noise_medium,C_Sf_oracle_relative_error,0.02564572487949657,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-noise_medium,C_Sr_oracle_relative_error,0.01658433993381647,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+noise_medium,C_Sf_oracle_relative_error,0.02564572487949657,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+noise_medium,C_Sr_oracle_relative_error,0.01658433993381647,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 noise_medium,jacobian_condition_number,1.321453093519052,unitless,fit,Condition number of the normalized residual Jacobian.
+noise_medium,raw_jacobian_condition_number,2.899225308012463,unitless,fit,Condition number after undoing response and log-parameter scaling.
+noise_medium,parameter_correlation,0.08901971124591705,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+noise_medium,sensitivity_column_cosine,-0.08901971124591716,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 noise_medium,train_one_step_yaw_rate_rmse,0.012458942917848239,rad/s,train,One-step yaw-rate RMSE.
 noise_medium,train_one_step_slip_angle_rmse,0.00020510089020480397,rad,train,One-step slip-angle RMSE.
 noise_medium,heldout_one_step_yaw_rate_rmse,0.012713336309544158,rad/s,heldout,One-step yaw-rate RMSE.
@@ -64,9 +73,12 @@ noise_medium,optimizer_cost,3.401864683428896,unitless,fit,Least-squares objecti
 noise_medium,optimizer_evaluations,6.0,count,fit,Optimizer function evaluations.
 noise_high,fitted_C_Sf,4.208952536089089,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 noise_high,fitted_C_Sr,6.604408317991454,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-noise_high,C_Sf_oracle_relative_error,0.10789475708158357,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-noise_high,C_Sr_oracle_relative_error,0.2104410245209952,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+noise_high,C_Sf_oracle_relative_error,0.10789475708158357,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+noise_high,C_Sr_oracle_relative_error,0.2104410245209952,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 noise_high,jacobian_condition_number,1.1377113558298462,unitless,fit,Condition number of the normalized residual Jacobian.
+noise_high,raw_jacobian_condition_number,2.512720798158285,unitless,fit,Condition number after undoing response and log-parameter scaling.
+noise_high,parameter_correlation,0.04740356511872988,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+noise_high,sensitivity_column_cosine,-0.04740356511872992,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 noise_high,train_one_step_yaw_rate_rmse,0.04645687956958674,rad/s,train,One-step yaw-rate RMSE.
 noise_high,train_one_step_slip_angle_rmse,0.0006052251241058904,rad,train,One-step slip-angle RMSE.
 noise_high,heldout_one_step_yaw_rate_rmse,0.04775195138950238,rad/s,heldout,One-step yaw-rate RMSE.
@@ -85,9 +97,12 @@ noise_high,optimizer_cost,43.6066490899199,unitless,fit,Least-squares objective 
 noise_high,optimizer_evaluations,7.0,count,fit,Optimizer function evaluations.
 latency_20ms,fitted_C_Sf,2.640226153884279,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 latency_20ms,fitted_C_Sr,5.171786995728473,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-latency_20ms,C_Sf_oracle_relative_error,0.4403929305035441,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-latency_20ms,C_Sr_oracle_relative_error,0.05212657238948846,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+latency_20ms,C_Sf_oracle_relative_error,0.4403929305035441,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+latency_20ms,C_Sr_oracle_relative_error,0.05212657238948846,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 latency_20ms,jacobian_condition_number,1.1460315026593326,unitless,fit,Condition number of the normalized residual Jacobian.
+latency_20ms,raw_jacobian_condition_number,3.37084268886914,unitless,fit,Condition number after undoing response and log-parameter scaling.
+latency_20ms,parameter_correlation,0.10367333663803652,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+latency_20ms,sensitivity_column_cosine,-0.10367333663803664,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 latency_20ms,train_one_step_yaw_rate_rmse,0.021010873735760754,rad/s,train,One-step yaw-rate RMSE.
 latency_20ms,train_one_step_slip_angle_rmse,0.0008845144777571687,rad,train,One-step slip-angle RMSE.
 latency_20ms,heldout_one_step_yaw_rate_rmse,0.029889543003403234,rad/s,heldout,One-step yaw-rate RMSE.
@@ -106,9 +121,12 @@ latency_20ms,optimizer_cost,14.927600250818482,unitless,fit,Least-squares object
 latency_20ms,optimizer_evaluations,7.0,count,fit,Optimizer function evaluations.
 latency_50ms,fitted_C_Sf,0.5076414271936858,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 latency_50ms,fitted_C_Sr,4.543996208910415,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-latency_50ms,C_Sf_oracle_relative_error,0.892403258331139,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-latency_50ms,C_Sr_oracle_relative_error,0.16718664841640424,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+latency_50ms,C_Sf_oracle_relative_error,0.892403258331139,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+latency_50ms,C_Sr_oracle_relative_error,0.16718664841640424,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 latency_50ms,jacobian_condition_number,1.7793961684944355,unitless,fit,Condition number of the normalized residual Jacobian.
+latency_50ms,raw_jacobian_condition_number,5.5535129021428284,unitless,fit,Condition number after undoing response and log-parameter scaling.
+latency_50ms,parameter_correlation,0.06550718905245499,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+latency_50ms,sensitivity_column_cosine,-0.06550718905245498,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 latency_50ms,train_one_step_yaw_rate_rmse,0.027692418989574353,rad/s,train,One-step yaw-rate RMSE.
 latency_50ms,train_one_step_slip_angle_rmse,0.0013045031021307366,rad,train,One-step slip-angle RMSE.
 latency_50ms,heldout_one_step_yaw_rate_rmse,0.03306663031916625,rad/s,heldout,One-step yaw-rate RMSE.
@@ -127,9 +145,12 @@ latency_50ms,optimizer_cost,28.649358759053783,unitless,fit,Least-squares object
 latency_50ms,optimizer_evaluations,9.0,count,fit,Optimizer function evaluations.
 latency_100ms,fitted_C_Sf,0.7539818272745578,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 latency_100ms,fitted_C_Sr,4.638996055914493,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-latency_100ms,C_Sf_oracle_relative_error,0.8401903714975503,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-latency_100ms,C_Sr_oracle_relative_error,0.1497752912439989,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+latency_100ms,C_Sf_oracle_relative_error,0.8401903714975503,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+latency_100ms,C_Sr_oracle_relative_error,0.1497752912439989,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 latency_100ms,jacobian_condition_number,1.5920985439470945,unitless,fit,Condition number of the normalized residual Jacobian.
+latency_100ms,raw_jacobian_condition_number,4.548182161322122,unitless,fit,Condition number after undoing response and log-parameter scaling.
+latency_100ms,parameter_correlation,0.0819122353588207,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+latency_100ms,sensitivity_column_cosine,-0.08191223535882063,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 latency_100ms,train_one_step_yaw_rate_rmse,0.02749139638138343,rad/s,train,One-step yaw-rate RMSE.
 latency_100ms,train_one_step_slip_angle_rmse,0.0012661265111888875,rad,train,One-step slip-angle RMSE.
 latency_100ms,heldout_one_step_yaw_rate_rmse,0.03416338712865072,rad/s,heldout,One-step yaw-rate RMSE.
@@ -148,9 +169,12 @@ latency_100ms,optimizer_cost,27.64764177723708,unitless,fit,Least-squares object
 latency_100ms,optimizer_evaluations,19.0,count,fit,Optimizer function evaluations.
 quantization_low,fitted_C_Sf,4.7210071525266635,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 quantization_low,fitted_C_Sr,5.455371436930202,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-quantization_low,C_Sf_oracle_relative_error,0.0006373786618617006,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-quantization_low,C_Sr_oracle_relative_error,0.00015185716612260762,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+quantization_low,C_Sf_oracle_relative_error,0.0006373786618617006,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+quantization_low,C_Sr_oracle_relative_error,0.00015185716612260762,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 quantization_low,jacobian_condition_number,1.3401053363360416,unitless,fit,Condition number of the normalized residual Jacobian.
+quantization_low,raw_jacobian_condition_number,2.944863854081191,unitless,fit,Condition number after undoing response and log-parameter scaling.
+quantization_low,parameter_correlation,0.0905304552673287,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+quantization_low,sensitivity_column_cosine,-0.09053045526732867,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 quantization_low,train_one_step_yaw_rate_rmse,0.00031908571649865705,rad/s,train,One-step yaw-rate RMSE.
 quantization_low,train_one_step_slip_angle_rmse,1.6686365131603122e-06,rad,train,One-step slip-angle RMSE.
 quantization_low,heldout_one_step_yaw_rate_rmse,0.00031586254725134497,rad/s,heldout,One-step yaw-rate RMSE.
@@ -169,9 +193,12 @@ quantization_low,optimizer_cost,0.00203279196291248,unitless,fit,Least-squares o
 quantization_low,optimizer_evaluations,7.0,count,fit,Optimizer function evaluations.
 quantization_medium,fitted_C_Sf,4.71288367656932,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 quantization_medium,fitted_C_Sr,5.439218264719417,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-quantization_medium,C_Sf_oracle_relative_error,0.001084426331216552,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-quantization_medium,C_Sr_oracle_relative_error,0.003112374047978915,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+quantization_medium,C_Sf_oracle_relative_error,0.001084426331216552,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+quantization_medium,C_Sr_oracle_relative_error,0.003112374047978915,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 quantization_medium,jacobian_condition_number,1.3379166792563433,unitless,fit,Condition number of the normalized residual Jacobian.
+quantization_medium,raw_jacobian_condition_number,2.926388828472479,unitless,fit,Condition number after undoing response and log-parameter scaling.
+quantization_medium,parameter_correlation,0.0895749390389322,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+quantization_medium,sensitivity_column_cosine,-0.08957493903893214,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 quantization_medium,train_one_step_yaw_rate_rmse,0.0011506034982910673,rad/s,train,One-step yaw-rate RMSE.
 quantization_medium,train_one_step_slip_angle_rmse,9.466765898977166e-06,rad,train,One-step slip-angle RMSE.
 quantization_medium,heldout_one_step_yaw_rate_rmse,0.0014698595488499453,rad/s,heldout,One-step yaw-rate RMSE.
@@ -190,9 +217,12 @@ quantization_medium,optimizer_cost,0.026787808570817404,unitless,fit,Least-squar
 quantization_medium,optimizer_evaluations,6.0,count,fit,Optimizer function evaluations.
 quantization_high,fitted_C_Sf,4.847956208643266,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 quantization_high,fitted_C_Sr,5.3761533417359635,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-quantization_high,C_Sf_oracle_relative_error,0.027544766562794868,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-quantization_high,C_Sr_oracle_relative_error,0.01467077054800712,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+quantization_high,C_Sf_oracle_relative_error,0.027544766562794868,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+quantization_high,C_Sr_oracle_relative_error,0.01467077054800712,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 quantization_high,jacobian_condition_number,1.3246318196098446,unitless,fit,Condition number of the normalized residual Jacobian.
+quantization_high,raw_jacobian_condition_number,2.698372620796912,unitless,fit,Condition number after undoing response and log-parameter scaling.
+quantization_high,parameter_correlation,0.08313488215801439,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+quantization_high,sensitivity_column_cosine,-0.08313488215801426,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 quantization_high,train_one_step_yaw_rate_rmse,0.005995375996631747,rad/s,train,One-step yaw-rate RMSE.
 quantization_high,train_one_step_slip_angle_rmse,0.00016364847241913906,rad,train,One-step slip-angle RMSE.
 quantization_high,heldout_one_step_yaw_rate_rmse,0.005397118468394304,rad/s,heldout,One-step yaw-rate RMSE.
@@ -211,9 +241,12 @@ quantization_high,optimizer_cost,0.9140382964855698,unitless,fit,Least-squares o
 quantization_high,optimizer_evaluations,6.0,count,fit,Optimizer function evaluations.
 combined_medium,fitted_C_Sf,0.5328859525019586,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 combined_medium,fitted_C_Sr,4.706120089580873,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-combined_medium,C_Sf_oracle_relative_error,0.8870525747134467,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-combined_medium,C_Sr_oracle_relative_error,0.137472950115305,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+combined_medium,C_Sf_oracle_relative_error,0.8870525747134467,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+combined_medium,C_Sr_oracle_relative_error,0.137472950115305,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 combined_medium,jacobian_condition_number,1.7592914718595987,unitless,fit,Condition number of the normalized residual Jacobian.
+combined_medium,raw_jacobian_condition_number,5.519319048646871,unitless,fit,Condition number after undoing response and log-parameter scaling.
+combined_medium,parameter_correlation,0.061809733221293565,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+combined_medium,sensitivity_column_cosine,-0.06180973322129359,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 combined_medium,train_one_step_yaw_rate_rmse,0.03127308444620938,rad/s,train,One-step yaw-rate RMSE.
 combined_medium,train_one_step_slip_angle_rmse,0.0012867442907456023,rad,train,One-step slip-angle RMSE.
 combined_medium,heldout_one_step_yaw_rate_rmse,0.03610982076178197,rad/s,heldout,One-step yaw-rate RMSE.

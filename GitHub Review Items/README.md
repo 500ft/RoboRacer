@@ -16,7 +16,7 @@ This folder tracks the post-review action list for the F1TENTH/RoboRacer portfol
 | 8 | Failure-mode FMEA | Done | `reports/failure_mode_fmea.md` |
 | 9 | Noise robustness of parameter ID | Done | `reports/parameter_id_robustness.md` |
 | 10 | LiDAR mast mechanical package | Pending | 4g load case, FEA, modal, tolerance page (now the first structural artifact of item 16) |
-| 11 | Real rosbag through pipeline | Pending | Design-only scope: `f1tenth_gym_ros` fallback bag now; real-hardware rerun deferred to the post-build milestone (item 17) |
+| 11 | Real rosbag through pipeline | Partial | Both ROS-backed runs pass locally; raw-bag GitHub release publication remains |
 | 12 | Final portfolio report | Pending | 10-20 page report and README results gallery |
 | 13 | Vehicle requirements & architecture | Pending | Requirements table + system block diagram (sensing/compute/actuation/power) |
 | 14 | Chassis, drivetrain & actuator selection | Pending | Platform choice; geometry locked to sim wheelbase 0.3302 m; motor/ESC/servo sizing |
@@ -283,7 +283,7 @@ Result:
 
 ## 10. LiDAR Mast Mechanical Package
 
-**Status:** Pending.
+**Status:** Partial.
 
 **Note:** Now executed as the first structural artifact inside the Vehicle Design Package (item 16), rather than as a standalone deliverable.
 
@@ -323,6 +323,18 @@ Pipeline:
 - telemetry quality gates
 - dynamic parameter fit
 - validation report
+
+Completed locally:
+
+- Recorded a genuine enriched ROS 2 bag and a stock `f1tenth_gym_ros` standard-topic bag.
+- Enriched native-state conversion, quality gates, excitation screening, Gym-oracle recovery, and held-out validation pass.
+- Stock upstream odometry/drive ingestion, timing, excitation, and yaw-response gates pass; no parameter fit is claimed.
+- ROS-free regression validation and deterministic conversion/evidence tooling pass.
+- Evidence report: `evidence/item11/report.md`.
+
+Remaining:
+
+- Publish both raw ZIP assets under tag `v11-ros-bag` and populate `evidence/item11/bags/MANIFEST.yaml` with immutable URLs and checksums.
 
 ## 12. Final Portfolio Report
 

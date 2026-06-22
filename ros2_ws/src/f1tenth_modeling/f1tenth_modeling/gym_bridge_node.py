@@ -18,7 +18,7 @@ from std_msgs.msg import Bool, Float64MultiArray
 from f110_gym.envs.base_classes import Integrator
 
 
-STATE_ORDER = "[X, Y, delta, v, psi, r, beta]"
+STATE_ORDER = "[X, Y, delta, v, psi, r, beta, sim_time_s]"
 
 
 def yaw_to_quaternion(yaw_rad: float) -> Quaternion:
@@ -92,6 +92,7 @@ class GymBridgeNode(Node):
         self.command_steer_rad = 0.0
         self.command_speed_mps = 0.0
         self.collision = False
+        self.sim_time_s = 0.0
 
         drive_topic = str(self.get_parameter("drive_topic").value)
         odom_topic = str(self.get_parameter("odom_topic").value)
@@ -148,6 +149,7 @@ class GymBridgeNode(Node):
                 np.array([[self.command_steer_rad, self.command_speed_mps]])
             )
             self.collision = bool(obs["collisions"][0]) or bool(done)
+            self.sim_time_s += self.timestep_s
 
         state = self.env.sim.agents[0].state
         self.publish_state(state, self.collision)
@@ -169,7 +171,7 @@ class GymBridgeNode(Node):
         self.odom_pub.publish(odom)
 
         state_msg = Float64MultiArray()
-        state_msg.data = [x, y, steer, speed, yaw, yaw_rate, slip_angle]
+        state_msg.data = [x, y, steer, speed, yaw, yaw_rate, slip_angle, self.sim_time_s]
         self.internal_state_pub.publish(state_msg)
 
         collision_msg = Bool()

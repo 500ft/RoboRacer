@@ -1,0 +1,57 @@
+{
+  "model": "Gym vehicle_dynamics_st",
+  "telemetry_source": "evidence/item11/telemetry/enriched_bridge.csv",
+  "source_label": "ROS-backed enriched Gym bridge telemetry with native achieved steering",
+  "method": "bounded nonlinear least squares on RK4 one-step yaw-rate and slip-angle residuals",
+  "input_alignment": "row k+1 achieved finite-difference inputs are applied over interval k to k+1",
+  "training_fraction": 0.7,
+  "dynamic_regime_min_speed_mps": 0.75,
+  "heldout_start_index": 1395,
+  "heldout_start_time_s": 13.95,
+  "fitted": {
+    "C_Sf": 4.718000001290799,
+    "C_Sr": 5.456200006816305
+  },
+  "bounds": {
+    "C_Sf": [
+      0.1,
+      20.0
+    ],
+    "C_Sr": [
+      0.1,
+      20.0
+    ]
+  },
+  "optimizer": {
+    "success": true,
+    "message": "`gtol` termination condition is satisfied.",
+    "function_evaluations": 6,
+    "cost": 1.00056612777374e-12
+  },
+  "acceptance_limits": {
+    "max_oracle_relative_error_fraction": 0.1,
+    "max_heldout_rollout_yaw_rate_rmse_radps": 0.01,
+    "max_heldout_rollout_slip_angle_rmse_rad": 0.001,
+    "max_heldout_rollout_yaw_rmse_rad": 0.01,
+    "max_heldout_rollout_yaw_rate_nrmse": 0.1,
+    "min_heldout_rollout_yaw_rate_vaf_percent": 95.0,
+    "max_jacobian_condition_number": 100.0,
+    "max_parameter_correlation_abs": 0.95
+  },
+  "acceptance_checks": {
+    "oracle_recovery": true,
+    "heldout_yaw_rate": true,
+    "heldout_slip_angle": true,
+    "heldout_yaw": true,
+    "heldout_normalized_fit": true,
+    "heldout_variance_accounted_for": true,
+    "identifiability": true,
+    "parameter_correlation": true
+  },
+  "heldout_validation_passed": true,
+  "scope": "No LQR, MPC, or controller tuning is performed.",
+  "known_oracle_for_synthetic_recovery_check": {
+    "C_Sf": 4.718,
+    "C_Sr": 5.4562
+  }
+}

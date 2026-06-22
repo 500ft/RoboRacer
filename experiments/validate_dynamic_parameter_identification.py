@@ -22,6 +22,9 @@ REQUIRED_METRICS = {
     "C_Sf_oracle_relative_error",
     "C_Sr_oracle_relative_error",
     "jacobian_condition_number",
+    "raw_jacobian_condition_number",
+    "parameter_correlation",
+    "sensitivity_column_cosine",
     "heldout_one_step_yaw_rate_rmse",
     "heldout_one_step_slip_angle_rmse",
     "heldout_rollout_position_rmse",
@@ -81,6 +84,8 @@ def main() -> int:
         >= float(limits["min_heldout_rollout_yaw_rate_vaf_percent"]),
         "identifiability": values["jacobian_condition_number"]
         <= float(limits["max_jacobian_condition_number"]),
+        "parameter_correlation": abs(values["parameter_correlation"])
+        <= float(limits["max_parameter_correlation_abs"]),
     }
     saved_checks = parameters.get("acceptance_checks", {})
     if calculated_checks != saved_checks:

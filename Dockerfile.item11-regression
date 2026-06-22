@@ -1,0 +1,17 @@
+FROM --platform=linux/amd64 python:3.9.23-slim-bookworm@sha256:72d2b9b85bf192b477c1b02fbc0e0905b2ac0dd7f8c9355fd39205ad9a1ec43b
+
+ENV OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_CORETYPE=Haswell \
+    PYTHONPATH=/workspace/gym
+
+WORKDIR /workspace
+COPY requirements-item11-regression.txt .
+RUN pip install --no-cache-dir -r requirements-item11-regression.txt
+COPY gym ./gym
+COPY experiments ./experiments
+COPY evidence ./evidence
+
+CMD ["python", "experiments/validate_item11.py", "--strict"]
+

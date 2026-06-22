@@ -34,6 +34,7 @@ runs/*
 !runs/parameter_id_robustness/**
 reports/figures/*
 reports/ros2_sysid_steering_excitation.md
+evidence/item11/assets/
 !reports/figures/first_integrator_comparison.png
 !reports/figures/integrator_trajectory_overlay.png
 !reports/figures/integrator_tracking_error_vs_progress.png

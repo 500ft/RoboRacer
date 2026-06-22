@@ -1,0 +1,27 @@
+{
+  "repeats_per_interpreter": 10,
+  "interpreter_versions": [
+    "Python 3.9.23",
+    "Python 3.11.8"
+  ],
+  "baseline": {
+    "fitted_C_Sf": 4.718000001290801,
+    "fitted_C_Sr": 5.456200006816303,
+    "heldout_rollout_yaw_rate_rmse": 2.9861523503164485e-10,
+    "jacobian_condition_number": 1.3393075537524508,
+    "parameter_correlation": 0.09075516884557067,
+    "raw_jacobian_condition_number": 2.9490155328228864
+  },
+  "absolute_tolerance": {
+    "fitted_C_Sf": 1.0476064463229131e-13,
+    "fitted_C_Sr": 1.211519774905479e-13,
+    "heldout_rollout_yaw_rate_rmse": 2.220446049250313e-14,
+    "jacobian_condition_number": 1.4001696468923797e-08,
+    "parameter_correlation": 6.05378944196211e-08,
+    "raw_jacobian_condition_number": 1.0657569493588426e-07
+  },
+  "telemetry_sha256": {
+    "enriched": "6044181ee013e2ed83a9b37bcd076f0f07975c031c0dcd8a98a516b7fe6a28e3",
+    "upstream": "caf0d8fd6ffabaacb0f84f6373dc9c08a336920f510ce55712611a9c7d5690a4"
+  }
+}

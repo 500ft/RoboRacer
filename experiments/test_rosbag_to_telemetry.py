@@ -74,14 +74,14 @@ def assert_common_schema(telemetry: Path) -> pd.DataFrame:
     return df
 
 
-def run_case(name: str, include_internal_state: bool) -> None:
+def run_case(name: str, include_internal_state: bool, sample_clock: str = "fixed") -> None:
     case_dir = TEST_DIR / name
     bag = case_dir / "bag"
     telemetry = case_dir / "telemetry.csv"
     metadata = case_dir / "metadata.json"
     quality = case_dir / "quality_metrics.csv"
     create_bag(bag, include_internal_state=include_internal_state, force=True)
-    result = convert_bag(bag, telemetry, metadata, quality)
+    result = convert_bag(bag, telemetry, metadata, quality, sample_clock=sample_clock)
     df = assert_common_schema(telemetry)
     run_validator(telemetry, quality)
     saved_metadata = json.loads(metadata.read_text())
@@ -92,6 +92,58 @@ def run_case(name: str, include_internal_state: bool) -> None:
         row = df.iloc[40]
         if abs(float(row["steer_rad"]) - float(row["command_steer_rad"])) < 1e-6:
             raise AssertionError("internal-state steering should differ from command steering in synthetic case")
+    if result["sample_clock"] != sample_clock:
+        raise AssertionError(f"wrong sample clock for {name}")
+    if "topic_diagnostics" not in saved_metadata:
+        raise AssertionError(f"missing topic diagnostics for {name}")
+    if sample_clock == "internal_state":
+        if not saved_metadata["sim_time_observed"]:
+            raise AssertionError("internal-state native export did not observe simulator time")
+        if not np.allclose(df["time_s"], df["wall_time_s"], atol=1e-9):
+            raise AssertionError("synthetic native simulator and wall clocks should agree")
+
+
+def run_determinism_case() -> None:
+    case_dir = TEST_DIR / "determinism"
+    bag = case_dir / "bag"
+    create_bag(bag, include_internal_state=True, force=True)
+    outputs = []
+    for suffix in ("a", "b"):
+        telemetry = case_dir / f"telemetry_{suffix}.csv"
+        convert_bag(
+            bag,
+            telemetry,
+            case_dir / f"metadata_{suffix}.json",
+            case_dir / f"quality_{suffix}.csv",
+            sample_clock="internal_state",
+        )
+        outputs.append(telemetry.read_bytes())
+    if outputs[0] != outputs[1]:
+        raise AssertionError("converter telemetry output is not byte deterministic")
+
+
+def run_missing_sim_time_case() -> None:
+    case_dir = TEST_DIR / "missing_sim_time"
+    bag = case_dir / "bag"
+    create_bag(
+        bag,
+        include_internal_state=True,
+        include_sim_time=False,
+        force=True,
+    )
+    try:
+        convert_bag(
+            bag,
+            case_dir / "telemetry.csv",
+            case_dir / "metadata.json",
+            case_dir / "quality.csv",
+            sample_clock="internal_state",
+        )
+    except SystemExit as exc:
+        if "sim_time_s" not in str(exc):
+            raise
+    else:
+        raise AssertionError("native internal-state export accepted missing simulator time")
 
 
 def main() -> None:
@@ -99,6 +151,10 @@ def main() -> None:
         shutil.rmtree(TEST_DIR)
     run_case("standard_topics", include_internal_state=False)
     run_case("with_internal_state", include_internal_state=True)
+    run_case("standard_topics_native", include_internal_state=False, sample_clock="odom")
+    run_case("with_internal_state_native", include_internal_state=True, sample_clock="internal_state")
+    run_determinism_case()
+    run_missing_sim_time_case()
     print("rosbag_to_telemetry synthetic tests passed")
 
 

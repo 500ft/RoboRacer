@@ -1,0 +1,79 @@
+{
+  "bag_path": "runs/item11_capture/enriched_bridge_bag_v2",
+  "topic_types": {
+    "/drive": "ackermann_msgs/msg/AckermannDriveStamped",
+    "/f1tenth/collision": "std_msgs/msg/Bool",
+    "/f1tenth/internal_state": "std_msgs/msg/Float64MultiArray",
+    "/ego_racecar/odom": "nav_msgs/msg/Odometry"
+  },
+  "odom_topic": "/ego_racecar/odom",
+  "drive_topic": "/drive",
+  "collision_topic": "/f1tenth/collision",
+  "internal_state_topic": "/f1tenth/internal_state",
+  "has_internal_state": true,
+  "has_collision": true,
+  "converter": "experiments/rosbag_to_telemetry.py",
+  "output_path": "evidence/item11/telemetry/enriched_bridge.csv",
+  "quality_path": "evidence/item11/metrics/enriched_quality.csv",
+  "dt_s": 0.01,
+  "sample_clock": "internal_state",
+  "timestamp_basis": "rosbag_receive_time",
+  "num_output_samples": 1993,
+  "duration_s": 19.920000000001153,
+  "steer_rad_source": "internal_state",
+  "collision_observed": true,
+  "topic_diagnostics": {
+    "/ego_racecar/odom": {
+      "sample_count": 2523,
+      "start_time_s": 1782017523.506456,
+      "stop_time_s": 1782017548.736475,
+      "duration_s": 25.230019092559814,
+      "median_period_s": 0.009996771812438965,
+      "observed_rate_hz": 100.03229230017052,
+      "max_gap_s": 0.02432727813720703,
+      "median_header_bag_skew_s": 0.0002989768981933594,
+      "max_header_bag_skew_s": 0.008481025695800781
+    },
+    "/drive": {
+      "sample_count": 1994,
+      "start_time_s": 1782017528.4266846,
+      "stop_time_s": 1782017548.3666368,
+      "duration_s": 19.93995213508606,
+      "median_period_s": 0.01000213623046875,
+      "observed_rate_hz": 99.97864225781846,
+      "max_gap_s": 0.024282455444335938,
+      "median_header_bag_skew_s": 0.00017750263214111328,
+      "max_header_bag_skew_s": 0.007903814315795898
+    },
+    "/f1tenth/collision": {
+      "sample_count": 2522,
+      "start_time_s": 1782017523.5164683,
+      "stop_time_s": 1782017548.7364964,
+      "duration_s": 25.220028162002563,
+      "median_period_s": 0.01000070571899414,
+      "observed_rate_hz": 99.99294330806275,
+      "max_gap_s": 0.02429795265197754,
+      "median_header_bag_skew_s": null,
+      "max_header_bag_skew_s": null
+    },
+    "/f1tenth/internal_state": {
+      "sample_count": 2522,
+      "start_time_s": 1782017523.5164614,
+      "stop_time_s": 1782017548.7364917,
+      "duration_s": 25.220030307769775,
+      "median_period_s": 0.00999760627746582,
+      "observed_rate_hz": 100.02394295662128,
+      "max_gap_s": 0.024319887161254883,
+      "median_header_bag_skew_s": null,
+      "max_header_bag_skew_s": null
+    }
+  },
+  "required_topic_overlap_s": 19.93995213508606,
+  "sim_time_observed": true,
+  "real_time_factor": 0.9994951676184499,
+  "standard_topics_primary": true,
+  "internal_state_is_optional_enrichment": true,
+  "raw_dt_min_s": 4.76837158203125e-06,
+  "raw_dt_max_s": 0.024115324020385742,
+  "raw_dt_mean_s": 0.003584830318536566
+}

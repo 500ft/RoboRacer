@@ -118,6 +118,8 @@ class SysidExcitationNode(Node):
 
         self.rows: list[dict[str, str | float | int]] = []
         self.start_time = None
+        self.start_sim_time_s: float | None = None
+        self.current_sim_time_s: float | None = None
         self.last_state: list[float] | None = None
         self.previous_steer: float | None = None
         self.previous_speed: float | None = None
@@ -133,6 +135,8 @@ class SysidExcitationNode(Node):
         )
 
     def elapsed_s(self) -> float:
+        if self.start_sim_time_s is not None and self.current_sim_time_s is not None:
+            return self.current_sim_time_s - self.start_sim_time_s
         if self.start_time is None:
             return 0.0
         elapsed = self.get_clock().now() - self.start_time
@@ -174,6 +178,11 @@ class SysidExcitationNode(Node):
 
         if self.start_time is None:
             self.start_time = self.get_clock().now()
+
+        if len(message.data) >= 8:
+            self.current_sim_time_s = float(message.data[7])
+            if self.start_sim_time_s is None:
+                self.start_sim_time_s = self.current_sim_time_s
 
         x, y, steer, speed, theta, yaw_rate, slip_angle = [float(value) for value in message.data[:7]]
         if self.previous_steer is None:
@@ -282,7 +291,7 @@ class SysidExcitationNode(Node):
             "experiment": "ros2_sysid_steering_excitation",
             "runtime": "ros2",
             "telemetry_source": "ROS 2 topics",
-            "state_source": "/f1tenth/internal_state Float64MultiArray [X, Y, delta, v, psi, r, beta]",
+            "state_source": "/f1tenth/internal_state Float64MultiArray [X, Y, delta, v, psi, r, beta, sim_time_s]",
             "command_convention": "[command_steer_rad, command_speed_mps] published as AckermannDriveStamped",
             "future_sysid_input_convention": "[steer_vel_radps, accel_x_mps2] reconstructed from achieved state",
             "target_speed_mps": self.target_speed_mps,
@@ -293,6 +302,7 @@ class SysidExcitationNode(Node):
             "saturation_threshold_rad": self.saturation_threshold_rad,
             "passed_quality_gates": passed,
             "no_parameter_fitting": True,
+            "time_basis": "sim_time_s from enriched internal state" if self.start_sim_time_s is not None else "ROS system time",
         }
         self.metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
 

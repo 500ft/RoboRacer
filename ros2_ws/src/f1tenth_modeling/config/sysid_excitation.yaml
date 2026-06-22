@@ -1,5 +1,6 @@
 gym_bridge_node:
   ros__parameters:
+    use_sim_time: false
     drive_topic: /drive
     odom_topic: /ego_racecar/odom
     internal_state_topic: /f1tenth/internal_state
@@ -15,6 +16,7 @@ gym_bridge_node:
 
 sysid_excitation_node:
   ros__parameters:
+    use_sim_time: false
     drive_topic: /drive
     internal_state_topic: /f1tenth/internal_state
     collision_topic: /f1tenth/collision

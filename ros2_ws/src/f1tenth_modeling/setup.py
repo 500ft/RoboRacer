@@ -23,6 +23,7 @@ setup(
         "console_scripts": [
             "gym_bridge_node = f1tenth_modeling.gym_bridge_node:main",
             "sysid_excitation_node = f1tenth_modeling.sysid_excitation_node:main",
+            "command_only_excitation_node = f1tenth_modeling.command_only_excitation_node:main",
         ],
     },
 )

@@ -1,6 +1,7 @@
 {
   "model": "Gym vehicle_dynamics_st",
   "telemetry_source": "runs/sysid_steering_excitation/telemetry.csv",
+  "source_label": "controlled Gym excitation",
   "method": "bounded nonlinear least squares on RK4 one-step yaw-rate and slip-angle residuals",
   "input_alignment": "row k+1 achieved finite-difference inputs are applied over interval k to k+1",
   "training_fraction": 0.7,
@@ -10,10 +11,6 @@
   "fitted": {
     "C_Sf": 4.717999997547852,
     "C_Sr": 5.4562000035612845
-  },
-  "known_oracle_for_synthetic_recovery_check": {
-    "C_Sf": 4.718,
-    "C_Sr": 5.4562
   },
   "bounds": {
     "C_Sf": [
@@ -38,7 +35,8 @@
     "max_heldout_rollout_yaw_rmse_rad": 0.01,
     "max_heldout_rollout_yaw_rate_nrmse": 0.1,
     "min_heldout_rollout_yaw_rate_vaf_percent": 95.0,
-    "max_jacobian_condition_number": 100.0
+    "max_jacobian_condition_number": 100.0,
+    "max_parameter_correlation_abs": 0.95
   },
   "acceptance_checks": {
     "oracle_recovery": true,
@@ -47,8 +45,13 @@
     "heldout_yaw": true,
     "heldout_normalized_fit": true,
     "heldout_variance_accounted_for": true,
-    "identifiability": true
+    "identifiability": true,
+    "parameter_correlation": true
   },
   "heldout_validation_passed": true,
-  "scope": "No LQR, MPC, or controller tuning is performed."
+  "scope": "No LQR, MPC, or controller tuning is performed.",
+  "known_oracle_for_synthetic_recovery_check": {
+    "C_Sf": 4.718,
+    "C_Sr": 5.4562
+  }
 }

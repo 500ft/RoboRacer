@@ -232,6 +232,7 @@ def write_report(results: pd.DataFrame) -> None:
             "gate_heldout_normalized_fit",
             "gate_heldout_variance_accounted_for",
             "gate_identifiability",
+            "gate_parameter_correlation",
         ]
     ]
     failed = results[results["acceptance_passed"] == False]  # noqa: E712

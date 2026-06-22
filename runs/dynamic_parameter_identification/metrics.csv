@@ -1,9 +1,12 @@
 metric,value,units,partition,description
 fitted_C_Sf,4.717999997547852,Gym coefficient,fit,Identified front cornering stiffness coefficient.
 fitted_C_Sr,5.4562000035612845,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
-C_Sf_oracle_relative_error,5.197430729403866e-10,fraction,oracle_check,Relative error against the known synthetic-data oracle.
-C_Sr_oracle_relative_error,6.527041898300296e-10,fraction,oracle_check,Relative error against the known synthetic-data oracle.
+C_Sf_oracle_relative_error,5.197430729403866e-10,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+C_Sr_oracle_relative_error,6.527041898300296e-10,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
 jacobian_condition_number,1.3401395117691883,unitless,fit,Condition number of the normalized residual Jacobian.
+raw_jacobian_condition_number,2.947657486309123,unitless,fit,Condition number after undoing response and log-parameter scaling.
+parameter_correlation,0.09072084880544605,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+sensitivity_column_cosine,-0.09072084880544605,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
 train_one_step_yaw_rate_rmse,3.3521249998415075e-10,rad/s,train,One-step yaw-rate RMSE.
 train_one_step_slip_angle_rmse,3.615293278690588e-10,rad,train,One-step slip-angle RMSE.
 heldout_one_step_yaw_rate_rmse,3.5597293544629724e-10,rad/s,heldout,One-step yaw-rate RMSE.

@@ -1,0 +1,25 @@
+metric,value,units,partition,description
+fitted_C_Sf,4.718000001290799,Gym coefficient,fit,Identified front cornering stiffness coefficient.
+fitted_C_Sr,5.456200006816305,Gym coefficient,fit,Identified rear cornering stiffness coefficient.
+C_Sf_oracle_relative_error,2.7359039154574157e-10,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+C_Sr_oracle_relative_error,1.249276942539672e-09,fraction,oracle_check,Relative error against the supplied synthetic-data oracle.
+jacobian_condition_number,1.3393075551526206,unitless,fit,Condition number of the normalized residual Jacobian.
+raw_jacobian_condition_number,2.949015522165317,unitless,fit,Condition number after undoing response and log-parameter scaling.
+parameter_correlation,0.09075516279178125,correlation,fit,C_Sf-C_Sr correlation implied by the inverse normalized information matrix.
+sensitivity_column_cosine,-0.09075516279178122,cosine,fit,Cosine between normalized C_Sf and C_Sr sensitivity columns.
+train_one_step_yaw_rate_rmse,3.412417445316211e-10,rad/s,train,One-step yaw-rate RMSE.
+train_one_step_slip_angle_rmse,3.554213922774708e-10,rad,train,One-step slip-angle RMSE.
+heldout_one_step_yaw_rate_rmse,3.4926232486841e-10,rad/s,heldout,One-step yaw-rate RMSE.
+heldout_one_step_slip_angle_rmse,3.5722167933017227e-10,rad,heldout,One-step slip-angle RMSE.
+heldout_rollout_position_rmse,5.998213500954326e-10,m,heldout,Independent held-out rollout position RMSE.
+heldout_rollout_yaw_rmse,2.8573626057874387e-10,rad,heldout,Independent held-out rollout yaw RMSE.
+heldout_rollout_yaw_rate_rmse,2.986152376008509e-10,rad/s,heldout,Independent held-out rollout yaw-rate RMSE.
+heldout_rollout_yaw_rate_nrmse,5.271253478452167e-10,fraction of measured range,heldout,Independent held-out rollout yaw-rate RMSE normalized by measured range.
+heldout_rollout_yaw_rate_vaf_percent,100.0,%,heldout,Independent held-out rollout yaw-rate variance accounted for.
+heldout_rollout_slip_angle_rmse,2.851398145907796e-10,rad,heldout,Independent held-out rollout slip-angle RMSE.
+heldout_rollout_slip_angle_nrmse,1.015065710153731e-08,fraction of measured range,heldout,Independent held-out rollout slip-angle RMSE normalized by measured range.
+heldout_rollout_slip_angle_vaf_percent,99.9999999999999,%,heldout,Independent held-out rollout slip-angle variance accounted for.
+train_intervals,1391.0,count,train,Dynamic-regime intervals used for fitting.
+heldout_intervals,597.0,count,heldout,Chronologically held-out dynamic-regime intervals.
+optimizer_cost,1.00056612777374e-12,unitless,fit,Least-squares objective at the solution.
+optimizer_evaluations,6.0,count,fit,Optimizer function evaluations.

@@ -35,3 +35,14 @@ jobs:
     - name: Run rosbag conversion tests
       run: |
         python experiments/test_rosbag_to_telemetry.py
+        python experiments/test_bag_evidence.py
+        python experiments/validate_item11.py
+
+  item11-regression:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build pinned item 11 regression image
+      run: docker build -f Dockerfile.item11-regression -t item11-regression .
+    - name: Run strict item 11 regression
+      run: docker run --rm item11-regression

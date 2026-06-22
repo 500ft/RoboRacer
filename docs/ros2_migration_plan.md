@@ -61,10 +61,10 @@ Message type:
 std_msgs/Float64MultiArray
 ```
 
-State order:
+State order (the eighth entry is backward-compatible enrichment added for item 11):
 
 ```text
-[X, Y, delta, v, psi, r, beta]
+[X, Y, delta, v, psi, r, beta, sim_time_s]
 ```
 
 Telemetry mapping:
@@ -78,6 +78,7 @@ Telemetry mapping:
 | `psi` | `theta_rad` |
 | `r` | `yaw_rate_radps` |
 | `beta` | `slip_angle_rad` |
+| `sim_time_s` | native identification/export clock |
 
 This topic is project-specific enrichment, not an upstream RoboRacer standard. It should be used when available because it exposes achieved steering and slip angle directly.
 

@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+from argparse import ArgumentParser
 from pathlib import Path
 
 import matplotlib
@@ -38,6 +40,8 @@ VALIDATION_TRACE_PATH = RUN_DIR / "heldout_replay_trace.csv"
 REPORT_PATH = REPO_ROOT / "reports" / "dynamic_parameter_identification.md"
 FIT_FIGURE_PATH = FIGURE_DIR / "dynamic_parameter_fit.png"
 RESIDUAL_FIGURE_PATH = FIGURE_DIR / "dynamic_parameter_residuals.png"
+SOURCE_LABEL = "controlled Gym excitation"
+ORACLE_MODE = "gym"
 
 TRAIN_FRACTION = 0.70
 DYNAMIC_REGIME_MIN_SPEED_MPS = 0.75
@@ -73,6 +77,13 @@ ACCEPTANCE_LIMITS = {
 
 
 vehicle_dynamics_st = load_vehicle_dynamics_st(REPO_ROOT, module_name="sysid_dynamic_models")
+
+
+def portable_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
 
 
 def load_telemetry() -> pd.DataFrame:
@@ -321,7 +332,8 @@ def write_parameters(
     checks = identified.acceptance_checks
     payload = {
         "model": "Gym vehicle_dynamics_st",
-        "telemetry_source": "runs/sysid_steering_excitation/telemetry.csv",
+        "telemetry_source": portable_path(TELEMETRY_PATH),
+        "source_label": SOURCE_LABEL,
         "method": "bounded nonlinear least squares on RK4 one-step yaw-rate and slip-angle residuals",
         "input_alignment": "row k+1 achieved finite-difference inputs are applied over interval k to k+1",
         "training_fraction": TRAIN_FRACTION,
@@ -331,10 +343,6 @@ def write_parameters(
         "fitted": {
             "C_Sf": float(coefficients[0]),
             "C_Sr": float(coefficients[1]),
-        },
-        "known_oracle_for_synthetic_recovery_check": {
-            "C_Sf": float(ORACLE[0]),
-            "C_Sr": float(ORACLE[1]),
         },
         "bounds": {
             "C_Sf": [float(LOWER_BOUND[0]), float(UPPER_BOUND[0])],
@@ -346,11 +354,16 @@ def write_parameters(
             "function_evaluations": int(identified.optimizer_evaluations),
             "cost": float(identified.optimizer_cost),
         },
-        "acceptance_limits": ACCEPTANCE_LIMITS,
+        "acceptance_limits": identified.acceptance_limits,
         "acceptance_checks": checks,
         "heldout_validation_passed": bool(all(checks.values())),
         "scope": "No LQR, MPC, or controller tuning is performed.",
     }
+    if ORACLE_MODE == "gym":
+        payload["known_oracle_for_synthetic_recovery_check"] = {
+            "C_Sf": float(ORACLE[0]),
+            "C_Sr": float(ORACLE[1]),
+        }
     PARAMETERS_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
@@ -398,26 +411,37 @@ def create_figures(fit_trace: pd.DataFrame, validation_trace: pd.DataFrame) -> N
 def write_report(metrics: pd.DataFrame, checks: dict[str, bool]) -> None:
     values = metric_dict(metrics)
     status = "passed" if all(checks.values()) else "failed"
+    if ORACLE_MODE == "gym":
+        parameter_table = f"""| Parameter | Identified | Known Gym oracle | Relative error |
+| --- | ---: | ---: | ---: |
+| `C_Sf` | {values["fitted_C_Sf"]:.9f} | {ORACLE[0]:.9f} | {values["C_Sf_oracle_relative_error"]:.3e} |
+| `C_Sr` | {values["fitted_C_Sr"]:.9f} | {ORACLE[1]:.9f} | {values["C_Sr_oracle_relative_error"]:.3e} |
+
+The oracle comparison is a controlled simulator-recovery check, not physical-vehicle validation."""
+    else:
+        parameter_table = f"""| Parameter | Identified |
+| --- | ---: |
+| `C_Sf` | {values["fitted_C_Sf"]:.9f} |
+| `C_Sr` | {values["fitted_C_Sr"]:.9f} |
+
+No parameter oracle is available for this source; acceptance uses held-out prediction and identifiability only."""
+    fit_figure = os.path.relpath(FIT_FIGURE_PATH, REPORT_PATH.parent)
+    residual_figure = os.path.relpath(RESIDUAL_FIGURE_PATH, REPORT_PATH.parent)
     report = f"""# Dynamic Parameter Identification
 
 ## Objective
 
-Estimate Gym nonlinear single-track coefficients `C_Sf` and `C_Sr` from the validated steering-excitation dataset, then require an independent held-out replay to pass before any LQR, MPC, or controller tuning begins.
+Estimate nonlinear single-track coefficients `C_Sf` and `C_Sr` from {SOURCE_LABEL}, then require an independent held-out replay to pass.
 
 ## Method
 
-The fitter uses the logged internal states and achieved/reconstructed inputs from `runs/sysid_steering_excitation/telemetry.csv`. Only intervals starting at `speed_mps >= {DYNAMIC_REGIME_MIN_SPEED_MPS:.2f}` are used, excluding Gym's low-speed kinematic fallback. The first {TRAIN_FRACTION:.0%} of usable intervals are training data; the final {1.0 - TRAIN_FRACTION:.0%} are held out chronologically.
+The fitter uses the logged internal states and achieved/reconstructed inputs from `{portable_path(TELEMETRY_PATH)}`. Only intervals starting at `speed_mps >= {DYNAMIC_REGIME_MIN_SPEED_MPS:.2f}` are used, excluding Gym's low-speed kinematic fallback. The first {TRAIN_FRACTION:.0%} of usable intervals are training data; the final {1.0 - TRAIN_FRACTION:.0%} are held out chronologically.
 
 For each training interval, the measured state at row `k` is propagated one RK4 step through `vehicle_dynamics_st`. The achieved finite-difference inputs stored on row `k+1` are applied over interval `k -> k+1`. Bounded nonlinear least squares minimizes normalized yaw-rate and slip-angle one-step residuals. The held-out rollout starts once from the measured split state and then propagates recursively without state resets.
 
 ## Identified Parameters
 
-| Parameter | Identified | Known Gym oracle | Relative error |
-| --- | ---: | ---: | ---: |
-| `C_Sf` | {values["fitted_C_Sf"]:.9f} | {ORACLE[0]:.9f} | {values["C_Sf_oracle_relative_error"]:.3e} |
-| `C_Sr` | {values["fitted_C_Sr"]:.9f} | {ORACLE[1]:.9f} | {values["C_Sr_oracle_relative_error"]:.3e} |
-
-The oracle values are used only because this excitation dataset was generated by Gym and therefore supports a controlled recovery check. A real RoboRacer bag will not have an oracle comparison.
+{parameter_table}
 
 ## Held-Out Validation
 
@@ -434,6 +458,9 @@ Validation status: **{status}**
 | Held-out rollout yaw RMSE | {values["heldout_rollout_yaw_rmse"]:.6e} rad |
 | Held-out rollout position RMSE | {values["heldout_rollout_position_rmse"]:.6e} m |
 | Normalized residual Jacobian condition number | {values["jacobian_condition_number"]:.6f} |
+| Raw physical Jacobian condition number | {values["raw_jacobian_condition_number"]:.6f} |
+| `C_Sf`-`C_Sr` parameter correlation | {values["parameter_correlation"]:.6f} |
+| Sensitivity-column cosine | {values["sensitivity_column_cosine"]:.6f} |
 
 Acceptance checks:
 
@@ -443,15 +470,15 @@ Acceptance checks:
 
 ## Figures
 
-![Dynamic parameter fit](figures/dynamic_parameter_fit.png)
+![Dynamic parameter fit]({fit_figure})
 
-![Held-out residuals](figures/dynamic_parameter_residuals.png)
+![Held-out residuals]({residual_figure})
 
 ## Interpretation
 
 The held-out validation demonstrates that the identified coefficients reproduce the nonlinear lateral-yaw state evolution for a frequency regime not used during fitting. The low Jacobian condition number indicates that the selected excitation distinguishes the two fitted coefficients for this controlled dataset.
 
-This result validates the identification pipeline against Gym's known oracle. It does not establish that the same coefficients apply to a physical RoboRacer vehicle.
+This result validates the identification pipeline for the stated source. It does not establish that the same coefficients apply to a physical RoboRacer vehicle.
 
 ## Scope Gate
 
@@ -460,12 +487,46 @@ No LQR, MPC, or controller tuning is performed here. Controller design remains b
     REPORT_PATH.write_text(report, encoding="utf-8")
 
 
+def parse_args():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--telemetry", type=Path, default=TELEMETRY_PATH)
+    parser.add_argument("--run-dir", type=Path, default=RUN_DIR)
+    parser.add_argument("--report", type=Path, default=REPORT_PATH)
+    parser.add_argument("--figure-dir", type=Path, default=FIGURE_DIR)
+    parser.add_argument("--figure-prefix", default="dynamic_parameter")
+    parser.add_argument("--source-label", default=SOURCE_LABEL)
+    parser.add_argument("--oracle", choices=["gym", "none"], default="gym")
+    return parser.parse_args()
+
+
+def configure_paths(args) -> None:
+    global TELEMETRY_PATH, RUN_DIR, FIGURE_DIR, PARAMETERS_PATH, METRICS_PATH
+    global FIT_TRACE_PATH, VALIDATION_TRACE_PATH, REPORT_PATH, FIT_FIGURE_PATH
+    global RESIDUAL_FIGURE_PATH, SOURCE_LABEL, ORACLE_MODE
+    TELEMETRY_PATH = args.telemetry.resolve()
+    RUN_DIR = args.run_dir.resolve()
+    FIGURE_DIR = args.figure_dir.resolve()
+    PARAMETERS_PATH = RUN_DIR / "parameters.json"
+    METRICS_PATH = RUN_DIR / "metrics.csv"
+    FIT_TRACE_PATH = RUN_DIR / "fit_trace.csv"
+    VALIDATION_TRACE_PATH = RUN_DIR / "heldout_replay_trace.csv"
+    REPORT_PATH = args.report.resolve()
+    FIT_FIGURE_PATH = FIGURE_DIR / f"{args.figure_prefix}_fit.png"
+    RESIDUAL_FIGURE_PATH = FIGURE_DIR / f"{args.figure_prefix}_residuals.png"
+    SOURCE_LABEL = args.source_label
+    ORACLE_MODE = args.oracle
+
+
 def main() -> int:
+    args = parse_args()
+    configure_paths(args)
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     FIGURE_DIR.mkdir(parents=True, exist_ok=True)
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     telemetry = load_telemetry()
-    identified = shared_identify_from_telemetry(telemetry, repo_root=REPO_ROOT)
+    oracle = ORACLE if ORACLE_MODE == "gym" else None
+    identified = shared_identify_from_telemetry(telemetry, repo_root=REPO_ROOT, oracle=oracle)
     coefficients = identified.coefficients
     fit_trace = identified.fit_trace
     validation_trace = identified.validation_trace

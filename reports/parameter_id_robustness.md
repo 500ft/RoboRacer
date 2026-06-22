@@ -40,19 +40,19 @@ First failed perturbation: `noise_medium` at gate `heldout_yaw_rate`.
 
 ## Acceptance Gates
 
-| scenario | gate_oracle_recovery | gate_heldout_yaw_rate | gate_heldout_slip_angle | gate_heldout_yaw | gate_heldout_normalized_fit | gate_heldout_variance_accounted_for | gate_identifiability |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| nominal | True | True | True | True | True | True | True |
-| noise_low | True | True | True | True | True | True | True |
-| noise_medium | True | False | True | False | True | True | True |
-| noise_high | False | False | True | False | True | False | True |
-| latency_20ms | False | False | False | True | False | False | True |
-| latency_50ms | False | False | False | False | False | False | True |
-| latency_100ms | False | False | False | False | False | False | True |
-| quantization_low | True | True | True | True | True | True | True |
-| quantization_medium | True | True | True | True | True | True | True |
-| quantization_high | True | False | True | False | True | True | True |
-| combined_medium | False | False | False | False | False | False | True |
+| scenario | gate_oracle_recovery | gate_heldout_yaw_rate | gate_heldout_slip_angle | gate_heldout_yaw | gate_heldout_normalized_fit | gate_heldout_variance_accounted_for | gate_identifiability | gate_parameter_correlation |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| nominal | True | True | True | True | True | True | True | True |
+| noise_low | True | True | True | True | True | True | True | True |
+| noise_medium | True | False | True | False | True | True | True | True |
+| noise_high | False | False | True | False | True | False | True | True |
+| latency_20ms | False | False | False | True | False | False | True | True |
+| latency_50ms | False | False | False | False | False | False | True | True |
+| latency_100ms | False | False | False | False | False | False | True | True |
+| quantization_low | True | True | True | True | True | True | True | True |
+| quantization_medium | True | True | True | True | True | True | True | True |
+| quantization_high | True | False | True | False | True | True | True | True |
+| combined_medium | False | False | False | False | False | False | True | True |
 
 ## Figures
 

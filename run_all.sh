@@ -25,6 +25,7 @@ python experiments/fit_dynamic_parameters.py
 python experiments/validate_dynamic_parameter_identification.py
 python experiments/validate_noise_helpers.py
 python experiments/validate_estimation_helpers.py
+python experiments/validate_item11.py
 
 # Controller tuning and comparison at RK4 dt=0.002 s with 100 Hz zero-order-held commands.
 python experiments/pure_pursuit_sweep.py

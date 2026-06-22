@@ -43,6 +43,7 @@ ACCEPTANCE_LIMITS = {
     "max_heldout_rollout_yaw_rate_nrmse": 0.10,
     "min_heldout_rollout_yaw_rate_vaf_percent": 95.0,
     "max_jacobian_condition_number": 100.0,
+    "max_parameter_correlation_abs": 0.95,
 }
 
 ACCEPTANCE_GATE_ORDER = [
@@ -53,6 +54,7 @@ ACCEPTANCE_GATE_ORDER = [
     "heldout_normalized_fit",
     "heldout_variance_accounted_for",
     "identifiability",
+    "parameter_correlation",
 ]
 
 
@@ -69,6 +71,9 @@ class IdentificationResult:
     optimizer_cost: float
     optimizer_evaluations: int
     jacobian_condition_number: float
+    raw_jacobian_condition_number: float
+    parameter_correlation: float
+    sensitivity_column_cosine: float
     train_intervals: int
     heldout_intervals: int
     split_interval: int
@@ -274,17 +279,31 @@ def create_metrics(
     result: object,
     train: np.ndarray,
     heldout: np.ndarray,
+    oracle: np.ndarray | None,
 ) -> pd.DataFrame:
     train_trace = fit_trace[fit_trace["partition"] == "train"]
     heldout_trace = fit_trace[fit_trace["partition"] == "heldout"]
-    relative_error = np.abs(coefficients - ORACLE) / ORACLE
     jacobian_condition = float(np.linalg.cond(result.jac))
+    row_scales = np.tile(np.asarray(result.response_scales, dtype=float), len(train))
+    raw_jacobian = result.jac * row_scales[:, None] / coefficients[None, :]
+    raw_jacobian_condition = float(np.linalg.cond(raw_jacobian))
+    information = result.jac.T @ result.jac
+    covariance_shape = np.linalg.inv(information)
+    parameter_correlation = float(
+        covariance_shape[0, 1]
+        / np.sqrt(covariance_shape[0, 0] * covariance_shape[1, 1])
+    )
+    sensitivity_column_cosine = float(
+        np.dot(result.jac[:, 0], result.jac[:, 1])
+        / (np.linalg.norm(result.jac[:, 0]) * np.linalg.norm(result.jac[:, 1]))
+    )
     rows = [
         metric_row("fitted_C_Sf", float(coefficients[0]), "Gym coefficient", "fit", "Identified front cornering stiffness coefficient."),
         metric_row("fitted_C_Sr", float(coefficients[1]), "Gym coefficient", "fit", "Identified rear cornering stiffness coefficient."),
-        metric_row("C_Sf_oracle_relative_error", float(relative_error[0]), "fraction", "oracle_check", "Relative error against the known synthetic-data oracle."),
-        metric_row("C_Sr_oracle_relative_error", float(relative_error[1]), "fraction", "oracle_check", "Relative error against the known synthetic-data oracle."),
         metric_row("jacobian_condition_number", jacobian_condition, "unitless", "fit", "Condition number of the normalized residual Jacobian."),
+        metric_row("raw_jacobian_condition_number", raw_jacobian_condition, "unitless", "fit", "Condition number after undoing response and log-parameter scaling."),
+        metric_row("parameter_correlation", parameter_correlation, "correlation", "fit", "C_Sf-C_Sr correlation implied by the inverse normalized information matrix."),
+        metric_row("sensitivity_column_cosine", sensitivity_column_cosine, "cosine", "fit", "Cosine between normalized C_Sf and C_Sr sensitivity columns."),
         metric_row("train_one_step_yaw_rate_rmse", rmse(train_trace["yaw_rate_residual_radps"].to_numpy()), "rad/s", "train", "One-step yaw-rate RMSE."),
         metric_row("train_one_step_slip_angle_rmse", rmse(train_trace["slip_angle_residual_rad"].to_numpy()), "rad", "train", "One-step slip-angle RMSE."),
         metric_row("heldout_one_step_yaw_rate_rmse", rmse(heldout_trace["yaw_rate_residual_radps"].to_numpy()), "rad/s", "heldout", "One-step yaw-rate RMSE."),
@@ -302,6 +321,12 @@ def create_metrics(
         metric_row("optimizer_cost", float(result.cost), "unitless", "fit", "Least-squares objective at the solution."),
         metric_row("optimizer_evaluations", float(result.nfev), "count", "fit", "Optimizer function evaluations."),
     ]
+    if oracle is not None:
+        relative_error = np.abs(coefficients - oracle) / oracle
+        rows[2:2] = [
+            metric_row("C_Sf_oracle_relative_error", float(relative_error[0]), "fraction", "oracle_check", "Relative error against the supplied synthetic-data oracle."),
+            metric_row("C_Sr_oracle_relative_error", float(relative_error[1]), "fraction", "oracle_check", "Relative error against the supplied synthetic-data oracle."),
+        ]
     return pd.DataFrame(rows)
 
 
@@ -311,9 +336,7 @@ def metric_dict(metrics: pd.DataFrame) -> dict[str, float]:
 
 def acceptance(metrics: pd.DataFrame) -> dict[str, bool]:
     values = metric_dict(metrics)
-    return {
-        "oracle_recovery": max(values["C_Sf_oracle_relative_error"], values["C_Sr_oracle_relative_error"])
-        <= ACCEPTANCE_LIMITS["max_oracle_relative_error_fraction"],
+    checks = {
         "heldout_yaw_rate": values["heldout_rollout_yaw_rate_rmse"]
         <= ACCEPTANCE_LIMITS["max_heldout_rollout_yaw_rate_rmse_radps"],
         "heldout_slip_angle": values["heldout_rollout_slip_angle_rmse"]
@@ -326,27 +349,53 @@ def acceptance(metrics: pd.DataFrame) -> dict[str, bool]:
         >= ACCEPTANCE_LIMITS["min_heldout_rollout_yaw_rate_vaf_percent"],
         "identifiability": values["jacobian_condition_number"]
         <= ACCEPTANCE_LIMITS["max_jacobian_condition_number"],
+        "parameter_correlation": abs(values["parameter_correlation"])
+        <= ACCEPTANCE_LIMITS["max_parameter_correlation_abs"],
     }
+    if "C_Sf_oracle_relative_error" in values:
+        checks = {
+            "oracle_recovery": max(
+                values["C_Sf_oracle_relative_error"],
+                values["C_Sr_oracle_relative_error"],
+            )
+            <= ACCEPTANCE_LIMITS["max_oracle_relative_error_fraction"],
+            **checks,
+        }
+    return checks
 
 
 def first_failed_gate(checks: dict[str, bool]) -> str:
     for gate in ACCEPTANCE_GATE_ORDER:
-        if not bool(checks[gate]):
+        if gate in checks and not bool(checks[gate]):
             return gate
     return ""
 
 
-def identify_from_telemetry(telemetry: pd.DataFrame, *, repo_root: Path) -> IdentificationResult:
+def identify_from_telemetry(
+    telemetry: pd.DataFrame,
+    *,
+    repo_root: Path,
+    oracle: np.ndarray | None = ORACLE,
+) -> IdentificationResult:
     telemetry = validate_identification_telemetry(telemetry.copy())
     vehicle_dynamics_st = load_vehicle_dynamics_st(repo_root, module_name="roboracer_identification_dynamic_models")
     states = state_matrix(telemetry)
     controls = input_matrix(telemetry)
     dt = np.diff(telemetry["time_s"].to_numpy(dtype=float))
     train, heldout, split_interval = split_intervals(states)
-    coefficients, optimizer, _ = fit_coefficients(vehicle_dynamics_st, states, controls, dt, train)
+    coefficients, optimizer, response_scales = fit_coefficients(vehicle_dynamics_st, states, controls, dt, train)
+    optimizer.response_scales = response_scales
     fit_trace = build_fit_trace(vehicle_dynamics_st, telemetry, states, controls, dt, train, heldout, coefficients)
     validation_trace = heldout_rollout(vehicle_dynamics_st, telemetry, states, controls, dt, split_interval, coefficients)
-    metrics = create_metrics(fit_trace, validation_trace, coefficients, optimizer, train, heldout)
+    metrics = create_metrics(
+        fit_trace,
+        validation_trace,
+        coefficients,
+        optimizer,
+        train,
+        heldout,
+        oracle,
+    )
     checks = acceptance(metrics)
     values = metric_dict(metrics)
     return IdentificationResult(
@@ -361,6 +410,9 @@ def identify_from_telemetry(telemetry: pd.DataFrame, *, repo_root: Path) -> Iden
         optimizer_cost=float(optimizer.cost),
         optimizer_evaluations=int(optimizer.nfev),
         jacobian_condition_number=float(values["jacobian_condition_number"]),
+        raw_jacobian_condition_number=float(values["raw_jacobian_condition_number"]),
+        parameter_correlation=float(values["parameter_correlation"]),
+        sensitivity_column_cosine=float(values["sensitivity_column_cosine"]),
         train_intervals=int(values["train_intervals"]),
         heldout_intervals=int(values["heldout_intervals"]),
         split_interval=split_interval,

@@ -76,14 +76,35 @@ def make_collision(value: bool, typestore):
     return bool_type(value)
 
 
-def make_internal_state(x: float, y: float, steer: float, speed: float, yaw: float, yaw_rate: float, beta: float, typestore):
+def make_internal_state(
+    x: float,
+    y: float,
+    steer: float,
+    speed: float,
+    yaw: float,
+    yaw_rate: float,
+    beta: float,
+    sim_time_s: float,
+    typestore,
+    include_sim_time: bool,
+):
     layout_type = typestore.types["std_msgs/msg/MultiArrayLayout"]
     array_type = typestore.types["std_msgs/msg/Float64MultiArray"]
-    data = np.array([x, y, steer, speed, yaw, yaw_rate, beta], dtype=np.float64)
+    values = [x, y, steer, speed, yaw, yaw_rate, beta]
+    if include_sim_time:
+        values.append(sim_time_s)
+    data = np.array(values, dtype=np.float64)
     return array_type(layout_type([], 0), data)
 
 
-def create_bag(output: Path, include_internal_state: bool, duration_s: float = 20.0, dt_s: float = 0.01, force: bool = False) -> None:
+def create_bag(
+    output: Path,
+    include_internal_state: bool,
+    duration_s: float = 20.0,
+    dt_s: float = 0.01,
+    force: bool = False,
+    include_sim_time: bool = True,
+) -> None:
     if output.exists():
         if not force:
             raise SystemExit(f"FAIL: output bag already exists: {output}")
@@ -130,7 +151,18 @@ def create_bag(output: Path, include_internal_state: bool, duration_s: float = 2
             writer.write(drive_conn, timestamp, typestore.serialize_cdr(drive, drive_type))
             writer.write(collision_conn, timestamp, typestore.serialize_cdr(collision, collision_type))
             if internal_conn is not None:
-                internal = make_internal_state(x, y, steer_achieved, speed, yaw, yaw_rate, beta, typestore)
+                internal = make_internal_state(
+                    x,
+                    y,
+                    steer_achieved,
+                    speed,
+                    yaw,
+                    yaw_rate,
+                    beta,
+                    time_s,
+                    typestore,
+                    include_sim_time,
+                )
                 writer.write(internal_conn, timestamp, typestore.serialize_cdr(internal, internal_type))
 
 

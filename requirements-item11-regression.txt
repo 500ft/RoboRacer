@@ -1,0 +1,7 @@
+numpy==1.21.6
+scipy==1.11.2
+pandas==2.0.3
+numba==0.57.1
+PyYAML==6.0.2
+rosbags==0.11.3
+
