@@ -32,6 +32,8 @@ runs/*
 !runs/failure_mode_fmea/**
 !runs/parameter_id_robustness/
 !runs/parameter_id_robustness/**
+!runs/ride_quality_baseline/
+!runs/ride_quality_baseline/**
 reports/figures/*
 reports/ros2_sysid_steering_excitation.md
 evidence/item11/assets/

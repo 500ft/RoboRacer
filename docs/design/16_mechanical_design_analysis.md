@@ -12,7 +12,7 @@ F_lateral, governing = m_LiDAR_tip × a_lat,peak × SF
 
 where `a_lat,peak` is the **measured peak lateral acceleration** from the ride-quality race metrics added in commit `9e603d0` — `max_abs_lat_accel_mps2` from `summarize_run` / `race_and_report` in `gym/roboracer/closed_loop.py` — `m_LiDAR_tip` is the LiDAR tip mass from item 15, and `SF` is a stated safety factor. A **separate crash / drop case** is analyzed independently (it is not a steady maneuvering load and should not be blended into the maneuvering case).
 
-> **`[confirm]` — peak lateral acceleration is not yet available as a clean number.** The lateral/longitudinal-accel summary columns (`max_abs_lat_accel_mps2`, `max_abs_long_accel_mps2`, lat-jerk) were added to `summarize_run` in commit `9e603d0` but **do not populate the committed controller-comparison run outputs yet** — the commit note states they "populate on the next `run_all.sh` rerun in the gym==0.19.0 env." The only existing closed-loop telemetry with accel columns (`runs/first_lap/telemetry.csv`) contains **raw scripted-lap / collision spikes** (max |a_y| ≈ 78 m/s², max |a_x| ≈ 801 m/s²) that are physically implausible as a clean ride-quality figure and **must not be used as the load case**. Action: rerun `RUN_FULL_MPC=1 ./run_all.sh`, read `max_abs_lat_accel_mps2` from a clean completed lap, and insert it below.
+> **Peak lateral acceleration — measured from a clean completed lap.** `a_lat,peak = 19.4 m/s²` (≈ 2.0 g), the `max_abs_lat_accel_mps2` reported by `summarize_run` for a **clean completed lap** (`completed_lap == True`, `collision == False`) of the **tuned pure-pursuit baseline** (lookahead 1.2 m, velocity gain 1.2 — the single `selected_baseline == True` row in `runs/pure_pursuit_sweep/results.csv`). Conditions: **RK4 integrator, `dt = 0.002 s`, controller at 100 Hz**, `examples/example_map`; lap time 38.04 s, mean speed 8.33 m/s. Companion figures from the same lap: `mean_abs_lat_accel_mps2 = 5.78`, `max_abs_long_accel_mps2 = 9.51`, `rms_lat_jerk_mps3 = 22.1`. Reproduce with `experiments/ride_quality_baseline.py`; the run is committed to `runs/ride_quality_baseline/` (`summary.json` + per-step `telemetry.csv`). The discarded `runs/first_lap/telemetry.csv` figures (max |a_y| ≈ 78 m/s², max |a_x| ≈ 801 m/s²) are **raw scripted-lap / collision spikes** and were deliberately **not** used.
 
 ---
 
@@ -23,8 +23,8 @@ where `a_lat,peak` is the **measured peak lateral acceleration** from the ride-q
 | Wheelbase (geometry) | 0.3302 m | item 14 / `closed_loop.py` |
 | LiDAR tip mass `m_LiDAR_tip` | `[confirm]` kg | item 15 |
 | LiDAR optical-center height above deck | `[confirm]` m | item 15 (moment arm) |
-| Peak lateral accel `a_lat,peak` | `[confirm]` m/s² (from `max_abs_lat_accel_mps2`, clean lap, after rerun) | `summarize_run`, `gym/roboracer/closed_loop.py` |
-| Peak longitudinal accel | `[confirm]` m/s² (`max_abs_long_accel_mps2`) | `summarize_run` |
+| Peak lateral accel `a_lat,peak` | **19.4 m/s²** (≈ 2.0 g; `max_abs_lat_accel_mps2`, clean completed lap, pure-pursuit baseline, RK4 `dt = 0.002 s`, 100 Hz) | `summarize_run`, `gym/roboracer/closed_loop.py`; `runs/ride_quality_baseline/summary.json` |
+| Peak longitudinal accel | **9.51 m/s²** (`max_abs_long_accel_mps2`, same clean lap) | `summarize_run`; `runs/ride_quality_baseline/summary.json` |
 | Safety factor `SF` (maneuvering) | `[confirm]` (state and justify, e.g. 2.0) | design choice |
 | Crash/drop case | `[confirm]` (e.g. drop height, or impact deceleration) | design choice, separate from maneuvering |
 | Mast material | `[confirm]` (E, σ_yield, ρ) | datasheet |
@@ -55,7 +55,7 @@ Record the section (I, c), the numbers, and the margin against σ_yield. **This 
 
 | Quantity | Symbol | Value | Note |
 | --- | --- | ---: | --- |
-| Governing lateral force | F | `[confirm]` N | = m_LiDAR_tip × a_lat,peak × SF |
+| Governing lateral force | F | `[confirm]` N | = m_LiDAR_tip × a_lat,peak × SF, with **a_lat,peak = 19.4 m/s² known** (clean lap); m_LiDAR_tip (item 15) and SF still to set |
 | Moment arm | h_arm | `[confirm]` m | optical-center height |
 | Root bending moment | M | `[confirm]` N·m | F × h_arm |
 | Section modulus / I, c | — | `[confirm]` | from CAD section |
@@ -109,7 +109,7 @@ Record the section (I, c), the numbers, and the margin against σ_yield. **This 
 
 ## 9. Checklist (none complete)
 
-- [ ] Inputs from items 13-15 filled (geometry, LiDAR mass + height, **clean** peak lateral accel after `run_all.sh` rerun)
+- [ ] Inputs from items 13-15 filled (geometry, LiDAR mass + height; **clean peak lateral accel `a_lat,peak = 19.4 m/s²` DONE** — pure-pursuit baseline, clean lap, `runs/ride_quality_baseline/`)
 - [ ] Mass & CG budget
 - [ ] FBD + hand calc (maneuvering case derived from telemetry, NOT 4g)
 - [ ] FBD + hand calc (separate crash/drop case)
