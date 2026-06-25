@@ -63,6 +63,56 @@ Record the section (I, c), the numbers, and the margin against σ_yield. **This 
 | Hand-calc tip deflection | δ_hand | `[confirm]` mm | F·L³/(3EI) |
 | Margin vs yield | — | `[confirm]` | σ_yield / σ_hand |
 
+### 3.1 Hand calculation (analytical baseline)
+
+> **First-pass closed-form baseline computed now**, ahead of the item-15 LiDAR
+> selection, so the FEA has a number to be validated against. The mast is
+> modeled as a **thin-walled 6061-T6 aluminum cantilever tube**, fixed at the
+> deck (root) with the LiDAR mass lumped at the free tip (moment arm = full
+> length). Reproduce with `experiments/mast_hand_calc.py`; raw output is in
+> `runs/mast_hand_calc/summary.txt`. **All geometry/mass/material values are
+> ASSUMED placeholders** (clearly labelled below) and must be re-run once item
+> 15 locks the real LiDAR mass and optical-center height. The measured
+> `a_lat,peak = 19.4 m/s²` is the only non-assumed input.
+
+**Assumptions block (all ASSUMED unless noted):**
+
+| Parameter | Value | Basis |
+| --- | ---: | --- |
+| Mast length `L` (= moment arm `h_arm`) | 0.120 m | ASSUMED — short mast, tip at free end (conservative lever) |
+| Tube OD | 16.0 mm | ASSUMED — stock aluminum tube |
+| Wall thickness `t` | 1.50 mm | ASSUMED → ID 13.0 mm |
+| Section: `I` = π/64·(OD⁴−ID⁴), `c` = OD/2 | I = 1.815×10⁻⁹ m⁴ (1815 mm⁴), c = 8.0 mm | derived |
+| Material | 6061-T6 Al: E = 68.9 GPa, σ_yield = 276 MPa, ρ = 2700 kg/m³ | ASSUMED — carbon tube is the lighter/stiffer alternative but anisotropic with no single yield; Al is the conservative baseline |
+| Tip mass `m_tip` | 0.20 kg | ASSUMED — RPLIDAR-class 2D scanner + bracket |
+| Maneuver accel `a_lat,peak` | 19.4 m/s² (≈ 2.0 g) | **MEASURED** — clean lap, `runs/ride_quality_baseline` |
+| Crash shock | 50 g = 490 m/s² | ASSUMED — stated half-sine-equivalent survival shock; bounds a low-speed bench drop and deliberately governs strength over the ~2 g maneuvering case |
+| Safety factors | SF_maneuver = 2.0, SF_crash = 1.5 | ASSUMED — 2.0 on yield for the repeated maneuvering load; 1.5 on top of the already-inflated 50 g crash |
+
+**Results — both load cases** (cantilever, tip point load `F = m_tip·a·SF`, fixed root):
+
+| Quantity | Maneuvering (2 g, SF 2.0) | Crash (50 g, SF 1.5) |
+| --- | ---: | ---: |
+| Tip force `F` | 7.76 N | 147.2 N |
+| Root moment `M = F·L` | 0.931 N·m | 17.66 N·m |
+| Max bending stress `σ = M·c/I` | 4.10 MPa | 77.83 MPa |
+| Tip deflection `δ = F·L³/(3EI)` | 0.036 mm | 0.678 mm |
+| Yield margin `σ_yield/σ` | **67.2** (PASS, ≥2.0) | **3.55** (PASS, ≥1.5) |
+
+The **crash case governs strength** (σ ≈ 78 MPa vs 4 MPa); both clear yield with margin. Stress is modest because a 16 mm tube is over-stiff in bending for these loads — strength is not the binding constraint.
+
+**First natural frequency** (load-independent; Rayleigh tip-mass model):
+
+| Quantity | Value |
+| --- | ---: |
+| `k_eff = 3EI/L³` | 2.171×10⁵ N/m |
+| `m_eff = m_tip + 0.23·m_mast` (m_mast = 22.1 g) | 205.1 g |
+| `f1 = (1/2π)·√(k_eff/m_eff)` | **163.8 Hz** |
+
+**Acceptance criterion:** `f1` must clear the **100 Hz control update rate** and a plausible low-hundreds-Hz motor/drivetrain excitation band by a factor of 2, i.e. **f1 ≥ 200 Hz**. **Result: 163.8 Hz → FAIL.** It clears 100 Hz (1.6×) but lands inside the 2× guard band, dominated by the heavy 0.20 kg tip mass on a slender tube. **Action: stiffen — shorter `L`, larger OD/wall, or a carbon tube — and re-check before accepting the mast.** This is exactly the kind of binding constraint the modal analysis (Section 6) is meant to catch.
+
+> **This `3.1` hand calc is the analytical ground truth the Section 4 static FEA (and Section 6 modal) must reproduce within ~10–15% (away from stress concentrations) before the detailed-geometry FEA is trusted.**
+
 ## 4. Static FEA vs Hand Calc (REQUIRED)
 
 > TEMPLATE / TODO. Run static FEA on the real mast geometry with the same governing load and boundary condition (fixed root). **Acceptance: FEA peak stress agrees with the Section 3 hand calc** (state the % difference and an acceptance band, e.g. within ~10-15% away from stress concentrations). Report σ_FEA, δ_FEA, and the comparison. Repeat for the crash/drop case.
