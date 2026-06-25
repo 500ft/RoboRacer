@@ -1,2 +1,54 @@
-bags: []
-
+bags:
+- name: item11-enriched-bridge
+  source: enriched-bridge
+  topics:
+  - /ego_racecar/odom
+  - /drive
+  - /f1tenth/collision
+  - /f1tenth/internal_state
+  git_tag: v11-ros-bag
+  upstream_revision: ''
+  record_command: ros2 bag record --storage sqlite3 -o runs/item11_capture/enriched_bridge_bag
+    /ego_racecar/odom /drive /f1tenth/collision /f1tenth/internal_state
+  rosbag_storage: sqlite3
+  clock_source: system
+  use_sim_time: false
+  rtf_preflight: 1.0
+  rtf_final: 0.9994951676184499
+  asset_sha256: fcf2824d9b4839e202f3696849edb5e6e94230bc9f22ed6308ffbb76d12076d6
+  asset_size_bytes: 431906
+  converter_git_revision: a3248aa6ddeb719112092f6ef5837adca671731f
+  converter_sha256: 8a7707630979f3cfd8f83546f2c19455d16ad7d8eee80a8135c960ffa17a9b1f
+  converter_command: python experiments/rosbag_to_telemetry.py --bag {bag} --output
+    {telemetry} --metadata {metadata} --quality {quality} --sample-clock internal_state
+  telemetry_path: evidence/item11/telemetry/enriched_bridge.csv
+  telemetry_sha256: 6044181ee013e2ed83a9b37bcd076f0f07975c031c0dcd8a98a516b7fe6a28e3
+  storage: github-release
+  url: https://github.com/500ft/RoboRacer/releases/download/v11-ros-bag/item11-enriched-bridge.zip
+  access: public
+- name: item11-upstream-gym_ros
+  source: upstream-gym_ros
+  topics:
+  - /ego_racecar/odom
+  - /drive
+  git_tag: v11-ros-bag
+  upstream_revision: 883394df0964c555ee05bea69c3002daf6f2d405
+  record_command: ros2 bag record --storage sqlite3 -o runs/item11_capture/upstream_gym_ros_bag
+    /ego_racecar/odom /drive
+  rosbag_storage: sqlite3
+  clock_source: system
+  use_sim_time: false
+  rtf_preflight: 1.0
+  rtf_final: 0.9998101949396698
+  asset_sha256: b60fe8c42a0de2f7c1360a2288a124f8d0bd18d452a3ff03064f50d51ada1b1b
+  asset_size_bytes: 346731
+  converter_git_revision: a3248aa6ddeb719112092f6ef5837adca671731f
+  converter_sha256: 8a7707630979f3cfd8f83546f2c19455d16ad7d8eee80a8135c960ffa17a9b1f
+  converter_command: python experiments/rosbag_to_telemetry.py --bag {bag} --output
+    {telemetry} --metadata {metadata} --quality {quality} --sample-clock odom --sim-step-dt
+    0.01 --command-frequency-start 0.2 --command-frequency-end 2.0
+  telemetry_path: evidence/item11/telemetry/upstream_gym_ros.csv
+  telemetry_sha256: caf0d8fd6ffabaacb0f84f6373dc9c08a336920f510ce55712611a9c7d5690a4
+  storage: github-release
+  url: https://github.com/500ft/RoboRacer/releases/download/v11-ros-bag/item11-upstream-gym_ros.zip
+  access: public
