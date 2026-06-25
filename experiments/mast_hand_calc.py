@@ -189,6 +189,287 @@ def first_natural_frequency(sec: SectionProps, *, length: float, E: float, m_tip
     return f1, k_eff, m_eff
 
 
+# ----------------------------------------------------------------------------
+# DESIGN SWEEP — frequency fix
+# ----------------------------------------------------------------------------
+# The baseline (L=0.12 m, OD=16 mm, t=1.5 mm, 6061-T6) PASSES strength but
+# FAILS the modal guard band: f1 = 163.8 Hz < 200 Hz. The sweep below searches
+# mast geometry (length L, outer diameter OD, wall t) and material to find
+# configurations that clear f1 >= 200 Hz with comfortable margin while keeping
+# the crash-case yield safety factor acceptable.
+#
+# WHY shortening L and growing OD work (and why they win over adding mass):
+#   k_eff = 3 E I / L^3,  I = (pi/64)(OD^4 - ID^4) ~ (pi/8) R^3 t  (thin wall)
+#   f1 = (1/2pi) sqrt(k_eff / m_eff),  m_eff = m_tip + 0.23 m_mast
+#   The 0.20 kg tip mass dominates m_eff (mast self-mass ~0.02 kg), so m_eff
+#   is nearly constant and f1 ~ sqrt(k_eff) = sqrt(3 E I / L^3).
+#     - Length:  k ∝ L^-3, so f1 ∝ L^-1.5. A 0.12 -> 0.10 m cut is a 1.73x
+#       stiffness gain (1.32x in f1) for a TINY mass change.
+#     - Diameter: I ∝ OD^3·t (thin wall), while the added material the larger
+#       tube contributes to m_eff is second-order (tip mass dominates). So OD
+#       buys stiffness far faster than it adds effective mass.
+#   Both levers raise k_eff much faster than m_eff, so f1 climbs.
+
+# --- CFRP alternative material (ASSUMED, clearly stated) ---
+# A pultruded / roll-wrapped carbon-fiber tube. Axial modulus depends heavily
+# on layup; standard-modulus unidirectional-dominant tube is ~70-130 GPa. We
+# take E_CFRP = 100 GPa as a representative mid-range axial value and
+# rho_CFRP = 1600 kg/m^3. CFRP is ANISOTROPIC and has NO single tensile yield
+# point, so a "yield SF" is not strictly defined; for screening we compare its
+# peak bending stress against a CONSERVATIVE allowable of 600 MPa (typical
+# design allowable, well below ultimate ~1.5-2 GPa) purely as a sanity bound.
+# Aluminum remains the recommended baseline because its yield is well-defined.
+E_CFRP = 100.0e9          # CFRP axial Young's modulus [Pa] (ASSUMED, mid-range)
+RHO_CFRP = 1600.0         # CFRP density [kg/m^3]           (ASSUMED)
+SIGMA_ALLOW_CFRP = 600.0e6  # CFRP conservative bending allowable [Pa] (ASSUMED)
+
+# Comfortable-margin target: aim ~1.5x above the 200 Hz guard (i.e. ~3x the
+# 100 Hz control rate) so the design sits well clear of the acceptance
+# threshold AND of any low-hundreds-Hz motor band, not on the knife-edge.
+F1_TARGET_HZ = 1.5 * F1_MIN_HZ  # = 300 Hz aspirational margin
+
+
+@dataclass
+class SweepCandidate:
+    """One mast configuration evaluated by the design sweep."""
+
+    material: str        # "6061-T6" or "CFRP"
+    length: float        # L [m]
+    od: float            # OD [m]
+    wall: float          # t [m]
+    E: float             # Young's modulus [Pa]
+    rho: float           # density [kg/m^3]
+    sigma_limit: float   # yield (Al) or conservative allowable (CFRP) [Pa]
+    I: float             # section second moment [m^4]
+    mast_mass: float     # mast self-mass [kg]
+    f1: float            # first natural frequency [Hz]
+    sigma_crash: float   # crash-case peak bending stress [Pa]
+    sf_crash: float      # crash-case strength margin sigma_limit/sigma_crash
+    delta_crash: float   # crash-case tip deflection [m]
+
+    @property
+    def f1_pass(self) -> bool:
+        return self.f1 >= F1_MIN_HZ
+
+    @property
+    def strength_pass(self) -> bool:
+        # Require the crash case to clear its stated SF (1.5) on the limit.
+        return self.sf_crash >= SF_CRASH
+
+
+def evaluate_candidate(
+    material: str, length: float, od: float, wall: float,
+    E: float, rho: float, sigma_limit: float,
+) -> SweepCandidate:
+    """Compute f1 and the (governing) crash-case strength for one geometry."""
+    idia = od - 2.0 * wall
+    sec = section_properties(od, idia, length, rho)
+    f1, _k, _m = first_natural_frequency(sec, length=length, E=E, m_tip=M_TIP)
+    # Crash governs strength (50 g >> ~2 g maneuver); evaluate it with SF_crash.
+    crash = evaluate_load_case(
+        "crash", A_CRASH, SF_CRASH, sec,
+        length=length, E=E, sigma_yield=sigma_limit, m_tip=M_TIP,
+    )
+    return SweepCandidate(
+        material=material, length=length, od=od, wall=wall, E=E, rho=rho,
+        sigma_limit=sigma_limit, I=sec.I, mast_mass=sec.mast_mass,
+        f1=f1, sigma_crash=crash.sigma, sf_crash=crash.sf_yield,
+        delta_crash=crash.delta,
+    )
+
+
+def run_design_sweep() -> tuple[list[SweepCandidate], SweepCandidate, SweepCandidate]:
+    """Sweep L, OD, wall, and material; return (all, baseline, recommended).
+
+    Recommendation policy: among aluminum candidates that PASS both f1>=200 Hz
+    and the crash SF, pick the one closest to (but at/above) the comfortable
+    F1_TARGET_HZ that uses standard stock sizing and the smallest geometry
+    change from baseline — i.e. prefer keeping the stock 1.5 mm wall and the
+    shortest length / smallest OD that still clears the target with margin.
+    Aluminum is preferred over CFRP because its yield is well-defined; CFRP is
+    reported as the lighter alternative.
+    """
+    lengths = [0.12, 0.11, 0.10, 0.09, 0.08]
+    ods_mm = [16.0, 18.0, 20.0, 22.0, 25.0]
+    walls_mm = [1.0, 1.5, 2.0]
+
+    candidates: list[SweepCandidate] = []
+    for L_i in lengths:
+        for od_mm in ods_mm:
+            for t_mm in walls_mm:
+                od_i = od_mm * 1e-3
+                t_i = t_mm * 1e-3
+                if od_i - 2.0 * t_i <= 0.0:          # physical wall guard
+                    continue
+                # Aluminum
+                candidates.append(evaluate_candidate(
+                    "6061-T6", L_i, od_i, t_i, E, RHO, SIGMA_YIELD))
+                # CFRP (same geometry, screened against conservative allowable)
+                candidates.append(evaluate_candidate(
+                    "CFRP", L_i, od_i, t_i, E_CFRP, RHO_CFRP, SIGMA_ALLOW_CFRP))
+
+    # Baseline candidate (the failing reference), aluminum at nominal geometry.
+    baseline = evaluate_candidate("6061-T6", L, OD, WALL_T, E, RHO, SIGMA_YIELD)
+
+    # --- Recommendation policy -------------------------------------------
+    # Use BOTH stiffness levers (shorter L AND larger OD) for a robust,
+    # comfortable-margin design rather than shortening alone to barely clear
+    # the band. Practical manufacturability / integration constraints:
+    #   * Aluminum (well-defined yield) and stock 1.5 mm wall.
+    #   * L >= 0.10 m: do NOT shorten below 100 mm — the optical-center height
+    #     is needed for the LiDAR sightline over the compute stack (dropping
+    #     the full 40 mm to 80 mm would compromise sensor clearance), so we
+    #     spend most of the stiffness budget on OD, only trimming L by 20 mm.
+    #   * OD <= 22 mm: keep a slim, common stock size.
+    # Among candidates meeting those constraints AND clearing the comfortable
+    # F1_TARGET, pick the smallest OD / longest L that still clears it (least
+    # material, smallest integration change) -> a sensible, defensible part.
+    al_pass = [
+        c for c in candidates
+        if c.material == "6061-T6" and c.f1_pass and c.strength_pass
+        and c.f1 >= F1_TARGET_HZ
+        and abs(c.wall - WALL_T) < 1e-9      # stock 1.5 mm wall
+        and c.length >= 0.10 - 1e-9          # preserve LiDAR sightline
+        and c.od <= 0.022 + 1e-9             # slim, common stock OD
+        and c.od > OD + 1e-9                 # actually use the OD lever
+    ]
+    if not al_pass:  # graceful fallback: any passing Al if constraints too tight
+        al_pass = [
+            c for c in candidates
+            if c.material == "6061-T6" and c.f1_pass and c.strength_pass
+        ]
+
+    def rec_key(c: SweepCandidate) -> tuple:
+        # Prefer smallest OD, then longest L, among those clearing the target;
+        # tie-break toward the configuration closest above the target.
+        return (
+            round(c.od, 4),                       # least diameter (least material)
+            -round(c.length, 4),                  # longest length (best sightline)
+            round(abs(c.f1 - F1_TARGET_HZ), 1),   # closest above target
+        )
+
+    recommended = min(al_pass, key=rec_key)
+    return candidates, baseline, recommended
+
+
+def _fmt_sweep_lines(
+    candidates: list[SweepCandidate],
+    baseline: SweepCandidate,
+    recommended: SweepCandidate,
+) -> list[str]:
+    """Human-readable design-sweep report (comparison table + reasoning)."""
+    out: list[str] = []
+    a = out.append
+
+    def row(c: SweepCandidate, tag: str = "") -> str:
+        fv = "PASS" if c.f1_pass else "FAIL"
+        sv = "PASS" if c.strength_pass else "FAIL"
+        return (f"  {tag:<12}{c.material:<9}{c.length*1e3:>6.0f}{c.od*1e3:>6.0f}"
+                f"{c.wall*1e3:>6.1f}{c.f1:>9.1f} {fv:<5}{c.sf_crash:>8.2f} {sv:<5}"
+                f"{c.sigma_crash/1e6:>9.1f}{c.mast_mass*1e3:>8.1f}")
+
+    a("=" * 88)
+    a("DESIGN SWEEP — FREQUENCY FIX (raise f1 >= 200 Hz, keep strength SF >= 1.5)")
+    a("=" * 88)
+    a("")
+    a("Goal: the baseline PASSES strength but FAILS the modal guard band")
+    a(f"      (f1 = {baseline.f1:.1f} Hz < {F1_MIN_HZ:.0f} Hz). Find a stiffer mast.")
+    a("")
+    a("Levers (tip mass dominates m_eff, so f1 ~ sqrt(3 E I / L^3)):")
+    a("  * Shorten L : k ∝ L^-3  -> f1 ∝ L^-1.5  (big gain, ~no mass cost)")
+    a("  * Grow OD   : I ∝ OD^3·t -> stiffness rises far faster than m_eff")
+    a("  Both raise k_eff much faster than m_eff, so f1 climbs.")
+    a("")
+    a("CFRP alternative (ASSUMED): E = {:.0f} GPa, rho = {:.0f} kg/m^3, conservative".format(
+        E_CFRP / 1e9, RHO_CFRP))
+    a("  bending allowable {:.0f} MPa (anisotropic, NO single yield -> screening only).".format(
+        SIGMA_ALLOW_CFRP / 1e6))
+    a("")
+    hdr = (f"  {'tag':<12}{'matl':<9}{'L_mm':>6}{'OD':>6}{'t':>6}"
+           f"{'f1[Hz]':>9} {'f1?':<5}{'SFcr':>8} {'str?':<5}{'sig[MPa]':>9}{'mast[g]':>8}")
+    a(hdr)
+    a("  " + "-" * (len(hdr) - 2))
+    a(row(baseline, "BASELINE"))
+    a(row(recommended, "RECOMMEND"))
+    a("")
+    a("  Stock-wall (1.5 mm) aluminum candidates that clear the comfortable")
+    a(f"  target (f1 >= {F1_TARGET_HZ:.0f} Hz) AND pass strength, sorted small->large OD")
+    a("  then long->short L (the recommendation policy: least material / best sightline):")
+    al_pass = sorted(
+        [c for c in candidates
+         if c.material == "6061-T6" and c.f1_pass and c.strength_pass
+         and c.f1 >= F1_TARGET_HZ and abs(c.wall - WALL_T) < 1e-9],
+        key=lambda c: (round(c.od, 4), -round(c.length, 4)),
+    )[:8]
+    for c in al_pass:
+        tag = "  <== REC" if (c.length == recommended.length and c.od == recommended.od
+                              and c.wall == recommended.wall) else ""
+        a(row(c) + tag)
+    a("")
+    a("RECOMMENDATION")
+    a("-" * 88)
+    dod = (recommended.od - OD) * 1e3
+    dL = (recommended.length - L) * 1e3
+    a(f"  Revised mast: 6061-T6 aluminum, L = {recommended.length*1e3:.0f} mm "
+      f"(from {L*1e3:.0f}), OD = {recommended.od*1e3:.0f} mm (from {OD*1e3:.0f}), "
+      f"wall t = {recommended.wall*1e3:.1f} mm (stock).")
+    a(f"    Change vs baseline: L {dL:+.0f} mm, OD {dod:+.0f} mm, same wall, same material.")
+    a(f"  -> f1 = {recommended.f1:.1f} Hz  (>= {F1_MIN_HZ:.0f} Hz guard; "
+      f"{recommended.f1/F1_MIN_HZ:.2f}x the guard, {recommended.f1/CONTROL_RATE_HZ:.1f}x "
+      f"the 100 Hz control rate)  PASS")
+    a(f"  -> crash-case strength SF = {recommended.sf_crash:.2f} "
+      f"(>= {SF_CRASH:.1f})  PASS   (sigma_crash = {recommended.sigma_crash/1e6:.1f} MPa, "
+      f"delta = {recommended.delta_crash*1e3:.3f} mm)")
+    a(f"  -> mast self-mass {recommended.mast_mass*1e3:.1f} g "
+      f"(baseline {baseline.mast_mass*1e3:.1f} g): a {(recommended.mast_mass-baseline.mast_mass)*1e3:+.1f} g penalty.")
+    a("")
+    a("  WHY it works: shortening L from 120 to {:.0f} mm raises k by ({:.0f}/{:.0f})^3 = {:.2f}x,".format(
+        recommended.length * 1e3, L * 1e3, recommended.length * 1e3,
+        (L / recommended.length) ** 3))
+    a("  and growing OD from {:.0f} to {:.0f} mm raises I by {:.2f}x; m_eff barely moves".format(
+        OD * 1e3, recommended.od * 1e3, recommended.I / baseline.I))
+    a("  (tip mass dominates), so f1 jumps {:.1f} -> {:.1f} Hz. Strength improves too".format(
+        baseline.f1, recommended.f1))
+    a("  (more I lowers bending stress), so the fix is monotonic in both checks.")
+    a("")
+    a("  CFRP note: the same {:.0f} mm / {:.0f} mm tube in CFRP would reach".format(
+        recommended.length * 1e3, recommended.od * 1e3))
+    cfrp = next((c for c in candidates if c.material == "CFRP"
+                 and c.length == recommended.length and c.od == recommended.od
+                 and c.wall == recommended.wall), None)
+    if cfrp is not None:
+        a(f"  f1 = {cfrp.f1:.1f} Hz at {cfrp.mast_mass*1e3:.1f} g "
+          f"({(cfrp.mast_mass-recommended.mast_mass)*1e3:+.1f} g vs the Al rec) — lighter and")
+        a("  stiffer, but anisotropic with no single yield, so aluminum is the recommended")
+        a("  baseline. CFRP is the upgrade path if mast mass ever becomes binding.")
+    a("=" * 88)
+    return out
+
+
+def _hand_sanity_check_recommended(rec: SweepCandidate) -> list[str]:
+    """Independent by-hand recomputation of the recommended f1 (catch slips)."""
+    out: list[str] = []
+    a = out.append
+    od, idia, Lr = rec.od, rec.od - 2.0 * rec.wall, rec.length
+    I = math.pi / 64.0 * (od**4 - idia**4)
+    A = math.pi / 4.0 * (od**2 - idia**2)
+    m_mast = rec.rho * A * Lr
+    k = 3.0 * rec.E * I / Lr**3
+    m_eff = M_TIP + 0.23 * m_mast
+    f1 = 1.0 / (2.0 * math.pi) * math.sqrt(k / m_eff)
+    a("SANITY CHECK (recommended geometry, recomputed by hand)")
+    a("-" * 88)
+    a(f"  I     = pi/64*(OD^4-ID^4) = {I*1e12:.1f} mm^4")
+    a(f"  k     = 3*E*I/L^3         = {k:.3e} N/m")
+    a(f"  m_eff = m_tip + 0.23*m_mast = {m_eff*1e3:.1f} g "
+      f"(m_tip 200 g + 0.23*{m_mast*1e3:.1f} g)")
+    a(f"  f1    = (1/2pi)*sqrt(k/m_eff) = {f1:.1f} Hz")
+    a(f"  cross-check vs sweep value {rec.f1:.1f} Hz: delta = {abs(f1-rec.f1):.3f} Hz "
+      f"({'OK' if abs(f1-rec.f1) < 0.5 else 'MISMATCH'})")
+    a("=" * 88)
+    return out
+
+
 def _fmt_lines(sec: SectionProps, cases: list[CantileverResult], f1: float, k_eff: float, m_eff: float) -> list[str]:
     """Build the human-readable report as a list of lines."""
     L_mm = L * 1e3
@@ -292,6 +573,26 @@ def main() -> None:
     RUN_DIR.mkdir(parents=True, exist_ok=True)
     (RUN_DIR / "summary.txt").write_text(report + "\n")
     print(f"\n[written] {RUN_DIR / 'summary.txt'}")
+
+    # --- DESIGN SWEEP (frequency fix) ---------------------------------------
+    candidates, baseline_c, recommended = run_design_sweep()
+
+    # The recommended design must clear BOTH the modal guard and the crash SF.
+    assert recommended.f1 >= F1_MIN_HZ, (
+        f"recommended f1 {recommended.f1:.1f} Hz below {F1_MIN_HZ:.0f} Hz guard")
+    assert recommended.sf_crash >= SF_CRASH, (
+        f"recommended crash SF {recommended.sf_crash:.2f} below {SF_CRASH:.1f}")
+    # Baseline must reproduce the known failing f1 (guards against drift).
+    assert abs(baseline_c.f1 - 163.8) < 0.5, (
+        f"baseline f1 drifted from the documented 163.8 Hz: {baseline_c.f1:.1f}")
+
+    sweep_lines = _fmt_sweep_lines(candidates, baseline_c, recommended)
+    sweep_lines += [""] + _hand_sanity_check_recommended(recommended)
+    sweep_report = "\n".join(sweep_lines)
+    print("\n" + sweep_report)
+
+    (RUN_DIR / "design_sweep.txt").write_text(sweep_report + "\n")
+    print(f"\n[written] {RUN_DIR / 'design_sweep.txt'}")
 
 
 if __name__ == "__main__":

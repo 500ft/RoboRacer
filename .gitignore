@@ -34,6 +34,20 @@ runs/*
 !runs/parameter_id_robustness/**
 !runs/ride_quality_baseline/
 !runs/ride_quality_baseline/**
+# Mast hand calc: small text summaries only (regenerable).
+!runs/mast_hand_calc/
+!runs/mast_hand_calc/*.txt
+# Mast FEA: keep the small human-readable artifacts; the multi-MB CalculiX
+# mesh/results binaries (.inp/.frd/.12d/.cvg/.sta/.out) stay ignored (they are
+# regenerable by `python experiments/mast_fea.py` once gmsh+ccx are set up).
+!runs/mast_fea/
+!runs/mast_fea/**
+runs/mast_fea/*.inp
+runs/mast_fea/*.frd
+runs/mast_fea/*.12d
+runs/mast_fea/*.cvg
+runs/mast_fea/*.sta
+runs/mast_fea/*.out
 reports/figures/*
 reports/ros2_sysid_steering_excitation.md
 evidence/item11/assets/

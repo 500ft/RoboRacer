@@ -1,6 +1,6 @@
 # 16 — Mechanical Design and Analysis (CAD / FEA Centerpiece)
 
-**Status: TEMPLATE / TODO.** This is the MechE centerpiece of the portfolio and **absorbs the old item 10 (LiDAR mast package)**. **Design-only: no fabrication.** The author does the CAD and FEA.
+**Status: IN PROGRESS.** This is the MechE centerpiece of the portfolio and **absorbs the old item 10 (LiDAR mast package)**. **Design-only: no fabrication.** The author does the CAD and FEA. **The LiDAR-mast analysis is substantially complete on ASSUMED placeholder masses/geometry:** hand calc (both load cases, §3.1), a frequency-fix design revision (§3.2, the baseline failed the modal guard band and was redesigned), and a real gmsh + CalculiX FEA validating it within ±15% (§4, §6). The mass/CG budget (§2) and tolerance stack (§7) still wait on the item-15 LiDAR lock; everything mast-related must be re-run once the real LiDAR mass + optical-center height are fixed.
 
 **Dependency order — do NOT do FEA first.** This file is **last**: **13 → 14 → 15 → 16**. The FEA must run on the **real geometry** locked in item 14 (wheelbase 0.3302 m, deck layout) and the **real masses** chosen in item 15 (LiDAR mass + optical-center height, compute, battery). An FEA built before those exist would be analyzing a fictional part. Do not start the mesh until items 13-15 are filled.
 
@@ -113,14 +113,48 @@ The **crash case governs strength** (σ ≈ 78 MPa vs 4 MPa); both clear yield w
 
 > **This `3.1` hand calc is the analytical ground truth the Section 4 static FEA (and Section 6 modal) must reproduce within ~10–15% (away from stress concentrations) before the detailed-geometry FEA is trusted.**
 
+### 3.2 Design revision — frequency fix (REQUIRED: the baseline FAILS modal)
+
+The §3.1 baseline **passes strength but fails the modal guard band** (`f1 = 163.8 Hz < 200 Hz`). A design sweep over mast geometry and material was run to find a configuration that clears `f1 ≥ 200 Hz` with comfortable margin while keeping the crash-case yield safety factor acceptable. Reproduce with `python experiments/mast_hand_calc.py`; raw output in `runs/mast_hand_calc/design_sweep.txt`.
+
+**Sweep space:** length `L ∈ {0.12 … 0.08} m`, outer diameter `OD ∈ {16 … 25} mm`, wall `t ∈ {1.0, 1.5, 2.0} mm`, material ∈ {6061-T6 aluminum, CFRP}. For every candidate the sweep recomputes `f1 = (1/2π)·√(3EI/(L³·m_eff))` with `m_eff = m_tip + 0.23·m_mast`, and the **governing crash-case** stress/SF.
+
+> **CFRP alternative (clearly-stated assumed properties):** a roll-wrapped/pultruded carbon-fiber tube, axial modulus depends strongly on layup (≈ 70–130 GPa); the sweep assumes **E = 100 GPa, ρ = 1600 kg/m³**. CFRP is **anisotropic with no single tensile yield**, so a "yield SF" is not strictly defined — it is screened only against a **conservative 600 MPa bending allowable** (well below ultimate ≈ 1.5–2 GPa). **Aluminum remains the recommended baseline** because its yield is well-defined; CFRP is the lighter upgrade path if mast mass ever becomes binding.
+
+**Recommended revised mast:** **6061-T6 aluminum, L = 100 mm, OD = 20 mm, wall t = 1.5 mm (stock).** This uses **both** stiffness levers (modestly shorter `L`, larger `OD`), keeps the stock 1.5 mm wall and the well-defined-yield aluminum, and only trims `L` by 20 mm (preserving the LiDAR optical-center height / sightline over the compute stack) — most of the stiffness budget is spent on diameter.
+
+| Quantity | **Baseline (FAILS)** | **Recommended (PASSES)** |
+| --- | ---: | ---: |
+| Geometry | L=120 mm, OD=16 mm, t=1.5 mm | **L=100 mm, OD=20 mm, t=1.5 mm** |
+| Material | 6061-T6 Al | 6061-T6 Al |
+| Section `I` | 1815 mm⁴ | **3754 mm⁴** (×2.07) |
+| `k = 3EI/L³` | 2.17×10⁵ N/m | **7.76×10⁵ N/m** (×3.58) |
+| **`f1` (Rayleigh)** | **163.8 Hz → FAIL** (< 200) | **309.3 Hz → PASS** (1.55× the 200 Hz guard; 3.1× the 100 Hz control rate) |
+| Crash-case `σ` | 77.8 MPa | **39.2 MPa** |
+| **Crash-case SF** vs yield | 3.55 (PASS) | **7.04 (PASS)** |
+| Crash tip deflection | 0.678 mm | 0.190 mm |
+| Mast self-mass | 22.1 g | 23.5 g (**+1.4 g**) |
+
+**Why it works (stiffness rises far faster than mass).** Because the 0.20 kg tip mass dominates `m_eff` (mast self-mass ≈ 0.02 kg), `m_eff` is nearly constant and `f1 ≈ √(3EI/L³)`. The two levers attack `k = 3EI/L³` directly:
+- **Shorter `L`:** `k ∝ L⁻³`, so 120→100 mm raises `k` by `(120/100)³ = 1.73×` (`f1 ∝ L⁻¹·⁵`) at essentially **zero mass cost**.
+- **Larger `OD`:** for a thin wall `I ∝ OD³·t`, so 16→20 mm raises `I` by `2.07×`, while the extra material it adds to `m_eff` is second-order (tip mass dominates).
+
+Together they lift `k` by `3.58×` and `f1` from 163.8 → 309.3 Hz. The same geometry change **also lowers** the crash stress (more `I` ⇒ less `M·c/I`), so the fix is **monotonic in both checks** — strength margin actually improves (SF 3.55 → 7.04). The same 100 mm/20 mm tube in CFRP would reach ≈ 375 Hz at ≈ 14 g, but aluminum is kept for its defined yield.
+
+**Hand sanity-check of the recommended `f1`:** `I = π/64·(20⁴−17⁴) = 3754 mm⁴`; `k = 3·68.9e9·3.754e-9/0.1³ = 7.76×10⁵ N/m`; `m_eff = 0.200 + 0.23·0.0235 = 0.2054 kg`; `f1 = (1/2π)·√(7.76e5/0.2054) = 309.3 Hz`. ✔ matches the sweep.
+
+> **FEA status — RAN and VALIDATED (not install-pending).** The gmsh + CalculiX toolchain was stood up (gmsh 4.15.2 mesher in the conda `base` env; CalculiX 2.23 `ccx` solver in a conda `fea` env) and a 3-D FEA of the **recommended** geometry was run via `experiments/mast_fea.py`. **FEA agrees with the hand calc within ±15 %** on all three headline metrics, and the higher-fidelity **FE first frequency (267.4 Hz) still clears the ≥ 200 Hz guard** (1.34×). Stand-up commands and the full workflow are in **`docs/design/FEA_SETUP.md`**; results in `runs/mast_fea/fea_summary.txt`. See §4 and §6.
+
 ## 4. Static FEA vs Hand Calc (REQUIRED)
 
-> TEMPLATE / TODO. Run static FEA on the real mast geometry with the same governing load and boundary condition (fixed root). **Acceptance: FEA peak stress agrees with the Section 3 hand calc** (state the % difference and an acceptance band, e.g. within ~10-15% away from stress concentrations). Report σ_FEA, δ_FEA, and the comparison. Repeat for the crash/drop case.
+> **DONE for the recommended geometry (§3.2).** Static FEA was run on the recommended mast (L=100 mm, OD=20 mm, t=1.5 mm, 6061-T6) with the **crash** load (147.2 N) and a fixed (ENCASTRE) root, via `experiments/mast_fea.py` (gmsh C3D10 mesh → CalculiX `ccx`). The crash load is **distributed over the tip-ring nodes** (a single-node point load creates a non-physical ~1.2 GPa nodal singularity); stress is compared on a **mid-span gauge ring** (away from the fixed root and the load) where elementary `M·c/I` applies, plus the global tip deflection. Mesh: 58 232 nodes / 28 985 quadratic tets, element size ≈ 1.2 mm. Raw results in `runs/mast_fea/fea_summary.txt`; toolchain in `docs/design/FEA_SETUP.md`.
 
-| Quantity | Hand calc | FEA | Δ% | Within band? |
+| Quantity | Hand calc | FEA | Δ% | Within ±15%? |
 | --- | ---: | ---: | ---: | --- |
-| Max stress | `[confirm]` | `[confirm]` | `[confirm]` | TODO |
-| Tip deflection | `[confirm]` | `[confirm]` | `[confirm]` | TODO |
+| Tip deflection (crash) | 0.190 mm | 0.201 mm | +5.9% | **YES** |
+| Mid-span gauge stress (crash) | 19.6 MPa | 19.8 MPa | +1.3% | **YES** |
+
+> The fixed-root **peak** von Mises (47.8 MPa) is a re-entrant-corner stress concentration / mesh singularity, **not** a valid `M·c/I` comparison — which is exactly why the §5 mesh-convergence metric and the comparison above use a defined gauge region and the global deflection, not the peak nodal stress. Tip deflection (+5.9%) and gauge stress (+1.3%) both fall well inside the ±15% band, so the static hand calc is validated.
 
 ## 5. Mesh Convergence (REQUIRED, <5%)
 
@@ -134,12 +168,15 @@ The **crash case governs strength** (σ ≈ 78 MPa vs 4 MPa); both clear yield w
 
 ## 6. Modal Analysis (REQUIRED, with acceptance criterion)
 
-> TEMPLATE / TODO. Compute the first several natural frequencies of the mast + LiDAR mass. **Acceptance criterion (state explicitly):** the **first natural frequency must be clear of both** (a) the chassis/motor/drivetrain excitation band **and** (b) the **control update rate of 100 Hz** (all controllers run at 100 Hz, `dt = 0.002 s`). State the separation margin (e.g. f1 ≥ 2× the highest excitation of concern, or a stated guard band around 100 Hz). If f1 lands near 100 Hz or the motor band, redesign (stiffen / add a rib / change section) — do not accept it.
+> **DONE for the recommended geometry (§3.2).** Acceptance criterion: `f1` must clear the **100 Hz control update rate** AND a plausible low-hundreds-Hz motor/drivetrain excitation band by **≥ 2× ⇒ f1 ≥ 200 Hz**. A CalculiX `*FREQUENCY` modal solve was run on the recommended mast with the 0.20 kg LiDAR as a lumped `*MASS` element at the tip and a fixed root (`experiments/mast_fea.py`). **The baseline (163.8 Hz) FAILED this guard; the recommended geometry PASSES by both the hand calc (309.3 Hz) and the FEA (267.4 Hz).**
 
-| Mode | Natural frequency | Excitation source to clear | Margin | Pass? |
+| Mode | Natural frequency (FEA) | Excitation source to clear | Margin | Pass? |
 | --- | ---: | --- | --- | --- |
-| 1st | `[confirm]` Hz | control rate 100 Hz; motor/drivetrain band `[confirm]` | `[confirm]` | TODO |
-| 2nd | `[confirm]` Hz | — | — | — |
+| 1st (bending) | **267.4 Hz** (hand calc 309.3 Hz, Δ −13.6%) | 100 Hz control rate; low-hundreds-Hz motor band | **1.34× the 200 Hz guard; 2.67× the 100 Hz rate** | **YES** |
+| 2nd (bending, orthogonal) | 282.3 Hz | — | — | — |
+| 3rd | 944.5 Hz | — | — | — |
+
+> Modes 1–2 are the two ~degenerate orthogonal bending modes of the axisymmetric tube (the small 267→282 Hz split is mesh asymmetry). The FE `f1` lands ~14% below the Rayleigh hand calc because the closed-form model assumes a perfectly rigid root and pure Euler–Bernoulli bending (neglecting shear and root flexibility) and so slightly over-predicts stiffness — the expected direction and magnitude. **Even at the higher-fidelity 267.4 Hz the design clears the ≥ 200 Hz guard (1.34×)**, so the frequency fix is robust. Baseline-vs-recommended comparison and reasoning: §3.2.
 
 ## 7. Tolerance Stack → LiDAR Angular Error (REQUIRED)
 
@@ -157,14 +194,16 @@ The **crash case governs strength** (σ ≈ 78 MPa vs 4 MPa); both clear yield w
 
 > TEMPLATE / TODO. One polished design page per major part (chassis plate, sensor deck, LiDAR mast): CAD render, key dimensions, governing load case + result, FEA contour, modal result, and the tolerance budget. Export figures to `docs/design/figures/`.
 
-## 9. Checklist (none complete)
+## 9. Checklist
 
-- [ ] Inputs from items 13-15 filled (geometry, LiDAR mass + height; **clean peak lateral accel `a_lat,peak = 19.4 m/s²` DONE** — pure-pursuit baseline, clean lap, `runs/ride_quality_baseline/`)
-- [ ] Mass & CG budget
-- [ ] FBD + hand calc (maneuvering case derived from telemetry, NOT 4g)
-- [ ] FBD + hand calc (separate crash/drop case)
-- [ ] Static FEA vs hand calc (within stated band)
-- [ ] Mesh convergence <5% on a defined gauge region
-- [ ] Modal analysis with first-frequency clearance of motor band AND 100 Hz control rate
-- [ ] Tolerance stack → LiDAR angular error
+- [ ] Inputs from items 13-15 filled (geometry, LiDAR mass + height; **clean peak lateral accel `a_lat,peak = 19.4 m/s²` DONE** — pure-pursuit baseline, clean lap, `runs/ride_quality_baseline/`). LiDAR mass/height still ASSUMED pending item 15 lock.
+- [ ] Mass & CG budget (depends on item 15 lock)
+- [x] FBD + hand calc, maneuvering case derived from telemetry, NOT 4g (§3.1)
+- [x] FBD + hand calc, separate crash/drop case (§3.1; crash governs strength)
+- [x] **Design revision — frequency fix** (§3.2): baseline `f1=163.8 Hz` FAILED the ≥200 Hz guard; recommended **L=100 mm / OD=20 mm / t=1.5 mm 6061-T6** → `f1=309.3 Hz`, crash SF 7.04 (both PASS)
+- [x] Static FEA vs hand calc within ±15% (§4): tip deflection +5.9%, gauge stress +1.3% (gmsh + CalculiX, recommended geometry)
+- [ ] Mesh convergence <5% on a defined gauge region (gauge ring defined and used in §4; a formal ≥3-level refinement study still to run)
+- [x] Modal analysis with first-frequency clearance of motor band AND 100 Hz control rate (§6): FE `f1=267.4 Hz` ≥ 200 Hz guard (1.34×)
+- [ ] Tolerance stack → LiDAR angular error (depends on item 15 lock)
 - [ ] Polished design page per part
+- [x] **FEA toolchain stood up and tested** (gmsh 4.15.2 + CalculiX 2.23 `ccx`); commands in `docs/design/FEA_SETUP.md`, pipeline `experiments/mast_fea.py`
