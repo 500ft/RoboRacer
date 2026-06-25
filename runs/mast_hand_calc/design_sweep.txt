@@ -3,7 +3,7 @@ DESIGN SWEEP — FREQUENCY FIX (raise f1 >= 200 Hz, keep strength SF >= 1.5)
 ========================================================================================
 
 Goal: the baseline PASSES strength but FAILS the modal guard band
-      (f1 = 163.8 Hz < 200 Hz). Find a stiffer mast.
+      (f1 = 174.7 Hz < 200 Hz). Find a stiffer mast.
 
 Levers (tip mass dominates m_eff, so f1 ~ sqrt(3 E I / L^3)):
   * Shorten L : k ∝ L^-3  -> f1 ∝ L^-1.5  (big gain, ~no mass cost)
@@ -15,36 +15,36 @@ CFRP alternative (ASSUMED): E = 100 GPa, rho = 1600 kg/m^3, conservative
 
   tag         matl       L_mm    OD     t   f1[Hz] f1?      SFcr str?  sig[MPa] mast[g]
   -------------------------------------------------------------------------------------
-  BASELINE    6061-T6     120    16   1.5    163.8 FAIL     3.55 PASS      77.8    22.1
-  RECOMMEND   6061-T6     100    20   1.5    309.3 PASS     7.04 PASS      39.2    23.5
+  BASELINE    6061-T6     120    16   1.5    174.7 FAIL     4.05 PASS      68.1    22.1
+  RECOMMEND   6061-T6     100    20   1.5    330.1 PASS     8.05 PASS      34.3    23.5
 
   Stock-wall (1.5 mm) aluminum candidates that clear the comfortable
   target (f1 >= 300 Hz) AND pass strength, sorted small->large OD
   then long->short L (the recommendation policy: least material / best sightline):
-              6061-T6      80    16   1.5    302.1 PASS     5.32 PASS      51.9    14.8
-              6061-T6      90    18   1.5    306.2 PASS     6.18 PASS      44.7    18.9
-              6061-T6      80    18   1.5    365.8 PASS     6.95 PASS      39.7    16.8
-              6061-T6     100    20   1.5    309.3 PASS     7.04 PASS      39.2    23.5  <== REC
-              6061-T6      90    20   1.5    362.8 PASS     7.82 PASS      35.3    21.2
-              6061-T6      80    20   1.5    433.5 PASS     8.80 PASS      31.4    18.8
-              6061-T6     110    22   1.5    311.7 PASS     7.91 PASS      34.9    28.7
-              6061-T6     100    22   1.5    360.1 PASS     8.70 PASS      31.7    26.1
+              6061-T6      80    16   1.5    322.6 PASS     6.08 PASS      45.4    14.8
+              6061-T6      90    18   1.5    326.9 PASS     7.06 PASS      39.1    18.9
+              6061-T6      80    18   1.5    390.6 PASS     7.94 PASS      34.7    16.8
+              6061-T6     100    20   1.5    330.1 PASS     8.05 PASS      34.3    23.5  <== REC
+              6061-T6      90    20   1.5    387.2 PASS     8.94 PASS      30.9    21.2
+              6061-T6      80    20   1.5    462.7 PASS    10.06 PASS      27.4    18.8
+              6061-T6     110    22   1.5    332.4 PASS     9.04 PASS      30.5    28.7
+              6061-T6     100    22   1.5    384.2 PASS     9.94 PASS      27.8    26.1
 
 RECOMMENDATION
 ----------------------------------------------------------------------------------------
   Revised mast: 6061-T6 aluminum, L = 100 mm (from 120), OD = 20 mm (from 16), wall t = 1.5 mm (stock).
     Change vs baseline: L -20 mm, OD +4 mm, same wall, same material.
-  -> f1 = 309.3 Hz  (>= 200 Hz guard; 1.55x the guard, 3.1x the 100 Hz control rate)  PASS
-  -> crash-case strength SF = 7.04 (>= 1.5)  PASS   (sigma_crash = 39.2 MPa, delta = 0.190 mm)
+  -> f1 = 330.1 Hz  (>= 200 Hz guard; 1.65x the guard, 3.3x the 100 Hz control rate)  PASS
+  -> crash-case strength SF = 8.05 (>= 1.5)  PASS   (sigma_crash = 34.3 MPa, delta = 0.166 mm)
   -> mast self-mass 23.5 g (baseline 22.1 g): a +1.4 g penalty.
 
   WHY it works: shortening L from 120 to 100 mm raises k by (120/100)^3 = 1.73x,
   and growing OD from 16 to 20 mm raises I by 2.07x; m_eff barely moves
-  (tip mass dominates), so f1 jumps 163.8 -> 309.3 Hz. Strength improves too
+  (tip mass dominates), so f1 jumps 174.7 -> 330.1 Hz. Strength improves too
   (more I lowers bending stress), so the fix is monotonic in both checks.
 
   CFRP note: the same 100 mm / 20 mm tube in CFRP would reach
-  f1 = 374.7 Hz at 13.9 g (-9.6 g vs the Al rec) — lighter and
+  f1 = 400.1 Hz at 13.9 g (-9.6 g vs the Al rec) — lighter and
   stiffer, but anisotropic with no single yield, so aluminum is the recommended
   baseline. CFRP is the upgrade path if mast mass ever becomes binding.
 ========================================================================================
@@ -53,7 +53,7 @@ SANITY CHECK (recommended geometry, recomputed by hand)
 ----------------------------------------------------------------------------------------
   I     = pi/64*(OD^4-ID^4) = 3754.2 mm^4
   k     = 3*E*I/L^3         = 7.760e+05 N/m
-  m_eff = m_tip + 0.23*m_mast = 205.4 g (m_tip 200 g + 0.23*23.5 g)
-  f1    = (1/2pi)*sqrt(k/m_eff) = 309.3 Hz
-  cross-check vs sweep value 309.3 Hz: delta = 0.000 Hz (OK)
+  m_eff = m_tip + 0.23*m_mast = 180.4 g (m_tip 175 g + 0.23*23.5 g)
+  f1    = (1/2pi)*sqrt(k/m_eff) = 330.1 Hz
+  cross-check vs sweep value 330.1 Hz: delta = 0.000 Hz (OK)
 ========================================================================================

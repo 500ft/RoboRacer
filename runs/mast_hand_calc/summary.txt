@@ -2,11 +2,12 @@
 LiDAR MAST — HAND CALCULATION (analytical baseline for item-16 FEA)
 ========================================================================
 
-ASSUMPTIONS (all values labelled ASSUMED; LiDAR item 15 not yet locked)
+ASSUMPTIONS (geometry/material ASSUMED; tip mass FIRMED, item-15 Hokuyo UST-10LX)
 ------------------------------------------------------------------------
   Geometry   : L = 120.0 mm (= moment arm), OD = 16.0 mm, wall t = 1.50 mm, ID = 13.00 mm   [ASSUMED]
   Material   : 6061-T6 Al, E = 68.9 GPa, sigma_yield = 276 MPa, rho = 2700 kg/m^3   [ASSUMED]
-  Tip mass   : m_tip = 0.200 kg (RPLIDAR-class 2D + bracket)   [ASSUMED]
+  Tip mass   : m_tip = 0.175 kg   [FIRMED, item 15]
+               = 130 g Hokuyo UST-10LX [DATASHEET] + 30 g bracket + 15 g cable [ASSUMED]
   Maneuver a : a_lat_peak = 19.4 m/s^2 (~1.98 g)   [MEASURED, clean lap]
   Crash a    : 50 g = 490 m/s^2 (stated shock level)   [ASSUMED]
   Safety fac : SF_maneuver = 2.0, SF_crash = 1.5   [ASSUMED]
@@ -23,22 +24,22 @@ LOAD CASES (cantilever, tip point load, fixed root)
 ------------------------------------------------------------------------
   case             F [N]     M [N.m]  sigma[MPa]   delta[mm]  SF_yield   verdict
   ------------------------------------------------------------------------------
-  maneuver          7.76       0.931        4.10      0.0357     67.24      PASS
-  crash           147.15      17.658       77.83      0.6778      3.55      PASS
+  maneuver          6.79       0.815        3.59      0.0313     76.85      PASS
+  crash           128.76      15.451       68.10      0.5931      4.05      PASS
 
   Notes per case:
-    maneuver  : applied SF = 2.0, realized yield margin = 67.24
-    crash     : applied SF = 1.5, realized yield margin = 3.55
+    maneuver  : applied SF = 2.0, realized yield margin = 76.85
+    crash     : applied SF = 1.5, realized yield margin = 4.05
 
 FIRST NATURAL FREQUENCY (Rayleigh tip-mass model; load-independent)
 ------------------------------------------------------------------------
   k_eff = 3 E I / L^3        = 2.171e+05 N/m
-  m_eff = m_tip + 0.23*m_mast= 205.092 g  (m_tip=200 g + 0.23*22.1 g)
-  f1    = (1/2pi) sqrt(k/m)  = 163.8 Hz
+  m_eff = m_tip + 0.23*m_mast= 180.092 g  (m_tip=175 g + 0.23*22.1 g)
+  f1    = (1/2pi) sqrt(k/m)  = 174.7 Hz
 
   Acceptance: f1 must clear the 100 Hz control rate AND the low-hundreds
   -Hz motor/drivetrain band by >=2x => f1 >= 200 Hz.
-  RESULT: f1 = 163.8 Hz <  200 Hz  -> FAIL -> stiffer/shorter mast or larger section required.
+  RESULT: f1 = 174.7 Hz <  200 Hz  -> FAIL -> stiffer/shorter mast or larger section required.
 
 MATERIAL ALTERNATIVE
 ------------------------------------------------------------------------

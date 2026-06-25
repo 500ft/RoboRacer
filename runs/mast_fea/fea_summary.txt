@@ -2,21 +2,21 @@
 FEA vs HAND CALC — recommended LiDAR mast
 ==============================================================================
   Mesh: 58232 nodes, 28985 C3D10 tets, size ~1.2 mm
-  BCs : root fully fixed (ENCASTRE); crash load F=147.2 N distributed over 474 tip-ring nodes
+  BCs : root fully fixed (ENCASTRE); crash load F=128.8 N distributed over 474 tip-ring nodes
 
   quantity                      hand calc          FEA  delta %  band(+-15%)
   --------------------------------------------------------------------------
-  f1 (1st bending) [Hz]             309.3        267.4    -13.6  OK
-  tip deflection [mm]               0.190        0.201      5.9  OK
-  gauge stress [MPa]                 19.6         19.8      1.3  OK
+  f1 (1st bending) [Hz]             330.1        285.5    -13.5  OK
+  tip deflection [mm]               0.166        0.176      5.9  OK
+  gauge stress [MPa]                 17.1         17.4      1.3  OK
 
-  Reference: root M*c/I hand calc = 39.2 MPa; FE global PEAK vonMises = 47.8 MPa
+  Reference: root M*c/I hand calc = 34.3 MPa; FE global PEAK vonMises = 41.9 MPa
     The PEAK sits at the fixed-root re-entrant corner (a stress
     concentration / mesh singularity) — NOT a valid M*c/I comparison.
     The mid-span GAUGE ring (above) and the global tip DEFLECTION are the
     fair checks; both should land within +-15% of beam theory.
 
-  First modes [Hz]: 267.4, 282.3, 944.5, 3655.1, 4232.7, 8007.9
+  First modes [Hz]: 285.5, 301.3, 1009.3, 3660.4, 4238.3, 8008.1
     (modes 1-2 are the two ~degenerate orthogonal bending modes of the
      axisymmetric tube; the small split is mesh asymmetry.)
 ==============================================================================

@@ -66,7 +66,9 @@ NU = 0.33                # Poisson's ratio [-]         (6061-T6)
 RHO = 2700.0             # density [kg/m^3]            (6061-T6)
 SIGMA_YIELD = 276.0e6    # tensile yield [Pa]          (6061-T6)
 
-M_TIP = 0.20             # LiDAR + bracket tip mass [kg]
+M_TIP = 0.175            # firmed LiDAR tip mass [kg] (item 15: Hokuyo UST-10LX
+                         # body 0.130 kg [datasheet] + 0.030 kg bracket +
+                         # 0.015 kg cable; see experiments/mast_hand_calc.py)
 G = 9.81
 A_CRASH = 50.0 * G       # crash shock [m/s^2]
 SF_CRASH = 1.5           # crash safety factor
@@ -401,7 +403,8 @@ def main() -> int:
     print(f"  Hand-calc targets:  f1 = {tgt['f1']:.1f} Hz   "
           f"sigma_root(crash) = {tgt['sigma_root']/1e6:.1f} MPa   "
           f"delta_tip = {tgt['delta_tip']*1e3:.3f} mm")
-    print(f"  Crash design load:  F = {F_CRASH:.1f} N (50 g x 0.20 kg x SF 1.5)")
+    print(f"  Crash design load:  F = {F_CRASH:.1f} N "
+          f"(50 g x {M_TIP:.3f} kg x SF 1.5)")
 
     ccx = find_ccx()
     try:

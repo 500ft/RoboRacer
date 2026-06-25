@@ -33,10 +33,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 RUN_DIR = REPO_ROOT / "runs" / "mast_hand_calc"
 
 # ----------------------------------------------------------------------------
-# ASSUMPTIONS — every value below is an explicit design assumption. The LiDAR
-# (item 15) is NOT yet selected, so tip mass, mast length, and section are
-# placeholders chosen to be representative and conservative. Each is labelled
-# ASSUMED with a short rationale; change these in one place when item 15 locks.
+# ASSUMPTIONS — most values below are explicit design assumptions, labelled
+# ASSUMED with a short rationale. The tip mass is now FIRMED from the item-15
+# LiDAR selection (datasheet-cited below); geometry/material remain engineering
+# choices. Change these in one place if the LiDAR or stock tube changes.
 # ----------------------------------------------------------------------------
 
 # --- Geometry (ASSUMED) ---
@@ -59,10 +59,26 @@ E = 68.9e9               # Young's modulus [Pa]           (ASSUMED, 6061-T6)
 SIGMA_YIELD = 276.0e6    # tensile yield strength [Pa]    (ASSUMED, 6061-T6)
 RHO = 2700.0             # density [kg/m^3]               (ASSUMED, 6061-T6)
 
-# --- Tip mass (ASSUMED) ---
-# RPLIDAR-class 2D scanner (e.g. A1/A2-class) plus a light mounting bracket.
-# A bare RPLIDAR A2 is ~0.19 kg; round up to 0.20 kg to cover the bracket.
-M_TIP = 0.20             # lumped LiDAR + bracket mass at tip [kg] (ASSUMED)
+# --- Tip mass (FIRMED from item 15: Hokuyo UST-10LX LiDAR) ---
+# The mast tip mass is now firmed against the SELECTED 2D LiDAR (item 15,
+# docs/design/15_sensor_compute_power.md): the Hokuyo UST-10LX, the canonical
+# F1TENTH scanner. Build-up (see item 15 for the full table):
+#   LiDAR body  : 0.130 kg  -- Hokuyo UST-10LX datasheet "Mass: Approx. 130 g"
+#                             (Hokuyo UST-10LX/UST-20LX specification sheet;
+#                              same 130 g is listed in the official F1TENTH BOM).
+#   Bracket/HW  : 0.030 kg  -- ASSUMED: 3D-printed/Al L-bracket + M3 fasteners
+#                             (30 g allowance; bench-typical for this sensor).
+#   Cable/conn. : 0.015 kg  -- ASSUMED: pigtail Ethernet + power lead carried by
+#                             the tip (15 g allowance; the run to the deck).
+#   -> firmed tip mass = 0.130 + 0.030 + 0.015 = 0.175 kg
+# This 0.175 kg is LIGHTER than the previous 0.20 kg placeholder, so it RAISES
+# f1 (m_eff falls) and LOWERS bending stress -- a strict improvement on both
+# the modal guard and the strength margin. A lighter RPLIDAR S2/A2 (~0.19 kg
+# body) would land near the same tip mass; the Hokuyo is the documented choice.
+M_LIDAR_BODY = 0.130     # Hokuyo UST-10LX body mass [kg] (DATASHEET: ~130 g)
+M_BRACKET = 0.030        # mounting bracket + fasteners [kg] (ASSUMED allowance)
+M_CABLE = 0.015          # tip-carried cable/connector [kg]  (ASSUMED allowance)
+M_TIP = M_LIDAR_BODY + M_BRACKET + M_CABLE  # firmed tip mass [kg] = 0.175
 
 # --- Load environment ---
 # Maneuvering peak lateral acceleration is NOT assumed — it is measured from a
@@ -201,7 +217,7 @@ def first_natural_frequency(sec: SectionProps, *, length: float, E: float, m_tip
 # WHY shortening L and growing OD work (and why they win over adding mass):
 #   k_eff = 3 E I / L^3,  I = (pi/64)(OD^4 - ID^4) ~ (pi/8) R^3 t  (thin wall)
 #   f1 = (1/2pi) sqrt(k_eff / m_eff),  m_eff = m_tip + 0.23 m_mast
-#   The 0.20 kg tip mass dominates m_eff (mast self-mass ~0.02 kg), so m_eff
+#   The 0.175 kg tip mass dominates m_eff (mast self-mass ~0.02 kg), so m_eff
 #   is nearly constant and f1 ~ sqrt(k_eff) = sqrt(3 E I / L^3).
 #     - Length:  k ∝ L^-3, so f1 ∝ L^-1.5. A 0.12 -> 0.10 m cut is a 1.73x
 #       stiffness gain (1.32x in f1) for a TINY mass change.
@@ -462,7 +478,7 @@ def _hand_sanity_check_recommended(rec: SweepCandidate) -> list[str]:
     a(f"  I     = pi/64*(OD^4-ID^4) = {I*1e12:.1f} mm^4")
     a(f"  k     = 3*E*I/L^3         = {k:.3e} N/m")
     a(f"  m_eff = m_tip + 0.23*m_mast = {m_eff*1e3:.1f} g "
-      f"(m_tip 200 g + 0.23*{m_mast*1e3:.1f} g)")
+      f"(m_tip {M_TIP*1e3:.0f} g + 0.23*{m_mast*1e3:.1f} g)")
     a(f"  f1    = (1/2pi)*sqrt(k/m_eff) = {f1:.1f} Hz")
     a(f"  cross-check vs sweep value {rec.f1:.1f} Hz: delta = {abs(f1-rec.f1):.3f} Hz "
       f"({'OK' if abs(f1-rec.f1) < 0.5 else 'MISMATCH'})")
@@ -480,13 +496,15 @@ def _fmt_lines(sec: SectionProps, cases: list[CantileverResult], f1: float, k_ef
     a("LiDAR MAST — HAND CALCULATION (analytical baseline for item-16 FEA)")
     a("=" * 72)
     a("")
-    a("ASSUMPTIONS (all values labelled ASSUMED; LiDAR item 15 not yet locked)")
+    a("ASSUMPTIONS (geometry/material ASSUMED; tip mass FIRMED, item-15 Hokuyo UST-10LX)")
     a("-" * 72)
     a(f"  Geometry   : L = {L_mm:.1f} mm (= moment arm), OD = {OD*1e3:.1f} mm, "
       f"wall t = {WALL_T*1e3:.2f} mm, ID = {ID*1e3:.2f} mm   [ASSUMED]")
     a(f"  Material   : 6061-T6 Al, E = {E/1e9:.1f} GPa, "
       f"sigma_yield = {SIGMA_YIELD/1e6:.0f} MPa, rho = {RHO:.0f} kg/m^3   [ASSUMED]")
-    a(f"  Tip mass   : m_tip = {M_TIP:.3f} kg (RPLIDAR-class 2D + bracket)   [ASSUMED]")
+    a(f"  Tip mass   : m_tip = {M_TIP:.3f} kg   [FIRMED, item 15]")
+    a(f"               = {M_LIDAR_BODY*1e3:.0f} g Hokuyo UST-10LX [DATASHEET]"
+      f" + {M_BRACKET*1e3:.0f} g bracket + {M_CABLE*1e3:.0f} g cable [ASSUMED]")
     a(f"  Maneuver a : a_lat_peak = {A_LAT_PEAK:.1f} m/s^2 (~{A_LAT_PEAK/G:.2f} g)   "
       f"[MEASURED, clean lap]")
     a(f"  Crash a    : {A_CRASH_G:.0f} g = {A_CRASH:.0f} m/s^2 (stated shock level)   [ASSUMED]")
@@ -560,8 +578,8 @@ def main() -> None:
     f1, k_eff, m_eff = first_natural_frequency(sec, length=L, E=E, m_tip=M_TIP)
 
     # --- internal sanity checks (cheap asserts; catch unit slips) ---
-    # 0.20 kg at ~2 g without SF is ~3.9 N; with SF=2 it is ~7.9 N.
-    assert abs(M_TIP * A_LAT_PEAK - 3.88) < 0.1, "maneuver base force off (unit slip?)"
+    # 0.175 kg at ~2 g without SF is ~3.4 N; with SF=2 it is ~6.8 N.
+    assert abs(M_TIP * A_LAT_PEAK - 3.395) < 0.1, "maneuver base force off (unit slip?)"
     assert 1e-10 < sec.I < 1e-7, f"I out of physical range for a ~16 mm tube: {sec.I}"
     assert 100.0 < f1 < 5000.0, f"f1 physically implausible for a short Al mast: {f1}"
     assert maneuver.sigma < SIGMA_YIELD, "maneuver stress exceeds yield — check inputs"
@@ -583,8 +601,12 @@ def main() -> None:
     assert recommended.sf_crash >= SF_CRASH, (
         f"recommended crash SF {recommended.sf_crash:.2f} below {SF_CRASH:.1f}")
     # Baseline must reproduce the known failing f1 (guards against drift).
-    assert abs(baseline_c.f1 - 163.8) < 0.5, (
-        f"baseline f1 drifted from the documented 163.8 Hz: {baseline_c.f1:.1f}")
+    # With the firmed 0.175 kg tip mass the baseline f1 rises to 174.8 Hz
+    # (from 163.8 Hz at the old 0.20 kg placeholder) but STILL fails < 200 Hz.
+    assert abs(baseline_c.f1 - 174.8) < 0.5, (
+        f"baseline f1 drifted from the documented 174.8 Hz: {baseline_c.f1:.1f}")
+    assert not baseline_c.f1_pass, (
+        f"baseline unexpectedly passes the 200 Hz guard at {baseline_c.f1:.1f} Hz")
 
     sweep_lines = _fmt_sweep_lines(candidates, baseline_c, recommended)
     sweep_lines += [""] + _hand_sanity_check_recommended(recommended)
