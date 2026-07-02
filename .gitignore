@@ -71,3 +71,4 @@ evidence/item11/assets/
 !reports/figures/parameter_id_noise_degradation.png
 !reports/figures/parameter_id_latency_degradation.png
 !reports/figures/parameter_id_condition_number.png
+runs/mast_fea/converge/

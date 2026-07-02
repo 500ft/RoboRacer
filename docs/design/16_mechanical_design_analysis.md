@@ -163,13 +163,15 @@ Together they lift `k` by `3.58×` and `f1` from 174.7 → 330.1 Hz. The same ge
 
 ## 5. Mesh Convergence (REQUIRED, <5%)
 
-> TEMPLATE / TODO. Refine the mesh over ≥3 levels and track peak stress on a **defined gauge region** (away from singular re-entrant corners — pick a fillet flank or a mid-span section so the metric converges instead of chasing a singularity). **Acceptance: <5% change in the gauge-region stress between the two finest meshes.**
+> **DONE — PASS.** Three uniform refinements (~1.5× each) of the recommended mast, solved for the static crash case **and** the first bending mode via `python experiments/mast_fea.py --converge` (raw table: `runs/mast_fea/mesh_convergence.txt`). The gauge band is held **fixed** (z = L/2 ± 1.0 mm) across all levels so every mesh samples the same physical region — letting the band scale with element size would change the comparison region between levels and contaminate the convergence measure. Acceptance: <5% change in gauge stress (and tip deflection and f1) between the two finest meshes.
 
-| Mesh level | Element size / count | Gauge-region stress | Δ% vs previous |
-| --- | --- | ---: | ---: |
-| Coarse | `[confirm]` | `[confirm]` | — |
-| Medium | `[confirm]` | `[confirm]` | `[confirm]` |
-| Fine | `[confirm]` | `[confirm]` | `[confirm]` (**must be <5%**) |
+| Mesh level | Element size / count | Gauge stress | Δ% | Tip defl. | Δ% | f1 | Δ% |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Coarse | 3.0 mm / 4 747 C3D10 | 17.38 MPa | — | 0.1772 mm | — | 290.6 Hz | — |
+| Medium | 2.0 mm / 10 435 C3D10 | 17.50 MPa | +0.70% | 0.1751 mm | −1.15% | 289.6 Hz | −0.35% |
+| Fine | 1.2 mm / 28 985 C3D10 | 17.48 MPa | **−0.15%** | 0.1757 mm | **+0.30%** | 285.5 Hz | **−1.42%** |
+
+All three metrics move by <1.5% at the final refinement — an order of magnitude inside the 5% acceptance band, so the 1.2 mm production mesh used in §4/§6 is converged for the quantities being reported. (The global *peak* von Mises at the fixed-root corner is deliberately **not** tracked here: it sits on a re-entrant-corner singularity and diverges with refinement, which is exactly why the acceptance metric is defined on the gauge region.)
 
 ## 6. Modal Analysis (REQUIRED, with acceptance criterion)
 

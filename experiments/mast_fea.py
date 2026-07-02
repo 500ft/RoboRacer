@@ -125,7 +125,7 @@ class Mesh:
     gauge_nodes: list[int]                          # nodes in a mid-span gauge ring
 
 
-def build_mesh(mesh_size: float = MESH_SIZE) -> Mesh:
+def build_mesh(mesh_size: float = MESH_SIZE, gauge_band: float | None = None) -> Mesh:
     """Build the recommended tube solid in gmsh and mesh with C3D10 tets.
 
     Tube axis is +z; root plane at z=0, free tip at z=L. Returns the parsed
@@ -184,7 +184,7 @@ def build_mesh(mesh_size: float = MESH_SIZE) -> Mesh:
         # the fixed-root and loaded-tip stress concentrations) where the FE
         # bending stress is the fair apples-to-apples check vs M*c/I.
         zg = L / 2.0
-        band = mesh_size * 0.6
+        band = gauge_band if gauge_band is not None else mesh_size * 0.6
         gauge_nodes = [nid for nid, (x, y, z) in nodes.items() if abs(z - zg) <= band]
 
         return Mesh(nodes=nodes, c3d10=c3d10,
@@ -391,6 +391,80 @@ def parse_dat_eigenfreqs(dat: Path) -> list[float]:
 
 
 # ---------------------------------------------------------------------------
+# Mesh-convergence study (design-package acceptance: < 5% on the gauge region)
+# ---------------------------------------------------------------------------
+# Three uniform refinements at ~1.4-1.6x each. The gauge band is held FIXED
+# (+-1.0 mm about z = L/2) across all meshes so every level samples the same
+# physical region; letting the band scale with element size would change the
+# comparison region between levels and contaminate the convergence measure.
+CONVERGE_SIZES = (3.0e-3, 2.0e-3, MESH_SIZE)
+CONVERGE_GAUGE_BAND = 1.0e-3
+CONVERGE_TOL_PCT = 5.0
+
+
+def run_convergence(ccx: str) -> int:
+    """Solve static + modal at successive mesh refinements; PASS when the last
+    refinement moves gauge stress, tip deflection, and f1 each by < 5%."""
+    conv_dir = RUN_DIR / "converge"
+    conv_dir.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, float]] = []
+
+    for size in CONVERGE_SIZES:
+        tag = f"h{size*1e3:.1f}mm".replace(".", "p")
+        print(f"\n[converge] mesh size {size*1e3:.1f} mm ...")
+        mesh = build_mesh(size, gauge_band=CONVERGE_GAUGE_BAND)
+        static_inp = conv_dir / f"static_{tag}.inp"
+        modal_inp = conv_dir / f"modal_{tag}.inp"
+        write_static_inp(mesh, static_inp)
+        write_modal_inp(mesh, modal_inp)
+        run_ccx(ccx, static_inp.with_suffix(""))
+        run_ccx(ccx, modal_inp.with_suffix(""))
+        vm_gauge = parse_frd_vonmises(conv_dir / f"static_{tag}.frd",
+                                      only=set(mesh.gauge_nodes))
+        tip_disp = parse_dat_tip_disp(conv_dir / f"static_{tag}.dat")
+        freqs = parse_dat_eigenfreqs(conv_dir / f"modal_{tag}.dat")
+        if vm_gauge is None or tip_disp is None or not freqs:
+            print(f"[converge] parse failure at {tag} — aborting")
+            return 3
+        rows.append({"size_mm": size * 1e3, "nodes": len(mesh.nodes),
+                     "elems": len(mesh.c3d10), "vm_gauge_mpa": vm_gauge / 1e6,
+                     "tip_mm": tip_disp * 1e3, "f1_hz": freqs[0]})
+        print(f"[converge]   nodes={len(mesh.nodes)}  gauge={vm_gauge/1e6:.2f} MPa  "
+              f"tip={tip_disp*1e3:.4f} mm  f1={freqs[0]:.1f} Hz")
+
+    lines = ["=" * 78,
+             "MESH CONVERGENCE — LiDAR mast (fixed gauge band z = L/2 +- 1.0 mm)",
+             "=" * 78,
+             f"  {'size mm':>8}{'nodes':>9}{'C3D10':>9}{'gauge MPa':>11}"
+             f"{'tip mm':>9}{'f1 Hz':>9}{'d_gauge%':>10}{'d_tip%':>8}{'d_f1%':>8}"]
+    all_ok = True
+    for i, r in enumerate(rows):
+        if i == 0:
+            deltas = ("-", "-", "-")
+        else:
+            prev = rows[i - 1]
+            dg = 100.0 * (r["vm_gauge_mpa"] - prev["vm_gauge_mpa"]) / prev["vm_gauge_mpa"]
+            dt = 100.0 * (r["tip_mm"] - prev["tip_mm"]) / prev["tip_mm"]
+            df = 100.0 * (r["f1_hz"] - prev["f1_hz"]) / prev["f1_hz"]
+            deltas = (f"{dg:.2f}", f"{dt:.2f}", f"{df:.2f}")
+            if i == len(rows) - 1:
+                all_ok = all(abs(x) < CONVERGE_TOL_PCT for x in (dg, dt, df))
+        lines.append(f"  {r['size_mm']:>8.1f}{r['nodes']:>9d}{r['elems']:>9d}"
+                     f"{r['vm_gauge_mpa']:>11.2f}{r['tip_mm']:>9.4f}{r['f1_hz']:>9.1f}"
+                     f"{deltas[0]:>10}{deltas[1]:>8}{deltas[2]:>8}")
+    lines.append("")
+    verdict = ("PASS" if all_ok else "FAIL")
+    lines.append(f"  Acceptance: final refinement changes gauge stress, tip deflection,")
+    lines.append(f"  and f1 each by < {CONVERGE_TOL_PCT:.0f}%  ->  {verdict}")
+    lines.append("=" * 78)
+    report = "\n".join(lines)
+    print("\n" + report)
+    (RUN_DIR / "mesh_convergence.txt").write_text(report + "\n")
+    print(f"\n[written] {RUN_DIR / 'mesh_convergence.txt'}")
+    return 0 if all_ok else 1
+
+
+# ---------------------------------------------------------------------------
 # Driver
 # ---------------------------------------------------------------------------
 def main() -> int:
@@ -419,6 +493,9 @@ def main() -> int:
         print("\n[install-pending] FEA toolchain incomplete. See docs/design/FEA_SETUP.md")
         print("  This stub is runnable; it will mesh + solve once gmsh and ccx exist.")
         return 2
+
+    if "--converge" in sys.argv:
+        return run_convergence(ccx)
 
     # 1) mesh
     print("\n[1/4] meshing (gmsh, C3D10) ...")
