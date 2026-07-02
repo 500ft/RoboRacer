@@ -187,15 +187,23 @@ All three metrics move by <1.5% at the final refinement — an order of magnitud
 
 ## 7. Tolerance Stack → LiDAR Angular Error (REQUIRED)
 
-> TEMPLATE / TODO. Build the tolerance stack from the mounting interfaces (deck flatness, mast base squareness, fastener clearance, LiDAR mounting datum) to the **angular error of the LiDAR optical axis**. Convert the worst-case (and RSS) tilt into a scan-angle / range error at a representative distance, and state whether it is acceptable for the localization that feeds `/ego_racecar/odom`.
+> **DONE — with a derived install requirement.** `experiments/mast_tolerance_stack.py` (raw: `runs/mast_tolerance_stack/summary.txt`). The UST-10LX scans a horizontal plane, so yaw misalignment is nulled by the software mount calibration; the physical stack that matters is the **tilt** of the scan plane. The requirement is derived from the sightline, both directions, at the 10 m guaranteed range (optical center 0.170 m above floor = 0.100 m mast [LOCKED] + 0.070 m deck [ASSUMED]; wall 0.30 m [ASSUMED, conservative vs the common 0.33 m duct]): **governing bound = up-tilt wall clearance, θ ≤ 0.745°** (down-tilt floor-graze bound 0.974°).
 
 | Contributor | Tolerance | Angular contribution | Note |
-| --- | --- | --- | --- |
-| Deck flatness | `[confirm]` | `[confirm]` ° | |
-| Mast base squareness | `[confirm]` | `[confirm]` ° | |
-| Fastener clearance / fit | `[confirm]` | `[confirm]` ° | |
-| LiDAR mounting datum | `[confirm]` | `[confirm]` ° | |
-| **Worst-case sum / RSS** | — | `[confirm]` ° | → range error `[confirm]` mm at `[confirm]` m |
+| --- | --- | ---: | --- |
+| Deck local flatness (20 mm base seat) | 0.10 mm / 20 mm | 0.286° | ASSUMED, machined/FR4-plate class |
+| Mast base-to-tube squareness | — | 0.500° | ASSUMED FDM-bracket class, no post-machining |
+| Bolted-joint preload rocking | — | 0.100° | clearance goes to yaw (software-nulled); tilt allowance kept |
+| LiDAR internal scan-plane-to-base | — | 0.250° | ASSUMED — datasheet does not spec it |
+| LiDAR mounting datum | 0.10 mm / 40 mm | 0.143° | ASSUMED bolt-pattern flatness |
+| Elastic tilt @ 2g maneuvering | FEA-derived | 0.004° | negligible — stack is interface-dominated |
+| **Worst-case sum (blind assembly)** | — | **1.284°** | **FAIL** vs 0.745° |
+| **RSS (blind assembly)** | — | **0.652°** | passes, but with no margin policy behind it |
+| **Worst-case after scan-plane leveling** | — | **0.354°** | **PASS**, >2× margin |
+
+Beam-height error: ±5.7 cm (RSS, blind) / ±3.1 cm (calibrated worst) at 5 m; ±11.4 / ±6.2 cm at 10 m.
+
+**Derived requirement:** blind assembly fails worst-case, so the build gains a one-time **scan-plane leveling step** — shim the mast base, verify by scanning a wall at two distances and equalizing return heights. That nulls every contributor external to the LiDAR; the calibrated residual (internal spec + preload drift + elastic) passes the governing bound with >2× margin. This is the same pattern as the §3.2 frequency fix: the analysis exists to catch the failure and convert it into a cheap requirement before anything is built.
 
 ## 8. Design Page(s)
 
