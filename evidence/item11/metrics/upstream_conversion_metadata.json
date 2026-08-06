@@ -1,0 +1,88 @@
+{
+  "bag_path": "runs/item11_capture/upstream_gym_ros_bag_v2",
+  "topic_types": {
+    "/drive": "ackermann_msgs/msg/AckermannDriveStamped",
+    "/ego_racecar/odom": "nav_msgs/msg/Odometry"
+  },
+  "odom_topic": "/ego_racecar/odom",
+  "drive_topic": "/drive",
+  "collision_topic": "/f1tenth/collision",
+  "internal_state_topic": "/f1tenth/internal_state",
+  "has_internal_state": false,
+  "has_collision": false,
+  "converter": "experiments/rosbag_to_telemetry.py",
+  "output_path": "evidence/item11/telemetry/upstream_gym_ros.csv",
+  "quality_path": "evidence/item11/metrics/upstream_quality.csv",
+  "dt_s": 0.01,
+  "sample_clock": "odom",
+  "timestamp_basis": "rosbag_receive_time",
+  "num_output_samples": 4977,
+  "duration_s": 19.903777837753296,
+  "steer_rad_source": "command_proxy",
+  "collision_observed": false,
+  "topic_diagnostics": {
+    "/ego_racecar/odom": {
+      "sample_count": 5556,
+      "start_time_s": 1782017854.659223,
+      "stop_time_s": 1782017876.8791347,
+      "duration_s": 22.219911575317383,
+      "median_period_s": 0.003971099853515625,
+      "observed_rate_hz": 251.81940441882804,
+      "max_gap_s": 0.007476091384887695,
+      "median_header_bag_skew_s": 0.00034928321838378906,
+      "max_header_bag_skew_s": 0.00311279296875
+    },
+    "/drive": {
+      "sample_count": 1992,
+      "start_time_s": 1782017856.6402788,
+      "stop_time_s": 1782017876.5504105,
+      "duration_s": 19.910131692886353,
+      "median_period_s": 0.009983301162719727,
+      "observed_rate_hz": 100.16726769039715,
+      "max_gap_s": 0.013303041458129883,
+      "median_header_bag_skew_s": 0.0001373291015625,
+      "max_header_bag_skew_s": 0.0018491744995117188
+    },
+    "/f1tenth/collision": {
+      "sample_count": 0,
+      "start_time_s": null,
+      "stop_time_s": null,
+      "duration_s": 0.0,
+      "median_period_s": null,
+      "observed_rate_hz": null,
+      "max_gap_s": null,
+      "median_header_bag_skew_s": null,
+      "max_header_bag_skew_s": null
+    },
+    "/f1tenth/internal_state": {
+      "sample_count": 0,
+      "start_time_s": null,
+      "stop_time_s": null,
+      "duration_s": 0.0,
+      "median_period_s": null,
+      "observed_rate_hz": null,
+      "max_gap_s": null,
+      "median_header_bag_skew_s": null,
+      "max_header_bag_skew_s": null
+    }
+  },
+  "required_topic_overlap_s": 19.910131692886353,
+  "sim_time_observed": false,
+  "real_time_factor": 0.9998101949396698,
+  "real_time_factor_source": "odom_state_change_count_times_configured_step",
+  "odom_state_change_count": 1990,
+  "sim_step_dt_s": 0.01,
+  "command_frequency_band_wall_hz": [
+    0.2,
+    2.0
+  ],
+  "realized_frequency_band_sim_hz": [
+    0.20003796821862607,
+    2.0003796821862605
+  ],
+  "standard_topics_primary": true,
+  "internal_state_is_optional_enrichment": true,
+  "raw_dt_min_s": 7.3909759521484375e-06,
+  "raw_dt_max_s": 0.007476091384887695,
+  "raw_dt_mean_s": 0.002944204528331441
+}

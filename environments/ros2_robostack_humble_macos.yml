@@ -1,0 +1,22 @@
+name: f1tenth-ros2-verify
+channels:
+  - robostack-staging
+  - conda-forge
+dependencies:
+  - python=3.11
+  - ros-humble-ros-base
+  - ros-humble-ackermann-msgs
+  - colcon-common-extensions
+  - numpy=1.26
+  - scipy
+  - numba
+  - pillow
+  - pyyaml
+  - matplotlib
+  - pandas
+  - pip
+  - pip:
+      - gym==0.26.2
+      - pyglet<1.5
+      - PyOpenGL
+      - cloudpickle

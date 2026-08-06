@@ -1,0 +1,11 @@
+{
+  "model": "vehicle_dynamics_st",
+  "parameter_source": "gym/f110_gym/envs/f110_env.py",
+  "model_source": "gym/f110_gym/envs/dynamic_models.py",
+  "integrator": "RK4",
+  "telemetry_source": "runs/first_lap/telemetry.csv",
+  "telemetry_integrator_filter": "rk4",
+  "slip_angle_initialization": "0.0 because slip angle is not logged",
+  "input_convention": "[steering_velocity, longitudinal_acceleration]",
+  "state_convention": "[x, y, steer_angle, speed, yaw, yaw_rate, slip_angle]"
+}

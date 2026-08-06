@@ -1,0 +1,23 @@
+{
+  "integration_dt_s": 0.002,
+  "control_rate_hz": 100.0,
+  "lookahead_values_m": [
+    0.4,
+    0.6,
+    0.8,
+    1.0,
+    1.2,
+    1.5
+  ],
+  "vgain_values": [
+    0.8,
+    1.0,
+    1.2,
+    1.375,
+    1.6
+  ],
+  "baseline": {
+    "lookahead_m": 1.2,
+    "vgain": 1.2
+  }
+}

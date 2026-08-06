@@ -1,0 +1,50 @@
+====================================================================================
+TOLERANCE STACK -> LiDAR SCAN-PLANE TILT (item 16 par.7)
+====================================================================================
+  Optical center: 0.220 m above floor (0.100 m mast [LOCKED] + 0.120 m deck [ASSUMED])
+  Requirement (governing = up-tilt wall clearance at R = 10 m):  theta <= 0.458 deg
+    (down-tilt floor-graze bound: 1.260 deg)
+
+  contributor                                  tilt [deg]
+  --------------------------------------------------------------------------------
+  Deck local flatness under 20 mm base              0.286   ASSUMED 0.10 mm across the 20 mm base seat (machined/FR4-plate class)
+  Mast base-to-tube squareness                      0.500   ASSUMED FDM/printed-bracket perpendicularity, no post-machining
+  Bolted-joint preload rocking allowance            0.100   clamped flat-on-flat; hole clearance goes to YAW (software-nulled), keep a tilt allowance
+  LiDAR internal scan-plane-to-base                 0.250   ASSUMED - UST-10LX datasheet does not spec scan-plane tilt; typical class
+  LiDAR mounting datum                              0.143   ASSUMED 0.10 mm across the 40 mm bolt pattern
+  Elastic tilt @ 2g maneuvering (FEA-derived)       0.004   delta = 0.0046 mm from the validated static FEA, scaled to F = 3.4 N
+
+  WORST-CASE sum (blind assembly)                   1.284   FAIL vs 0.458 deg
+  RSS (blind assembly)                              0.652   FAIL vs 0.458 deg
+  WORST-CASE after scan-plane leveling              0.354   PASS vs 0.458 deg
+
+  Beam-height error at range (RSS blind / calibrated worst):
+    R = 5 m : +-5.7 cm / +-3.1 cm
+    R = 10 m : +-11.4 cm / +-6.2 cm
+
+  Deck-height sensitivity (up-tilt bound tightens as the deck rises):
+    H_DECK [m]  H_OPT [m]  bound [deg]  margin vs residual
+         0.070      0.170        0.745               2.10x
+         0.090      0.190        0.630               1.78x
+         0.110      0.210        0.516               1.46x
+         0.120      0.220        0.458               1.29x <- baseline
+         0.130      0.230        0.401               1.13x
+         0.150      0.250        0.286               0.81x
+
+  DERIVED CAD REQUIREMENT (item-16 deck design):
+    mast-root (deck) plane <= 0.138 m above floor, or the
+    calibrated residual (0.354 deg) violates the up-tilt bound
+    at the 0.30 m wall. A 2x margin would need <= 0.076 m,
+    which the locked chassis makes infeasible (skid-plate clearance
+    alone is 0.072 m) - so margin is reported, not claimed at 2x.
+    At the common 0.33 m wall the pass limit relaxes to 0.168 m.
+
+  CONCLUSION: blind assembly FAILS worst-case (and at the chassis-informed
+  deck height the blind RSS fails too), so the stack DERIVES an install
+  requirement: a one-time scan-plane leveling (shim the base; verify by
+  scanning a wall at two distances and equalizing return heights). The
+  calibrated residual passes the governing bound; its margin depends on
+  the deck height per the table above and is settled by the deck CAD.
+  The elastic term is negligible (<0.01 deg): the stack is interface-
+  dominated, which is exactly why the procedure fixes it.
+====================================================================================

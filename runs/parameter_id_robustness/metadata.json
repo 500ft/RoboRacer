@@ -1,0 +1,67 @@
+{
+  "seed": 99,
+  "perturbations": {
+    "nominal": {
+      "kind": "nominal"
+    },
+    "noise_low": {
+      "kind": "noise",
+      "yaw_rate": 0.002,
+      "speed": 0.005,
+      "steer": 0.0005
+    },
+    "noise_medium": {
+      "kind": "noise",
+      "yaw_rate": 0.01,
+      "speed": 0.02,
+      "steer": 0.002
+    },
+    "noise_high": {
+      "kind": "noise",
+      "yaw_rate": 0.04,
+      "speed": 0.08,
+      "steer": 0.006
+    },
+    "latency_20ms": {
+      "kind": "latency",
+      "latency_s": 0.02
+    },
+    "latency_50ms": {
+      "kind": "latency",
+      "latency_s": 0.05
+    },
+    "latency_100ms": {
+      "kind": "latency",
+      "latency_s": 0.1
+    },
+    "quantization_low": {
+      "kind": "quantization",
+      "yaw_rate": 0.001,
+      "speed": 0.002,
+      "steer": 0.0005,
+      "accel": 0.01
+    },
+    "quantization_medium": {
+      "kind": "quantization",
+      "yaw_rate": 0.005,
+      "speed": 0.01,
+      "steer": 0.002,
+      "accel": 0.05
+    },
+    "quantization_high": {
+      "kind": "quantization",
+      "yaw_rate": 0.02,
+      "speed": 0.05,
+      "steer": 0.005,
+      "accel": 0.15
+    },
+    "combined_medium": {
+      "kind": "combined",
+      "yaw_rate": 0.01,
+      "speed": 0.02,
+      "steer": 0.002,
+      "latency_s": 0.05,
+      "accel": 0.05
+    }
+  }
+}

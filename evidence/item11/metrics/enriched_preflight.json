@@ -1,0 +1,33 @@
+{
+  "telemetry": "evidence/item11/telemetry/enriched_bridge.csv",
+  "metrics": {
+    "command_achieved_rmse_rad": 0.019424501113716422,
+    "command_achieved_max_abs_rad": 0.044004593,
+    "best_command_lag_samples": 2,
+    "best_command_lag_s": 0.019999999999999574,
+    "best_lag_rmse_rad": 0.01886566588955321,
+    "steering_rate_limit_fraction": 0.9954819277108434,
+    "normalized_jacobian_condition_number": 1.3393075551526206,
+    "raw_jacobian_condition_number": 2.949015522165317,
+    "parameter_correlation": 0.09075516279178125,
+    "sensitivity_column_cosine": -0.09075516279178122,
+    "lateral_acceleration_rms_mps2": 0.37432287084063925,
+    "lateral_acceleration_peak_abs_mps2": 0.5671817612086826,
+    "speed_in_band_fraction": 1.0,
+    "heldout_duration_s": 5.970000000000002,
+    "heldout_native_transitions": 597,
+    "fitted_C_Sf": 4.718000001290799,
+    "fitted_C_Sr": 5.456200006816305
+  },
+  "checks": {
+    "normalized_condition": true,
+    "parameter_correlation": true,
+    "lateral_acceleration_rms": true,
+    "lateral_acceleration_peak": true,
+    "speed_band": true,
+    "heldout_duration": true,
+    "heldout_transitions": true,
+    "achieved_channel_differs": true
+  },
+  "passed": true
+}

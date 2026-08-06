@@ -1,0 +1,12 @@
+{
+  "python_version": "3.9.23",
+  "f1tenth_gym_commit": "8578485dd641c6571c44bd985bcc48921ad863f6",
+  "map": "examples/example_map",
+  "waypoints": "examples/example_waypoints.csv",
+  "control": "pure_pursuit",
+  "integrators": [
+    "rk4",
+    "euler"
+  ],
+  "max_steps": 20000
+}

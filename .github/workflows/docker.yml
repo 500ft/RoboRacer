@@ -1,0 +1,25 @@
+name: Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build evidence regression image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.item11-regression
+          push: false
+          load: true
+          tags: item11-regression:ci
+      - name: Run strict item 11 regression
+        run: docker run --rm item11-regression:ci

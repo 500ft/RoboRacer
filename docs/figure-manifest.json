@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.0",
+  "project": "RoboRacer Modeling, Controls, and Mechanical Design",
+  "figures": [
+    {
+      "id": "integrator-comparison",
+      "evidence_type": "simulator output",
+      "generator": "experiments/plot_integrator_comparison.py",
+      "command": "python experiments/run_scripted_lap.py && python experiments/plot_integrator_comparison.py",
+      "inputs": ["runs/first_lap/telemetry.csv"],
+      "outputs": [
+        "reports/figures/first_integrator_comparison.png",
+        "reports/figures/integrator_trajectory_overlay.png",
+        "reports/figures/integrator_tracking_error_vs_progress.png",
+        "reports/figures/integrator_summary_metrics.png"
+      ]
+    },
+    {
+      "id": "integrator-convergence",
+      "evidence_type": "simulator output",
+      "generator": "experiments/integrator_convergence.py",
+      "command": "python experiments/integrator_convergence.py",
+      "inputs": ["experiments/integrator_convergence.py"],
+      "outputs": [
+        "reports/figures/integrator_convergence_position_error.png",
+        "reports/figures/integrator_convergence_metrics.png"
+      ]
+    },
+    {
+      "id": "dynamic-model-replay",
+      "evidence_type": "simulator replay",
+      "generator": "experiments/dynamic_model_replay.py",
+      "command": "python experiments/dynamic_model_replay.py",
+      "inputs": ["runs/first_lap/telemetry.csv"],
+      "outputs": [
+        "reports/figures/dynamic_replay_yaw_rate_overlay.png",
+        "reports/figures/dynamic_replay_state_errors.png"
+      ]
+    },
+    {
+      "id": "kinematic-model-replay",
+      "evidence_type": "simulator replay",
+      "generator": "experiments/model_vs_gym_comparison.py",
+      "command": "python experiments/model_vs_gym_comparison.py",
+      "inputs": ["runs/first_lap/telemetry.csv"],
+      "outputs": [
+        "reports/figures/model_vs_gym_trajectory_error.png",
+        "reports/figures/model_vs_gym_state_errors.png"
+      ]
+    },
+    {
+      "id": "kinematic-yaw-rate-diagnostic",
+      "evidence_type": "legacy simulator diagnostic",
+      "generator": null,
+      "command": null,
+      "inputs": [],
+      "outputs": ["reports/figures/kinematic_yaw_rate_diagnostic.png"],
+      "notes": "The image is cited by the report, but no generation code is present in the current repository."
+    },
+    {
+      "id": "steering-excitation",
+      "evidence_type": "simulator output",
+      "generator": "experiments/sysid_steering_excitation.py",
+      "command": "python experiments/sysid_steering_excitation.py",
+      "inputs": ["experiments/sysid_steering_excitation.py"],
+      "outputs": [
+        "reports/figures/sysid_steering_input.png",
+        "reports/figures/sysid_yaw_response.png",
+        "reports/figures/sysid_speed_hold.png"
+      ]
+    },
+    {
+      "id": "dynamic-parameter-identification",
+      "evidence_type": "simulator parameter recovery",
+      "generator": "experiments/fit_dynamic_parameters.py",
+      "command": "python experiments/fit_dynamic_parameters.py",
+      "inputs": ["runs/sysid_steering_excitation/telemetry.csv"],
+      "outputs": [
+        "reports/figures/dynamic_parameter_fit.png",
+        "reports/figures/dynamic_parameter_residuals.png"
+      ]
+    },
+    {
+      "id": "pure-pursuit-sweep",
+      "evidence_type": "simulator controller study",
+      "generator": "experiments/pure_pursuit_sweep.py",
+      "command": "python experiments/pure_pursuit_sweep.py",
+      "inputs": ["experiments/pure_pursuit_sweep.py"],
+      "outputs": [
+        "reports/figures/pure_pursuit_sweep_rms_cte_heatmap.png",
+        "reports/figures/pure_pursuit_sweep_lap_time_heatmap.png",
+        "reports/figures/pure_pursuit_sweep_regions.png"
+      ]
+    },
+    {
+      "id": "lqr-controller",
+      "evidence_type": "simulator controller study",
+      "generator": "experiments/lqr_controller.py",
+      "command": "python experiments/lqr_controller.py",
+      "inputs": ["runs/pure_pursuit_sweep/results.csv"],
+      "outputs": ["reports/figures/lqr_controller_cte_cases.png"]
+    },
+    {
+      "id": "mpc-controller",
+      "evidence_type": "simulator controller study and software timing",
+      "generator": "experiments/mpc_controller.py",
+      "command": "python experiments/mpc_controller.py",
+      "inputs": ["runs/pure_pursuit_sweep/results.csv"],
+      "outputs": [
+        "reports/figures/mpc_solver_runtime.png",
+        "reports/figures/mpc_controller_cte.png"
+      ]
+    },
+    {
+      "id": "ekf-study",
+      "evidence_type": "simulator estimator study",
+      "generator": "experiments/ekf_study.py",
+      "command": "python experiments/ekf_study.py",
+      "inputs": ["runs/pure_pursuit_sweep/results.csv"],
+      "outputs": [
+        "reports/figures/ekf_position_error_over_time.png",
+        "reports/figures/ekf_rmse_summary.png",
+        "reports/figures/ekf_dropout_zoom.png"
+      ]
+    },
+    {
+      "id": "failure-mode-fmea",
+      "evidence_type": "simulator-derived risk study",
+      "generator": "experiments/failure_mode_fmea.py",
+      "command": "python experiments/failure_mode_fmea.py",
+      "inputs": [
+        "runs/pure_pursuit_sweep/results.csv",
+        "runs/ekf_study/summary.csv"
+      ],
+      "outputs": [
+        "reports/figures/fmea_rpn_bar.png",
+        "reports/figures/fmea_detection_signals.png"
+      ]
+    },
+    {
+      "id": "parameter-id-robustness",
+      "evidence_type": "simulator perturbation study",
+      "generator": "experiments/parameter_id_robustness.py",
+      "command": "python experiments/parameter_id_robustness.py",
+      "inputs": ["runs/sysid_steering_excitation/telemetry.csv"],
+      "outputs": [
+        "reports/figures/parameter_id_noise_degradation.png",
+        "reports/figures/parameter_id_latency_degradation.png",
+        "reports/figures/parameter_id_condition_number.png"
+      ]
+    },
+    {
+      "id": "item11-steering-regression",
+      "evidence_type": "simulator-backed ROS 2 capture",
+      "generator": "experiments/item11_report.py",
+      "command": "python experiments/item11_report.py",
+      "inputs": ["evidence/item11/telemetry/enriched_bridge.csv"],
+      "outputs": ["evidence/item11/figures/steering_command_vs_achieved.png"]
+    },
+    {
+      "id": "item11-enriched-identification",
+      "evidence_type": "simulator-backed ROS 2 parameter recovery",
+      "generator": "experiments/fit_dynamic_parameters.py",
+      "command": "python experiments/fit_dynamic_parameters.py --telemetry evidence/item11/telemetry/enriched_bridge.csv --run-dir evidence/item11/metrics/enriched_identification --report evidence/item11/enriched_identification.md --figure-dir evidence/item11/figures --figure-prefix enriched_ros",
+      "inputs": ["evidence/item11/telemetry/enriched_bridge.csv"],
+      "outputs": [
+        "evidence/item11/figures/enriched_ros_fit.png",
+        "evidence/item11/figures/enriched_ros_residuals.png"
+      ]
+    }
+  ]
+}
