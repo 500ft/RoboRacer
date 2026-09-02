@@ -32,6 +32,11 @@ DEFAULT_DYNAMIC_PARAMS = {
 
 
 def install_numba_stub_if_missing() -> None:
+    # A stub installed by an earlier call has ``__spec__ is None``, which makes
+    # ``find_spec`` raise ValueError rather than report the module as present. Check
+    # ``sys.modules`` first so repeated calls in one process are a no-op.
+    if "numba" in sys.modules:
+        return
     if importlib.util.find_spec("numba") is not None:
         return
 
@@ -50,6 +55,9 @@ def install_numba_stub_if_missing() -> None:
     sys.modules["numba"] = numba_stub
 
 
+_CANONICAL_MODULE_NAME = "dynamic_models"
+
+
 def load_vehicle_dynamics_st(repo_root: Path, *, module_name: str = "roboracer_dynamic_models"):
     install_numba_stub_if_missing()
     path = repo_root / "gym" / "f110_gym" / "envs" / "dynamic_models.py"
@@ -58,6 +66,12 @@ def load_vehicle_dynamics_st(repo_root: Path, *, module_name: str = "roboracer_d
         raise ImportError(f"Could not load dynamic model source: {path}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
+    # The kernels in dynamic_models.py are decorated @njit(cache=True). numba resolves a
+    # cached function's defining module through its canonical name, so loading the file
+    # under any other name makes type inference raise
+    # "ModuleNotFoundError: No module named 'dynamic_models'". Register the canonical
+    # alias too; setdefault so a real top-level module of that name is never shadowed.
+    sys.modules.setdefault(_CANONICAL_MODULE_NAME, module)
     spec.loader.exec_module(module)
     return module.vehicle_dynamics_st
 
