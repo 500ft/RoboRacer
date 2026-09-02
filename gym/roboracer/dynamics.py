@@ -55,24 +55,36 @@ def install_numba_stub_if_missing() -> None:
     sys.modules["numba"] = numba_stub
 
 
-_CANONICAL_MODULE_NAME = "dynamic_models"
+_PACKAGE_MODULE_NAME = "f110_gym.envs.dynamic_models"
 
 
 def load_vehicle_dynamics_st(repo_root: Path, *, module_name: str = "roboracer_dynamic_models"):
     install_numba_stub_if_missing()
     path = repo_root / "gym" / "f110_gym" / "envs" / "dynamic_models.py"
-    spec = importlib.util.spec_from_file_location(module_name, path)
-    if spec is None or spec.loader is None:
+    if not path.is_file():
         raise ImportError(f"Could not load dynamic model source: {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    # The kernels in dynamic_models.py are decorated @njit(cache=True). numba resolves a
-    # cached function's defining module through its canonical name, so loading the file
-    # under any other name makes type inference raise
-    # "ModuleNotFoundError: No module named 'dynamic_models'". Register the canonical
-    # alias too; setdefault so a real top-level module of that name is never shadowed.
-    sys.modules.setdefault(_CANONICAL_MODULE_NAME, module)
-    spec.loader.exec_module(module)
+
+    # The kernels in dynamic_models.py are decorated @njit(cache=True), and numba's
+    # on-disk cache index records the defining module's name. That index is keyed to the
+    # source file and persists between processes, so importing this one file under more
+    # than one identity makes a later process read an index written under a name it
+    # cannot import: "ModuleNotFoundError: No module named '<other identity>'", raised
+    # during type inference. It is cross-process and depends on which script ran first,
+    # so it does not reproduce from a cold cache.
+    #
+    # The vendored environment already imports this file as the package module
+    # f110_gym.envs.dynamic_models (see gym/f110_gym/envs/base_classes.py). Loading it a
+    # second time by path -- under any name -- creates a competing identity. So import
+    # the package module and hand back its kernel, which leaves exactly one identity and
+    # one cache entry for every caller.
+    if str(GYM_ROOT_MARKER := repo_root / "gym") not in sys.path:
+        sys.path.insert(0, str(GYM_ROOT_MARKER))
+    module = importlib.import_module(_PACKAGE_MODULE_NAME)
+
+    if module_name not in (None, _PACKAGE_MODULE_NAME):
+        # Back-compat for callers that pass their own name: point it at the same module
+        # object rather than a second copy. setdefault so a real module is never shadowed.
+        sys.modules.setdefault(module_name, module)
     return module.vehicle_dynamics_st
 
 
