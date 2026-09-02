@@ -72,14 +72,39 @@ def load_vehicle_dynamics_st(repo_root: Path, *, module_name: str = "roboracer_d
     # during type inference. It is cross-process and depends on which script ran first,
     # so it does not reproduce from a cold cache.
     #
-    # The vendored environment already imports this file as the package module
+    # The vendored environment imports this file as the package module
     # f110_gym.envs.dynamic_models (see gym/f110_gym/envs/base_classes.py). Loading it a
-    # second time by path -- under any name -- creates a competing identity. So import
-    # the package module and hand back its kernel, which leaves exactly one identity and
-    # one cache entry for every caller.
-    if str(GYM_ROOT_MARKER := repo_root / "gym") not in sys.path:
-        sys.path.insert(0, str(GYM_ROOT_MARKER))
-    module = importlib.import_module(_PACKAGE_MODULE_NAME)
+    # second time under any other name creates a competing identity. So it is always
+    # registered under the package-qualified name, giving one identity and one cache
+    # entry for every caller.
+    module = sys.modules.get(_PACKAGE_MODULE_NAME)
+    if module is None:
+        gym_root = repo_root / "gym"
+        if str(gym_root) not in sys.path:
+            sys.path.insert(0, str(gym_root))
+        try:
+            # Preferred: the real package, when its dependencies are importable.
+            module = importlib.import_module(_PACKAGE_MODULE_NAME)
+        except ImportError:
+            # f110_gym/__init__.py imports the third-party ``gym``, which this repo's own
+            # gym/ directory shadows whenever PYTHONPATH points at it, and the
+            # evidence-only environments do not install it at all. Load the source
+            # directly, but still under the package-qualified name so the cache identity
+            # matches the package import. Parent placeholders carry the real __path__, so
+            # a later genuine import of a sibling submodule still resolves.
+            for pkg, pkg_dir in (("f110_gym", gym_root / "f110_gym"),
+                                 ("f110_gym.envs", gym_root / "f110_gym" / "envs")):
+                if pkg not in sys.modules:
+                    placeholder = types.ModuleType(pkg)
+                    placeholder.__path__ = [str(pkg_dir)]
+                    sys.modules[pkg] = placeholder
+            spec = importlib.util.spec_from_file_location(_PACKAGE_MODULE_NAME, path)
+            if spec is None or spec.loader is None:
+                raise ImportError(f"Could not load dynamic model source: {path}")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[_PACKAGE_MODULE_NAME] = module
+            spec.loader.exec_module(module)
+            setattr(sys.modules["f110_gym.envs"], "dynamic_models", module)
 
     if module_name not in (None, _PACKAGE_MODULE_NAME):
         # Back-compat for callers that pass their own name: point it at the same module
