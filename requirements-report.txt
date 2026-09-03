@@ -1,2 +1,7 @@
+# gym==0.19.0 (environment.yml) builds through a legacy setup.py path that modern
+# setuptools rejects, so `pip install -r` fails at build time on a clean interpreter.
+# Pin the build backend so the pip-only path works.
+setuptools<66
+wheel
 reportlab>=4.4,<6
 pypdf>=6,<7
