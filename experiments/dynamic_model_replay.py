@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -167,7 +168,7 @@ def metrics_as_dict(metrics: pd.DataFrame) -> dict[str, float]:
     return {str(row.metric): float(row.value) for row in metrics.itertuples(index=False)}
 
 
-def write_metadata(metadata: dict[str, str]) -> None:
+def write_metadata(metadata: dict[str, str], output_path: Path = None) -> None:
     payload = {
         "model": "vehicle_dynamics_st",
         "parameter_source": "gym/f110_gym/envs/f110_env.py",
@@ -179,7 +180,7 @@ def write_metadata(metadata: dict[str, str]) -> None:
         "input_convention": "[steering_velocity, longitudinal_acceleration]",
         "state_convention": "[x, y, steer_angle, speed, yaw, yaw_rate, slip_angle]",
     }
-    METADATA_PATH.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    (output_path or METADATA_PATH).write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
 def save_yaw_rate_figure(trace: pd.DataFrame, output_path: Path) -> None:
@@ -333,27 +334,52 @@ Use this oracle replay to decide the first system-identification experiment. The
 
 
 def main() -> None:
-    RUN_DIR.mkdir(parents=True, exist_ok=True)
-    FIGURE_DIR.mkdir(parents=True, exist_ok=True)
+    # --run-dir lets a reproducibility check regenerate into a scratch directory instead
+    # of overwriting the committed artifacts it is supposed to be comparing against.
+    # Figures and the report stay at their committed locations unless a run dir is given.
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--run-dir", default=None,
+        help="Write trace/metrics/metadata here instead of runs/dynamic_model_replay. "
+             "Figures and the report are also redirected, so the committed copies are "
+             "left untouched.",
+    )
+    args = parser.parse_args()
+
+    if args.run_dir is None:
+        run_dir, figure_dir, report_path = RUN_DIR, FIGURE_DIR, REPORT_PATH
+    else:
+        run_dir = Path(args.run_dir)
+        figure_dir = run_dir / "figures"
+        report_path = run_dir / "dynamic_model_replay.md"
+
+    trace_path = run_dir / "replay_trace.csv"
+    metrics_path = run_dir / "metrics.csv"
+    metadata_path = run_dir / "metadata.json"
+    yaw_rate_figure_path = figure_dir / YAW_RATE_FIGURE_PATH.name
+    state_errors_figure_path = figure_dir / STATE_ERRORS_FIGURE_PATH.name
+
+    run_dir.mkdir(parents=True, exist_ok=True)
+    figure_dir.mkdir(parents=True, exist_ok=True)
 
     rk4 = load_rk4_telemetry(TELEMETRY_PATH, required_columns=REQUIRED_COLUMNS)
     trace, metadata = replay_dynamic_model(rk4)
     metrics = pd.DataFrame(metric_rows(trace, metadata), columns=["metric", "value", "units", "description"])
 
-    trace.to_csv(TRACE_PATH, index=False)
-    metrics.to_csv(METRICS_PATH, index=False)
-    write_metadata(metadata)
-    save_yaw_rate_figure(trace, YAW_RATE_FIGURE_PATH)
-    save_state_error_figure(trace, STATE_ERRORS_FIGURE_PATH)
-    write_report(metrics, metadata, REPORT_PATH)
+    trace.to_csv(trace_path, index=False)
+    metrics.to_csv(metrics_path, index=False)
+    write_metadata(metadata, metadata_path)
+    save_yaw_rate_figure(trace, yaw_rate_figure_path)
+    save_state_error_figure(trace, state_errors_figure_path)
+    write_report(metrics, metadata, report_path)
 
     metric_values = metrics_as_dict(metrics)
-    print(f"Wrote replay trace to {TRACE_PATH}")
-    print(f"Wrote metrics to {METRICS_PATH}")
-    print(f"Wrote metadata to {METADATA_PATH}")
-    print(f"Wrote yaw-rate figure to {YAW_RATE_FIGURE_PATH}")
-    print(f"Wrote state-error figure to {STATE_ERRORS_FIGURE_PATH}")
-    print(f"Wrote report to {REPORT_PATH}")
+    print(f"Wrote replay trace to {trace_path}")
+    print(f"Wrote metrics to {metrics_path}")
+    print(f"Wrote metadata to {metadata_path}")
+    print(f"Wrote yaw-rate figure to {yaw_rate_figure_path}")
+    print(f"Wrote state-error figure to {state_errors_figure_path}")
+    print(f"Wrote report to {report_path}")
     print(
         "Summary: "
         f"dynamic yaw-rate RMSE={metric_values['dynamic_yaw_rate_rmse_radps']:.3f} rad/s, "
