@@ -1,0 +1,12 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 830400c..c05a52a 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -29,5 +29,7 @@ jobs:
+         python experiments/test_rosbag_to_telemetry.py
+         python experiments/test_bag_evidence.py
+         python experiments/validate_item11.py
++        python experiments/test_dynamics_loader.py
++        python experiments/test_replay_metrics.py
+         python experiments/test_mast_physical_validation.py
+         python experiments/test_final_report.py
