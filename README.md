@@ -28,16 +28,24 @@ hand calculations and FEA.
 
 ```mermaid
 flowchart LR
-    S[F1TENTH Gym] --> T[Normalized telemetry]
-    R[ROS 2 bag] --> T
-    T --> Q[Quality and excitation gates]
-    Q --> M[Model replay and identification]
-    Q --> C[Control and estimation studies]
-    M --> O[Reports, metrics, and figures]
+    classDef input    fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#1f2933,font-weight:bold;
+    classDef process  fill:#b2dfdb,stroke:#00796b,stroke-width:2px,color:#1f2933;
+    classDef core     fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#1f2933,font-weight:bold;
+    classDef decision fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#1f2933,font-weight:bold;
+    classDef endpoint fill:#f8bbd0,stroke:#c2185b,stroke-width:2px,color:#1f2933,font-weight:bold;
+
+    S[/F1TENTH Gym/]:::input --> T[Normalized telemetry]:::process
+    R[/ROS 2 bag/]:::input --> T
+    T --> Q{Quality and excitation gates}:::decision
+    Q --> M{{Model replay and identification}}:::core
+    Q --> C[Control and estimation studies]:::process
+    M --> O([Reports, metrics, and figures]):::endpoint
     C --> O
-    L[Simulation load envelope] --> D[Mast hand calc and FEA]
+    L[/Simulation load envelope/]:::input --> D[Mast hand calc and FEA]:::process
     D --> O
 ```
+
+*Shapes: parallelogram = input · rectangle = process · diamond = gate · hexagon = core method · pill = endpoint.*
 
 Most vehicle results are simulation outputs. The enriched ROS 2 regression
 captures exercise the telemetry path but are not physical vehicle tests. Mast
