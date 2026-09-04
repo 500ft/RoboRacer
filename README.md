@@ -1,19 +1,23 @@
 # RoboRacer Modeling, Controls, and Mechanical Design
 
+**A Python and ROS 2 suite for autonomous-racing dynamics, system
+identification, control, state estimation, telemetry analysis, and LiDAR-mast
+design.**
+
 [![CI](https://github.com/500ft/RoboRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/500ft/RoboRacer/actions/workflows/ci.yml)
 [![Docker](https://github.com/500ft/RoboRacer/actions/workflows/docker.yml/badge.svg)](https://github.com/500ft/RoboRacer/actions/workflows/docker.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-276c6b)](LICENSE)
 
-A Python and ROS 2 suite for autonomous-racing dynamics, system identification,
-control, state estimation, telemetry analysis, and LiDAR-mast design.
-
 **[Results](reports/final_report.md) · [Reproduce](#reproduce-the-study) · [Data and figures](docs/data-and-figures.md) · [ROS 2](#ros-2-workflow)**
 
-![Pure-pursuit tuning sweep](reports/figures/pure_pursuit_sweep_rms_cte_heatmap.png)
+![Identified dynamic bicycle model tracking yaw rate and slip angle through the held-out validation segment](reports/figures/dynamic_parameter_fit.png)
 
-*Pure-pursuit tracking error across the tested lookahead and velocity-gain
-grid. The [final report](reports/final_report.md) contains results and the
-[figure guide](docs/data-and-figures.md) traces each plot to code and inputs.*
+*One-step yaw-rate and slip-angle predictions of the identified dynamic
+bicycle model against F1TENTH Gym telemetry, with the held-out validation
+segment right of the dashed line. Evidence state: simulation. Details in
+[`reports/dynamic_parameter_identification.md`](reports/dynamic_parameter_identification.md);
+the [figure guide](docs/data-and-figures.md) traces each plot to code and
+inputs.*
 
 ## Overview
 
@@ -122,6 +126,42 @@ ros2_ws/      ROS 2 telemetry and excitation sidecar
 evidence/     portable ROS-backed regression captures
 docs/         models, schemas, setup notes, designs, and figure lineage
 ```
+
+## Status and roadmap
+
+Done (evidence state: simulation):
+
+- System identification of the dynamic bicycle model with a held-out
+  validation segment
+  ([`reports/dynamic_parameter_identification.md`](reports/dynamic_parameter_identification.md)),
+  plus noise robustness
+  ([`reports/parameter_id_robustness.md`](reports/parameter_id_robustness.md)).
+- RK4/Euler integrator convergence study
+  ([`reports/integrator_convergence.md`](reports/integrator_convergence.md))
+  and kinematic-model replay comparison
+  ([`reports/model_vs_gym_comparison.md`](reports/model_vs_gym_comparison.md)).
+- Pure pursuit, LQR, and MPC comparison
+  ([`reports/controller_comparison.md`](reports/controller_comparison.md)),
+  EKF study ([`reports/ekf_study.md`](reports/ekf_study.md)), and failure-mode
+  FMEA ([`reports/failure_mode_fmea.md`](reports/failure_mode_fmea.md)).
+- ROS 2 bag-to-telemetry bridge with portable regression evidence
+  ([`evidence/item11/report.md`](evidence/item11/report.md)) — simulator-backed
+  captures, not physical vehicle tests.
+
+Done (evidence state: hand calculation and FEA):
+
+- LiDAR-mast load case, hand calculations, static FEA, mesh convergence, and
+  modal analysis ([`docs/design/16_mechanical_design_analysis.md`](docs/design/16_mechanical_design_analysis.md)).
+
+Pending:
+
+- Physical mast compliance measurement. The FEA-predicted tip deflection
+  (0.176 mm at the committed load case) has not been measured; the frozen
+  test protocol is in
+  [`docs/specs/mast-physical-validation/`](docs/specs/mast-physical-validation/).
+- Parametric CAD for the mast and deck interface (analyses use idealized tube
+  geometry).
+- No physical-vehicle telemetry result is present.
 
 ## Compatibility
 
