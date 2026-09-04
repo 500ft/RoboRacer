@@ -49,9 +49,9 @@ Implement the next simulation-side robustness block after the controller work:
 ### [x] T00 - Record baseline commands
 - Files: `docs/specs/items-7-9-estimation-robustness/plan.md`
 - Do: run and record these commands under Execution notes:
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python -m compileall -q gym/roboracer experiments`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_controller_comparison.py`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_dynamic_parameter_identification.py`
+  - `env PYTHONPATH=gym python -m compileall -q gym/roboracer experiments`
+  - `env PYTHONPATH=gym python experiments/validate_controller_comparison.py`
+  - `env PYTHONPATH=gym python experiments/validate_dynamic_parameter_identification.py`
 - Depends on: none
 - Done when: commands are recorded with pass/fail status.
 - Parallel group: setup
@@ -351,12 +351,12 @@ Implement the next simulation-side robustness block after the controller work:
 ### [x] T27 - Run item 7-9 quality gates
 - Files: none
 - Do: run:
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python -m compileall -q gym/roboracer experiments`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_noise_helpers.py`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_estimation_helpers.py`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_ekf_study.py`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_failure_mode_fmea.py`
-  - `env PYTHONPATH=/Users/redhose/Documents/Codex/F1TENTH-current/gym /Users/redhose/ENTER/envs/f1tenth-gym/bin/python experiments/validate_parameter_id_robustness.py`
+  - `env PYTHONPATH=gym python -m compileall -q gym/roboracer experiments`
+  - `env PYTHONPATH=gym python experiments/validate_noise_helpers.py`
+  - `env PYTHONPATH=gym python experiments/validate_estimation_helpers.py`
+  - `env PYTHONPATH=gym python experiments/validate_ekf_study.py`
+  - `env PYTHONPATH=gym python experiments/validate_failure_mode_fmea.py`
+  - `env PYTHONPATH=gym python experiments/validate_parameter_id_robustness.py`
 - Depends on: T22, T23, T24, T25, T26
 - Done when: all commands pass and outputs are recorded in this plan.
 - Parallel group: final
