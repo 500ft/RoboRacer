@@ -122,9 +122,9 @@ has passed the frozen acceptance protocol.
 ## Output policy
 
 Reports under `reports/` are generated or assembled interpretations of the
-`runs/` artifacts. `reports/figures/` contains publication outputs. Doxygen
-images under `docs/html/`, brand assets under `docs/assets/`, and map files are
-not study results and are excluded from the manifest.
+`runs/` artifacts. `reports/figures/` contains publication outputs. Brand
+assets under `docs/assets/` and map files are not study results and are
+excluded from the manifest.
 
 See [`figure-manifest.json`](figure-manifest.json) for the machine-readable
 generator/input/output map.
