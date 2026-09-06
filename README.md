@@ -1,5 +1,7 @@
 # RoboRacer Modeling, Controls, and Mechanical Design
 
+CAD development is now broken into [individual work orders](docs/CAD_PLAN.md) and a [CAD task ledger](docs/CAD_TASKS.csv). These are planned models, fixtures and release drawings—not completed CAD or hardware evidence.
+
 **A Python and ROS 2 suite for autonomous-racing dynamics, system
 identification, control, state estimation, telemetry analysis, and LiDAR-mast
 design.**

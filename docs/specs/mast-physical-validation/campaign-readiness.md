@@ -1,5 +1,7 @@
 # Mast campaign readiness — prepared, not completed
 
+CAD dependencies are now explicit in [CAD_PLAN.md](../../CAD_PLAN.md) and [CAD_TASKS.csv](../../CAD_TASKS.csv): deck/mast geometry, clamp and fixture design, inspection/FEA handoff and fabrication drawings. Their completion alone does not close RR-S02: fabrication, as-built inspection, converged reference predictions and instrument calibration still require real records.
+
 Prepared 2026-09-05. No apparatus, measurement, instrument calibration, fabrication booking, reviewer contact, or as-built FEA is asserted by this checklist. Owner must supply actual records; Agent prepares analysis only. Physical readiness is RR-S02 in the [authoritative ledger](../../SPRINT_TASKS.csv).
 
 Before a physical campaign, obtain and review:
