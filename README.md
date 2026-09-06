@@ -163,6 +163,12 @@ Done (evidence state: hand calculation and FEA):
 
 Pending:
 
+- [Evidence-integrity sprint](docs/SPRINT_ROADMAP.md): the mast evaluator now
+  requires a complete paired trial matrix and traceable campaign/reference
+  artifacts. Synthetic checks are labeled `SIMULATED_AGREEMENT`, never physical
+  validation; [review evidence](docs/REVIEW_READY.md) distinguishes software
+  results from the still-pending apparatus.
+
 - Physical mast compliance measurement. The FEA-predicted tip deflection
   (0.176 mm at the committed load case) has not been measured; the frozen
   test protocol is in
