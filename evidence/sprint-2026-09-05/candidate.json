@@ -1,0 +1,14 @@
+{
+  "recorded_date": "2026-09-06",
+  "base_commit": "bea803741ab91c8d1e782064666d97f302dbb9d9",
+  "branch": "sprint/evidence-integrity-20260905",
+  "commit_status": "uncommitted source candidate",
+  "scope": "software only; not physical validation",
+  "files": {
+    "experiments/mast_physical_validation.py": "b05dce2ac368087c8458cb3b4d0c8f084dc03f7e104e9b53de12d7e71fb57b33",
+    "experiments/test_mast_physical_validation.py": "5f122be980f236f9b6b37fe453a01466dc505951c91c962bf170467f0c0bf91b",
+    "docs/specs/mast-physical-validation/design.md": "d4ea39890ce21a86707d47a399d347642d87d1eb359b5de71511f049bc83b433",
+    "README.md": "bc733a8361d54c5a0e99aa90755c232adc8b862b6bd90515fd6469af0008e607",
+    "docs/design/16_mechanical_design_analysis.md": "0045cc9a5a5d964dc0a50760efece7320cb7260e9a6478572e563993eb78bd9d"
+  }
+}

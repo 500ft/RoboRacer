@@ -1,0 +1,195 @@
+Final portable checks — candidate implementation before post-freeze developer spot check
+CWD: /Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer
+Python 3.11.8 macOS arm64; not pinned Python3.10 Docker reproduction
+
+COMMAND: python -m py_compile experiments/mast_physical_validation.py experiments/test_mast_physical_validation.py
+EXIT: 0
+
+COMMAND: git diff --check
+EXIT: 0
+
+COMMAND: PYTHONPATH=gym python experiments/test_rosbag_to_telemetry.py
+EXIT: 0
+Saved quality metrics:
+                                         metric        value    units  pass
+                                     duration_s 2.000000e+01        s  True
+                                    num_samples 2.001000e+03    count  True
+                                      collision 0.000000e+00     bool  True
+                                 speed_mean_mps 2.000000e+00      m/s  True
+                                  speed_std_mps 1.414214e-02      m/s  True
+                                       speed_cv 7.071068e-03 unitless  True
+                                steer_range_rad 1.280000e-01      rad  True
+                           yaw_rate_range_radps 5.199816e-01    rad/s  True
+                   steering_saturation_fraction 0.000000e+00 fraction  True
+                       max_saturation_segment_s 0.000000e+00        s  True
+                       required_topic_overlap_s 2.000000e+01        s  True
+                             collision_observed 1.000000e+00     bool  True
+        topic_ego_racecar_odom_observed_rate_hz 1.000000e+02       Hz  True
+               topic_ego_racecar_odom_max_gap_s 1.000000e-02        s  True
+topic_ego_racecar_odom_median_header_bag_skew_s 0.000000e+00        s  True
+   topic_ego_racecar_odom_max_header_bag_skew_s 3.552714e-15        s  True
+                   topic_drive_observed_rate_hz 1.000000e+02       Hz  True
+                          topic_drive_max_gap_s 1.000000e-02        s  True
+           topic_drive_median_header_bag_skew_s 0.000000e+00        s  True
+              topic_drive_max_header_bag_skew_s 3.552714e-15        s  True
+       topic_f1tenth_collision_observed_rate_hz 1.000000e+02       Hz  True
+              topic_f1tenth_collision_max_gap_s 1.000000e-02        s  True
+
+Validation summary:
+                      metric     value
+                  duration_s 20.000000
+             steer_range_rad  0.128000
+        yaw_rate_range_radps  0.519982
+              speed_mean_mps  2.000000
+               speed_std_mps  0.014142
+                    speed_cv  0.007071
+steering_saturation_fraction  0.000000
+    max_saturation_segment_s  0.000000
+
+Excitation quality checks passed
+Saved quality metrics:
+                                         metric        value    units  pass
+                                     duration_s 2.000000e+01        s  True
+                                    num_samples 2.001000e+03    count  True
+                                      collision 0.000000e+00     bool  True
+                                 speed_mean_mps 2.000000e+00      m/s  True
+                                  speed_std_mps 1.414214e-02      m/s  True
+                                       speed_cv 7.071068e-03 unitless  True
+                                steer_range_rad 1.024000e-01      rad  True
+                           yaw_rate_range_radps 5.199816e-01    rad/s  True
+                   steering_saturation_fraction 0.000000e+00 fraction  True
+                       max_saturation_segment_s 0.000000e+00        s  True
+                       required_topic_overlap_s 2.000000e+01        s  True
+                             collision_observed 1.000000e+00     bool  True
+        topic_ego_racecar_odom_observed_rate_hz 1.000000e+02       Hz  True
+               topic_ego_racecar_odom_max_gap_s 1.000000e-02        s  True
+topic_ego_racecar_odom_median_header_bag_skew_s 0.000000e+00        s  True
+   topic_ego_racecar_odom_max_header_bag_skew_s 3.552714e-15        s  True
+                   topic_drive_observed_rate_hz 1.000000e+02       Hz  True
+                          topic_drive_max_gap_s 1.000000e-02        s  True
+           topic_drive_median_header_bag_skew_s 0.000000e+00        s  True
+              topic_drive_max_header_bag_skew_s 3.552714e-15        s  True
+       topic_f1tenth_collision_observed_rate_hz 1.000000e+02       Hz  True
+              topic_f1tenth_collision_max_gap_s 1.000000e-02        s  True
+  topic_f1tenth_internal_state_observed_rate_hz 1.000000e+02       Hz  True
+         topic_f1tenth_internal_state_max_gap_s 1.000000e-02        s  True
+
+Validation summary:
+                      metric     value
+                  duration_s 20.000000
+             steer_range_rad  0.102400
+        yaw_rate_range_radps  0.519982
+              speed_mean_mps  2.000000
+               speed_std_mps  0.014142
+                    speed_cv  0.007071
+steering_saturation_fraction  0.000000
+    max_saturation_segment_s  0.000000
+
+Excitation quality checks passed
+Saved quality metrics:
+                                         metric        value    units  pass
+                                     duration_s 2.000000e+01        s  True
+                                    num_samples 2.001000e+03    count  True
+                                      collision 0.000000e+00     bool  True
+                                 speed_mean_mps 2.000000e+00      m/s  True
+                                  speed_std_mps 1.414214e-02      m/s  True
+                                       speed_cv 7.071068e-03 unitless  True
+                                steer_range_rad 1.280000e-01      rad  True
+                           yaw_rate_range_radps 5.199816e-01    rad/s  True
+                   steering_saturation_fraction 0.000000e+00 fraction  True
+                       max_saturation_segment_s 0.000000e+00        s  True
+                       required_topic_overlap_s 2.000000e+01        s  True
+                             collision_observed 1.000000e+00     bool  True
+        topic_ego_racecar_odom_observed_rate_hz 1.000000e+02       Hz  True
+               topic_ego_racecar_odom_max_gap_s 1.000000e-02        s  True
+topic_ego_racecar_odom_median_header_bag_skew_s 0.000000e+00        s  True
+   topic_ego_racecar_odom_max_header_bag_skew_s 3.552714e-15        s  True
+                   topic_drive_observed_rate_hz 1.000000e+02       Hz  True
+                          topic_drive_max_gap_s 1.000000e-02        s  True
+           topic_drive_median_header_bag_skew_s 0.000000e+00        s  True
+              topic_drive_max_header_bag_skew_s 3.552714e-15        s  True
+       topic_f1tenth_collision_observed_rate_hz 1.000000e+02       Hz  True
+              topic_f1tenth_collision_max_gap_s 1.000000e-02        s  True
+
+Validation summary:
+                      metric     value
+                  duration_s 20.000000
+             steer_range_rad  0.128000
+        yaw_rate_range_radps  0.519982
+              speed_mean_mps  2.000000
+               speed_std_mps  0.014142
+                    speed_cv  0.007071
+steering_saturation_fraction  0.000000
+    max_saturation_segment_s  0.000000
+
+Excitation quality checks passed
+Saved quality metrics:
+                                         metric        value    units  pass
+                                     duration_s 2.000000e+01        s  True
+                                    num_samples 2.001000e+03    count  True
+                                      collision 0.000000e+00     bool  True
+                                 speed_mean_mps 2.000000e+00      m/s  True
+                                  speed_std_mps 1.414214e-02      m/s  True
+                                       speed_cv 7.071068e-03 unitless  True
+                                steer_range_rad 1.024000e-01      rad  True
+                           yaw_rate_range_radps 5.199816e-01    rad/s  True
+                   steering_saturation_fraction 0.000000e+00 fraction  True
+                       max_saturation_segment_s 0.000000e+00        s  True
+                       required_topic_overlap_s 2.000000e+01        s  True
+                             collision_observed 1.000000e+00     bool  True
+        topic_ego_racecar_odom_observed_rate_hz 1.000000e+02       Hz  True
+               topic_ego_racecar_odom_max_gap_s 1.000000e-02        s  True
+topic_ego_racecar_odom_median_header_bag_skew_s 0.000000e+00        s  True
+   topic_ego_racecar_odom_max_header_bag_skew_s 3.552714e-15        s  True
+                   topic_drive_observed_rate_hz 1.000000e+02       Hz  True
+                          topic_drive_max_gap_s 1.000000e-02        s  True
+           topic_drive_median_header_bag_skew_s 0.000000e+00        s  True
+              topic_drive_max_header_bag_skew_s 3.552714e-15        s  True
+       topic_f1tenth_collision_observed_rate_hz 1.000000e+02       Hz  True
+              topic_f1tenth_collision_max_gap_s 1.000000e-02        s  True
+  topic_f1tenth_internal_state_observed_rate_hz 1.000000e+02       Hz  True
+         topic_f1tenth_internal_state_max_gap_s 1.000000e-02        s  True
+
+Validation summary:
+                      metric     value
+                  duration_s 20.000000
+             steer_range_rad  0.102400
+        yaw_rate_range_radps  0.519982
+              speed_mean_mps  2.000000
+               speed_std_mps  0.014142
+                    speed_cv  0.007071
+steering_saturation_fraction  0.000000
+    max_saturation_segment_s  0.000000
+
+Excitation quality checks passed
+rosbag_to_telemetry synthetic tests passed
+
+COMMAND: PYTHONPATH=gym python experiments/test_bag_evidence.py
+EXIT: 0
+Wrote telemetry to /var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/item11-bag-5r38z5_t/telemetry.csv
+Wrote metadata to /var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/item11-bag-5r38z5_t/metadata.json
+Wrote quality metrics to /var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/item11-bag-5r38z5_t/quality.csv
+steer_rad_source=internal_state
+Verified bag evidence: synthetic
+bag evidence tests passed
+
+COMMAND: PYTHONPATH=gym python experiments/validate_item11.py
+EXIT: 0
+Item 11 offline regression: PASS (portable mode)
+
+COMMAND: PYTHONPATH=gym python experiments/test_mast_physical_validation.py
+EXIT: 0
+....................
+----------------------------------------------------------------------
+Ran 20 tests in 0.970s
+
+OK
+
+COMMAND: PYTHONPATH=gym python experiments/test_final_report.py
+EXIT: 0
+.../private/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/tmpbgoaoaua/report.pdf
+...
+----------------------------------------------------------------------
+Ran 6 tests in 1.451s
+
+OK

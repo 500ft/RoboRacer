@@ -1,0 +1,147 @@
+{
+  "candidate": {
+    "recorded_date": "2026-09-06",
+    "base_commit": "bea803741ab91c8d1e782064666d97f302dbb9d9",
+    "branch": "sprint/evidence-integrity-20260905",
+    "commit_status": "uncommitted source candidate",
+    "scope": "software only; not physical validation",
+    "files": {
+      "experiments/mast_physical_validation.py": "b05dce2ac368087c8458cb3b4d0c8f084dc03f7e104e9b53de12d7e71fb57b33",
+      "experiments/test_mast_physical_validation.py": "5f122be980f236f9b6b37fe453a01466dc505951c91c962bf170467f0c0bf91b",
+      "docs/specs/mast-physical-validation/design.md": "d4ea39890ce21a86707d47a399d347642d87d1eb359b5de71511f049bc83b433",
+      "README.md": "bc733a8361d54c5a0e99aa90755c232adc8b862b6bd90515fd6469af0008e607",
+      "docs/design/16_mechanical_design_analysis.md": "0045cc9a5a5d964dc0a50760efece7320cb7260e9a6478572e563993eb78bd9d"
+    }
+  },
+  "runner_sha256": "9fc0c722dc7cc1e99f5337b9560d72e51fe557ee58583c2944e43889a9905857",
+  "selection": "six predeclared developer cases; no exclusions",
+  "limitations": "synthetic fixtures; developer-selected; not independent or physical validation",
+  "results": [
+    {
+      "id": "E1",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 0,
+      "expected_classification": "SIMULATED_AGREEMENT",
+      "observed_exit": 0,
+      "observed_classification": "SIMULATED_AGREEMENT",
+      "matches_predeclared_judgment": true,
+      "rows": 80,
+      "raw_csv_sha256": "4d8934797e08e41b4afc01166bfbdabf3ac6e2fad04c88e6eaea2db304a282ff",
+      "campaign_sha256": "c325ac7e93340c51af2c6e86a4717b87b116c369a1cb36dc72aa1a1b6309ce0f",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-4phyeg45/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-4phyeg45/campaign.json"
+      ],
+      "stdout": "{\n  \"axes\": [\n    {\n      \"axis\": \"x\",\n      \"compliance_mm_per_n\": 0.001366884125504815,\n      \"fea_relative_error\": 1.5863849060140177e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -6.938893903907228e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 40\n    },\n    {\n      \"axis\": \"y\",\n      \"compliance_mm_per_n\": 0.001366884125504815,\n      \"fea_relative_error\": 1.5863849060140177e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -6.938893903907228e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 40\n    }\n  ],\n  \"classification\": \"SIMULATED_AGREEMENT\",\n  \"evidence_kind\": \"synthetic\",\n  \"fixture_subtracted\": true,\n  \"reasons\": [\n    \"synthetic software exercise only; no physical validation\"\n  ],\n  \"reference_identity\": \"bea803741ab91c8d1e782064666d97f302dbb9d9:sha256:d2e48013b98fdb5af39f46a29337f0a28a366ddbf7f02d6bf466ccd32107d281\",\n  \"relative_u95\": 0.099\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "E2",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 0,
+      "expected_classification": "SIMULATED_AGREEMENT",
+      "observed_exit": 0,
+      "observed_classification": "SIMULATED_AGREEMENT",
+      "matches_predeclared_judgment": true,
+      "rows": 70,
+      "raw_csv_sha256": "3e3388d123a736787800b844b7719033e038d4829e0ad9353c14b3ad5e1b552f",
+      "campaign_sha256": "cfab84d012154e716c3fd594e79615e6d03c70bf44fd7dd25ded663d57b8b21b",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-vl47cfm1/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-vl47cfm1/campaign.json"
+      ],
+      "stdout": "{\n  \"axes\": [\n    {\n      \"axis\": \"x\",\n      \"compliance_mm_per_n\": 0.001366884125504815,\n      \"fea_relative_error\": 1.5863849060140177e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -6.938893903907228e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 40\n    },\n    {\n      \"axis\": \"y\",\n      \"compliance_mm_per_n\": 0.001366884125504815,\n      \"fea_relative_error\": 1.5863849060140177e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -3.469446951953614e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 30\n    }\n  ],\n  \"classification\": \"SIMULATED_AGREEMENT\",\n  \"evidence_kind\": \"synthetic\",\n  \"fixture_subtracted\": true,\n  \"reasons\": [\n    \"synthetic software exercise only; no physical validation\"\n  ],\n  \"reference_identity\": \"bea803741ab91c8d1e782064666d97f302dbb9d9:sha256:d2e48013b98fdb5af39f46a29337f0a28a366ddbf7f02d6bf466ccd32107d281\",\n  \"relative_u95\": 0.08\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "E3",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 2,
+      "expected_classification": null,
+      "observed_exit": 2,
+      "observed_classification": null,
+      "matches_predeclared_judgment": true,
+      "rows": 61,
+      "raw_csv_sha256": "f66631ac37c4aaa477131a592a49fc8a0d56d054f42f6cb33577c2206041ac43",
+      "campaign_sha256": "b1fceca00038eada0618d15ba675a850926d5400239a8a28e4e4dc1242afbb5b",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-gt11mybf/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-gt11mybf/campaign.json"
+      ],
+      "stdout": "",
+      "stderr": "usage: mast_physical_validation.py [-h] --campaign CAMPAIGN\n                                   [--relative-u95 RELATIVE_U95]\n                                   [--output OUTPUT]\n                                   csv\nmast_physical_validation.py: error: x axis has missing or duplicate cycle/direction/load cells\n"
+    },
+    {
+      "id": "E4",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 0,
+      "expected_classification": "INCONCLUSIVE",
+      "observed_exit": 0,
+      "observed_classification": "INCONCLUSIVE",
+      "matches_predeclared_judgment": true,
+      "rows": 60,
+      "raw_csv_sha256": "08c9afac702914393a78f3dc299210213a72efe75ef40ad998bce580c61d9604",
+      "campaign_sha256": "3d33a381a1abb366509cf2647fd5784c6f6d01f5e23721c221c2238c0cbc9bd2",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-66n1gv0x/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-66n1gv0x/campaign.json"
+      ],
+      "stdout": "{\n  \"axes\": [\n    {\n      \"axis\": \"x\",\n      \"compliance_mm_per_n\": 0.0008900000000000001,\n      \"fea_relative_error\": 1.21820468818596e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -1.734723475976807e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 30\n    },\n    {\n      \"axis\": \"y\",\n      \"compliance_mm_per_n\": 0.0008900000000000001,\n      \"fea_relative_error\": 1.21820468818596e-16,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": -1.734723475976807e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 30\n    }\n  ],\n  \"classification\": \"INCONCLUSIVE\",\n  \"evidence_kind\": \"synthetic\",\n  \"fixture_subtracted\": true,\n  \"reasons\": [\n    \"indicator resolution or 20-count measurability screen fails\"\n  ],\n  \"reference_identity\": \"bea803741ab91c8d1e782064666d97f302dbb9d9:sha256:141cce568bfae17616434f9f38a7ff96f6e76e6f1b553223586afe3be9a78a8f\",\n  \"relative_u95\": 0.08\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "E5",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 0,
+      "expected_classification": "SIMULATED_AGREEMENT",
+      "observed_exit": 0,
+      "observed_classification": "SIMULATED_AGREEMENT",
+      "matches_predeclared_judgment": true,
+      "rows": 60,
+      "raw_csv_sha256": "9a4a2ecfba8980514534de71b3f5ab26dfc9cdba65e011e5865c1a26aaf41a42",
+      "campaign_sha256": "5289c6e880d8406ce08ce16c75d6521457894c29304448b4c93119053ba2dab3",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-s2xqgtm_/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-s2xqgtm_/campaign.json"
+      ],
+      "stdout": "{\n  \"axes\": [\n    {\n      \"axis\": \"x\",\n      \"compliance_mm_per_n\": 0.0013668841255048152,\n      \"fea_relative_error\": 0.0,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": 3.469446951953614e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 30\n    },\n    {\n      \"axis\": \"y\",\n      \"compliance_mm_per_n\": 0.0013668841255048152,\n      \"fea_relative_error\": 0.0,\n      \"hysteresis_fraction\": 0.0,\n      \"intercept_mm\": 3.469446951953614e-18,\n      \"r_squared\": 1.0,\n      \"rows\": 30\n    }\n  ],\n  \"classification\": \"SIMULATED_AGREEMENT\",\n  \"evidence_kind\": \"synthetic\",\n  \"fixture_subtracted\": true,\n  \"reasons\": [\n    \"synthetic software exercise only; no physical validation\"\n  ],\n  \"reference_identity\": \"bea803741ab91c8d1e782064666d97f302dbb9d9:sha256:d2e48013b98fdb5af39f46a29337f0a28a366ddbf7f02d6bf466ccd32107d281\",\n  \"relative_u95\": 0.08\n}\n",
+      "stderr": ""
+    },
+    {
+      "id": "E6",
+      "evidence_kind": "synthetic developer spot check",
+      "expected_exit": 2,
+      "expected_classification": null,
+      "observed_exit": 2,
+      "observed_classification": null,
+      "matches_predeclared_judgment": true,
+      "rows": 60,
+      "raw_csv_sha256": "caf29f1bae55b526b62f6ee089a0bb34f29670616a98baa90098edc2f7cdb7d6",
+      "campaign_sha256": "f38af21052bceb87674b6d5bd5695e87c9ad3dc179093f0525d746a3efd3a358",
+      "command": [
+        "/Users/redhose/ENTER/bin/python",
+        "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-gy4_1bg5/raw.csv",
+        "--campaign",
+        "/var/folders/rm/1f4h8c954_58tny8x94fr7k40000gn/T/rr-developer-evaluation-gy4_1bg5/campaign.json"
+      ],
+      "stdout": "",
+      "stderr": "usage: mast_physical_validation.py [-h] --campaign CAMPAIGN\n                                   [--relative-u95 RELATIVE_U95]\n                                   [--output OUTPUT]\n                                   csv\nmast_physical_validation.py: error: raw_csv SHA-256 mismatch\n"
+    }
+  ]
+}

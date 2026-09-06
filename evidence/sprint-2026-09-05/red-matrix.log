@@ -1,0 +1,212 @@
+Command: python experiments/test_mast_physical_validation.py
+CWD: /Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer
+Base implementation: bea803741ab91c8d1e782064666d97f302dbb9d9; new regression tests only
+Exit: 1
+.F...FFFFFFFFFFFFFFFFFFFFFFFF.
+======================================================================
+FAIL: test_incomplete_reference_never_validates (__main__.MastPhysicalValidationTests.test_incomplete_reference_never_validates)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 79, in test_incomplete_reference_never_validates
+    self.assertEqual(verdict.classification, "INCONCLUSIVE")
+AssertionError: 'VALIDATED' != 'INCONCLUSIVE'
+- VALIDATED
++ INCONCLUSIVE
+
+
+======================================================================
+FAIL: test_rejects_audit_incomplete_matrix (__main__.MastPhysicalValidationTests.test_rejects_audit_incomplete_matrix)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 48, in test_rejects_audit_incomplete_matrix
+    with self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='cycle', value=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='cycle', value=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='cycle', value=1.5)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='cycle', value=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='force_n', value=0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='force_n', value=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='force_n', value=19.0)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='force_n', value=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='force_n', value=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='tip_mm', value=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='tip_mm', value=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='tip_mm', value=-inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='fixture_mm', value=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_cells (__main__.MastPhysicalValidationTests.test_rejects_invalid_cells) (field='fixture_mm', value=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 69, in test_rejects_invalid_cells
+    with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_uncertainty (__main__.MastPhysicalValidationTests.test_rejects_invalid_uncertainty) (value=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 74, in test_rejects_invalid_uncertainty
+    with self.subTest(value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_uncertainty (__main__.MastPhysicalValidationTests.test_rejects_invalid_uncertainty) (value=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 74, in test_rejects_invalid_uncertainty
+    with self.subTest(value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_invalid_uncertainty (__main__.MastPhysicalValidationTests.test_rejects_invalid_uncertainty) (value=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 74, in test_rejects_invalid_uncertainty
+    with self.subTest(value=value), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=59)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=30)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=40)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=30)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=48)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_rejects_missing_matrix_cells (__main__.MastPhysicalValidationTests.test_rejects_missing_matrix_cells) (rows=61)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 57, in test_rejects_missing_matrix_cells
+    with self.subTest(rows=len(rows)), self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.006s
+
+FAILED (failures=25)
