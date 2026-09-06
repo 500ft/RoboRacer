@@ -1,0 +1,48 @@
+Command: python experiments/test_mast_physical_validation.py
+Intermediate implementation; tests added before provenance correction
+Exit: 1
+..F..........F......
+======================================================================
+FAIL: test_changed_artifact_cannot_reuse_previously_loaded_campaign (__main__.MastPhysicalValidationTests.test_changed_artifact_cannot_reuse_previously_loaded_campaign)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 214, in test_changed_artifact_cannot_reuse_previously_loaded_campaign
+    with self.assertRaises(ValueError):
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_physical_reference_commit_is_separate_from_model_source_commit (__main__.MastPhysicalValidationTests.test_physical_reference_commit_is_separate_from_model_source_commit)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 252, in test_physical_reference_commit_is_separate_from_model_source_commit
+    campaign = load_campaign(path, raw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/mast_physical_validation.py", line 181, in load_campaign
+    frozen = subprocess.run(["git", "show", source_commit + ":" + ref_rel.as_posix()],
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/redhose/ENTER/lib/python3.11/unittest/mock.py", line 1124, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/redhose/ENTER/lib/python3.11/unittest/mock.py", line 1128, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/redhose/ENTER/lib/python3.11/unittest/mock.py", line 1189, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/redhose/Developer/research-sprints/2026-09-05/RoboRacer/experiments/test_mast_physical_validation.py", line 248, in mock_git
+    self.assertEqual(args, ["git", "show", expected])
+AssertionError: Lists differ: ['git', 'show', 'bea803741ab91c8d1e782064666d97f302dbb9d9:[23 chars]son'] != ['git', 'show', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:[23 chars]son']
+
+First differing element 2:
+'bea803741ab91c8d1e782064666d97f302dbb9d9:tmp8gqp9qns/reference.json'
+'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:tmp8gqp9qns/reference.json'
+
+  ['git',
+   'show',
+-  'bea803741ab91c8d1e782064666d97f302dbb9d9:tmp8gqp9qns/reference.json']
++  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:tmp8gqp9qns/reference.json']
+
+----------------------------------------------------------------------
+Ran 20 tests in 1.080s
+
+FAILED (failures=2)
