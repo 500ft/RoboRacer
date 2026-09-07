@@ -13,4 +13,6 @@ COPY gym ./gym
 COPY experiments ./experiments
 COPY evidence ./evidence
 
-CMD ["python", "experiments/validate_item11.py", "--strict"]
+# Log the host CPU model first: strict-mode drift has been runner-dependent, and the
+# CPU vendor/SIMD level is the variable that OPENBLAS_CORETYPE alone does not pin.
+CMD ["sh", "-c", "grep -m1 'model name' /proc/cpuinfo || true; python experiments/validate_item11.py --strict"]

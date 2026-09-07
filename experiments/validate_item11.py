@@ -15,6 +15,7 @@ os.environ.setdefault("OMP_NUM_THREADS", "1")
 os.environ.setdefault("MKL_NUM_THREADS", "1")
 os.environ.setdefault("OPENBLAS_CORETYPE", "Haswell")
 
+import numpy as np
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -109,14 +110,25 @@ def main() -> int:
     config = json.loads(TOLERANCES.read_text())
     validate_contracts(config)
     baseline = config["baseline"]
+    upper_bound = {k: float(v) for k, v in config.get("upper_bound", {}).items()}
     for name, value in values.items():
+        base = float(baseline[name])
+        if name in upper_bound:
+            if value > upper_bound[name]:
+                raise ValueError(
+                    f"{name} exceeded its upper bound: value={value}, bound={upper_bound[name]}, baseline={base}"
+                )
+            continue
         if args.strict:
             tolerance = float(config["absolute_tolerance"][name])
         else:
-            tolerance = max(1e-12, 1e-6 * max(1.0, abs(float(baseline[name]))))
-        if abs(value - float(baseline[name])) > tolerance:
+            tolerance = max(1e-12, 1e-6 * max(1.0, abs(base)))
+        diff = abs(value - base)
+        if diff > tolerance:
+            ulps = diff / np.spacing(abs(base)) if base else float("nan")
             raise ValueError(
-                f"{name} drifted: value={value}, baseline={baseline[name]}, tolerance={tolerance}"
+                f"{name} drifted: value={value}, baseline={base}, |diff|={diff:.3e} "
+                f"({ulps:.0f} ULP, {diff / max(1.0, abs(base)):.1e} relative), tolerance={tolerance}"
             )
     print(f"Item 11 offline regression: PASS ({'strict' if args.strict else 'portable'} mode)")
     return 0
