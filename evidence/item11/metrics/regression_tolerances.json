@@ -13,15 +13,27 @@
     "raw_jacobian_condition_number": 2.9490155328228864
   },
   "absolute_tolerance": {
-    "fitted_C_Sf": 1.0476064463229131e-13,
-    "fitted_C_Sr": 1.211519774905479e-13,
-    "heldout_rollout_yaw_rate_rmse": 2.220446049250313e-14,
-    "jacobian_condition_number": 1.4001696468923797e-08,
-    "parameter_correlation": 6.05378944196211e-08,
-    "raw_jacobian_condition_number": 1.0657569493588426e-07
+    "fitted_C_Sf": 4.718000001290802e-10,
+    "fitted_C_Sr": 5.456200006816304e-10,
+    "heldout_rollout_yaw_rate_rmse": 1e-10,
+    "jacobian_condition_number": 1.3393075537524507e-07,
+    "parameter_correlation": 1e-07,
+    "raw_jacobian_condition_number": 2.9490155328228865e-07
+  },
+  "relative_floor": {
+    "fitted_C_Sf": 1e-10,
+    "fitted_C_Sr": 1e-10,
+    "jacobian_condition_number": 1e-07,
+    "raw_jacobian_condition_number": 1e-07,
+    "parameter_correlation": 1e-07,
+    "heldout_rollout_yaw_rate_rmse": 1e-10
+  },
+  "upper_bound": {
+    "heldout_rollout_yaw_rate_rmse": 1e-08
   },
   "telemetry_sha256": {
     "enriched": "6044181ee013e2ed83a9b37bcd076f0f07975c031c0dcd8a98a516b7fe6a28e3",
     "upstream": "caf0d8fd6ffabaacb0f84f6373dc9c08a336920f510ce55712611a9c7d5690a4"
-  }
+  },
+  "calibration_note": "2026-09-07: floors re-derived from solver/Jacobian numerics (see calibrate_item11_regression.py); baselines and the 5x observed-range terms are unchanged from the recorded 10x2-interpreter calibration. Re-run the calibration inside the Docker image to refresh."
 }
