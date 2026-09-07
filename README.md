@@ -1,5 +1,7 @@
 # RoboRacer Modeling, Controls, and Mechanical Design
 
+Planned mechanical parts and assemblies are listed in [CAD_ITEMS.md](docs/CAD_ITEMS.md). This is a design inventory, not completed CAD or hardware evidence.
+
 **A Python and ROS 2 suite for autonomous-racing dynamics, system
 identification, control, state estimation, telemetry analysis, and LiDAR-mast
 design.**
