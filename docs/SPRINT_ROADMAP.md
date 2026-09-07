@@ -1,5 +1,9 @@
 # RoboRacer — trustworthy mast-evaluation sprint
 
+## Separate CAD phase — added 2026-09-06
+
+Individual mechanical work orders now live in [CAD_PLAN.md](CAD_PLAN.md), with their own authoritative [CAD_TASKS.csv](CAD_TASKS.csv). They are additional, unexecuted work outside this original 30-hour integrity sprint. Existing physical-readiness and publication gates remain open until their actual evidence arrives.
+
 Prepared 2026-09-05. Six workload days, **30 focused hours**, not unattended calendar execution. Scope: reviewer-reproducible mast analysis software and an honest hardware-pending handoff; no physical-validation claim.
 
 ## A. Identity and outcome
