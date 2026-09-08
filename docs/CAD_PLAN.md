@@ -2,6 +2,12 @@
 
 Amended 2026-09-06 after source review. Planning only: no CAD, fixture, fabrication or calibration result exists from this amendment.
 
+2026-09-08 update: [RR-CAD-01 input register](../cad/roboracer/design-inputs.md) is
+complete with explicit unknowns; see [verification](../evidence/task-2026-09-08/README.md).
+The placement-hold paragraph below records the original draft's state, not the
+current main state: these work orders are already on main. Today's authorized
+task PR does not authorize modeling with missing inputs or any physical operation.
+
 **MERGE BLOCKED — owner decision pending.** The earlier public-planning cleanup has not been explicitly reversed. This draft PR keeps ledgers on its unmerged branch for review; it does not authorize them on main. See [CAD_REVIEW_DISPOSITION.md](CAD_REVIEW_DISPOSITION.md). Removing details from the current tree does not erase previous public commits.
 
 [CAD_TASKS.csv](CAD_TASKS.csv) is the sole CAD status ledger. [SPRINT_TASKS.csv](SPRINT_TASKS.csv) remains byte-preserved for the earlier integrity sprint. [Scope tiers](specs/cad-development/scope.md) and [reproduction checks](CAD_PLAN_CHECKS.md) describe this amendment, not physical validation.

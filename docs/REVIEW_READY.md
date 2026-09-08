@@ -1,5 +1,11 @@
 # RoboRacer sprint review index — software candidate, partial project handoff
 
+## Latest follow-up — 2026-09-08
+
+[RR-CAD-01 input-register handoff](../evidence/task-2026-09-08/README.md) completes
+one planning-input task, not a CAD model. Hardware/metrology owner gates remain
+open. Earlier sprint evidence below is historical and unchanged.
+
 Updated 2026-09-06. [Roadmap](SPRINT_ROADMAP.md), [authoritative ledger](SPRINT_TASKS.csv),
 [progress and runtime inventory](SPRINT_PROGRESS.md).
 
