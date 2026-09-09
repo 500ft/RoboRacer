@@ -1,0 +1,22 @@
+{
+ "family": "mast_tube",
+ "source_parameters": "cad/roboracer/parameters.csv",
+ "reviewed_against": "analytic tube volume pi/4 (D^2 - d^2) L from the registered design_choice values; density is a model_assumption",
+ "expected": {
+  "volume_mm3": 8717.919613711676,
+  "mass_kg": 0.023538382957021525,
+  "bbox_mm": [
+   20.0,
+   20.0,
+   100.0
+  ],
+  "n_solids": 1
+ },
+ "tolerances": {
+  "volume_mm3_rel": 1e-06,
+  "mass_kg_rel": 1e-06,
+  "bbox_mm_abs": 1e-06,
+  "step_roundtrip_volume_rel": 1e-09
+ },
+ "evidence_note": "Model dimensions (design_choice / model_assumption in the register). Passing means the code regenerates the intended model, not that an as-built part matches it. As-built acceptance is RR-CAD-06 and docs/specs/mast-physical-validation."
+}

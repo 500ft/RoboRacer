@@ -1,0 +1,38 @@
+diff --git a/.github/workflows/cad-geometry.yml b/.github/workflows/cad-geometry.yml
+new file mode 100644
+index 0000000..69b43f2
+--- /dev/null
++++ b/.github/workflows/cad-geometry.yml
+@@ -0,0 +1,32 @@
++name: CAD geometry
++
++on:
++  push:
++    paths: ["cad/**"]
++  pull_request:
++    paths: ["cad/**"]
++
++jobs:
++  geometry:
++    runs-on: ubuntu-latest
++    defaults:
++      run:
++        shell: bash -el {0}
++    steps:
++      - uses: actions/checkout@v4
++      - uses: conda-incubator/setup-miniconda@v3
++        with:
++          python-version: "3.11.16"
++          channels: conda-forge
++          channel-priority: strict
++      - name: Install pinned CAD toolchain (cad/requirements.lock)
++        run: |
++          conda install -y cadquery=2.8.0 cadquery-ocp=7.9.3.1 numpy=2.4.6 pytest=9.1.1
++      - name: Regenerate geometry from the registered parameters
++        run: python cad/generate.py --parameters cad/roboracer/parameters.csv --output ${{ runner.temp }}/cad-out
++      - name: Geometry tests (contract, negative controls, version lock)
++        run: python -m pytest cad/tests -q
++      - uses: actions/upload-artifact@v4
++        with:
++          name: cad-geometry
++          path: ${{ runner.temp }}/cad-out
