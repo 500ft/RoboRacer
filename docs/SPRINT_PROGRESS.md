@@ -2,6 +2,8 @@
 
 ## Day-3 work — 2026-09-09
 
+Delivery update: the preparation was committed as 500ft and pushed; [day-3 PR](https://github.com/500ft/RoboRacer/pull/14) is open against main. Initial implementation source: `b1a3120bce422a8bbd334c2006b04533a6632a8a` (later review/documentation commits are visible in the PR). This supersedes the pre-push stopping state below. Original day-1/day-2 PRs are merged; this new PR is not merged. Resume from the named unresolved project gates in [DAY3_PLAN.md](DAY3_PLAN.md), not from the already completed push step.
+
 Both reviewed PR layers merged into main; new work starts from `44491a62d4418294d14143466c757010b1694ba4` on `task/day-three-20260909`. Six request-sheet tests cover exact pending-row coverage, future rows, invalid units, a filled pending value, duplicates and snapshot drift. 28 CAD tests pass. The failed 174.7 Hz baseline is distinguished from the selected nominal 285.5 Hz FE result; static acceptance is not repurposed as a modal verdict.
 
 The [evidence record](../evidence/task-day3-2026-09-09/README.md) contains checks and limits. Work is locally verified and not yet recorded here as pushed/merged. Current edits belong to this task; original checkouts were preserved. Next: finish verification, commit the bounded change and open the new PR; preserve all stated external gates.
