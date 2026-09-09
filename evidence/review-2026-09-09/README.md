@@ -1,5 +1,14 @@
 # CAD adversarial review amendment — 2026-09-09
 
+## Hosted tooling acceptance — 2026-09-09
+
+RR-CAD-08 is now **done**: hosted geometry and existing CI passed for source
+`8cefd74f15af71f95125d4fc15f62331d52ee795`. The uploaded STEP was downloaded, hash-checked,
+reimported and checked for one solid and contracted volume. See
+[hosted checks and artifact identity](hosted-verification.json). This supersedes the
+intermediate in-progress statements below. Owner/physical gates remain open.
+
+
 Review base: `fc6ca5c3ec5d3bd47f43a62e7b0963e7ff3aa441` (day-2 PR head). Candidate
 identity is the containing commit / PR head, not a self-embedded hash.
 Scope: input admission and verification for the existing **mast tube** family.

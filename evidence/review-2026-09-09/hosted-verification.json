@@ -1,0 +1,50 @@
+{
+  "source_commit": "8cefd74f15af71f95125d4fc15f62331d52ee795",
+  "observed_date": "2026-09-09",
+  "pr": "https://github.com/500ft/RoboRacer/pull/13",
+  "checks": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-09T15:49:03Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/500ft/RoboRacer/actions/runs/34372504278/job/102536979699",
+      "name": "geometry",
+      "startedAt": "2026-09-09T15:47:04Z",
+      "status": "COMPLETED",
+      "workflowName": "CAD geometry"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-09-09T15:47:42Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/500ft/RoboRacer/actions/runs/34372503923/job/102536973352",
+      "name": "evidence-tests",
+      "startedAt": "2026-09-09T15:47:04Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "artifacts": [
+    {
+      "digest": "sha256:7fdbc28dd8b10d6e00601bc9764f37292e9b98de0a4b569d4355ce6e323deef6",
+      "expired": false,
+      "id": 10112561205,
+      "name": "cad-geometry-645bf39019cada0ba4064281d88d74211be904b0",
+      "size_in_bytes": 3375,
+      "workflow_run": {
+        "head_branch": "task/priority-two-20260909",
+        "head_repository_id": 1344142328,
+        "head_sha": "8cefd74f15af71f95125d4fc15f62331d52ee795",
+        "id": 34372504278,
+        "repository_id": 1344142328
+      }
+    }
+  ],
+  "consumer_verification": {
+    "command": "gh run download <run-id> --repo 500ft/RoboRacer --name <artifact-name> --dir <new-directory>; import STEP with CadQuery and compare SHA256, one-solid count, and volume to cad/contract.json",
+    "result": "PASS",
+    "local_artifact_directory": "/private/tmp/review-cad-artifacts-20260909/RoboRacer",
+    "scope": "Hosted generated nominal-model artifact, not hardware or fabrication approval"
+  },
+  "commit_note": "This record is added after successful source-code CI; its documentation-only containing commit is identified by the PR, avoiding self-reference."
+}

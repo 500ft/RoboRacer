@@ -1,5 +1,14 @@
 # Sprint progress — RoboRacer
 
+## Hosted tooling acceptance — 2026-09-09
+
+RR-CAD-08 is now **done**: hosted geometry and existing CI passed for source
+`8cefd74f15af71f95125d4fc15f62331d52ee795`. The uploaded STEP was downloaded, hash-checked,
+reimported and checked for one solid and contracted volume. See
+[hosted checks and artifact identity](../evidence/review-2026-09-09/hosted-verification.json). This supersedes the
+intermediate in-progress statements below. Owner/physical gates remain open.
+
+
 ## 2026-09-09 — adversarial CAD review amendment
 
 The original day-2 completion statement below was premature: a proposed workflow
