@@ -1,6 +1,13 @@
 # RoboRacer sprint review index — software candidate, partial project handoff
 
-## Latest follow-up — 2026-09-08
+## Latest follow-up — 2026-09-09
+
+[RR-CAD-08 geometry-tooling handoff](../evidence/task-2026-09-09/README.md) adds a parameter-driven
+CadQuery generator, a reviewed geometry contract with 11 fail-closed tests, and a pinned
+toolchain. It regenerates model geometry from the register; it is not a fixture design, part or
+measurement. Geometry CI awaits the owner applying `ci-proposed/cad-geometry-workflow.patch`.
+
+## Follow-up — 2026-09-08
 
 [RR-CAD-01 input-register handoff](../evidence/task-2026-09-08/README.md) completes
 one planning-input task, not a CAD model. Hardware/metrology owner gates remain

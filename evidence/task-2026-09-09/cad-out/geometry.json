@@ -1,0 +1,62 @@
+{
+ "family": "mast_tube",
+ "parameters_file": "cad/roboracer/parameters.csv",
+ "parameters_sha256": "1c4e547374946515800cf2df2ad93102c0fd2c2e29da1ffa83de6e9dc065e303",
+ "inputs": {
+  "mast_length": 100.0,
+  "mast_length__evidence_state": "design_choice",
+  "mast_outer_diameter": 20.0,
+  "mast_outer_diameter__evidence_state": "design_choice",
+  "mast_wall_thickness": 1.5,
+  "mast_wall_thickness__evidence_state": "design_choice",
+  "density": 2700.0,
+  "density__evidence_state": "model_assumption"
+ },
+ "analytic": {
+  "volume_mm3": 8717.919613711676,
+  "mass_kg": 0.023538382957021525,
+  "bbox_mm": [
+   20.0,
+   20.0,
+   100.0
+  ],
+  "inner_diameter_mm": 17.0
+ },
+ "measured_direct": {
+  "volume_mm3": 8717.91961371168,
+  "bbox_mm": [
+   20.0,
+   20.0,
+   100.0
+  ],
+  "n_solids": 1,
+  "mass_kg": 0.023538382957021535
+ },
+ "measured_after_step_reimport": {
+  "volume_mm3": 8717.91961371187,
+  "bbox_mm": [
+   20.0,
+   20.0,
+   100.0
+  ],
+  "n_solids": 1,
+  "mass_kg": 0.023538382957022052
+ },
+ "step_file": "mast_tube.step",
+ "step_sha256": "a1e74213ed2bb1604106e7239f25622dbb884f3b43e72bf5d23b8f0a3166486e",
+ "versions": {
+  "python": "3.11.16",
+  "cadquery": "2.8.0",
+  "numpy": "2.4.6",
+  "OCP": "7.9.3.1"
+ },
+ "not_generated_pending_owner_inputs": {},
+ "pending_parameters_in_register": [
+  "actual_load_height",
+  "clamp_bolt_pitch",
+  "clamp_engagement",
+  "lidar_bracket_bolt_pitch",
+  "optical_center_offset",
+  "root_rotation_station_spacing"
+ ]
+}

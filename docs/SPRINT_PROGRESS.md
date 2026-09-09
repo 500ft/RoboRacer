@@ -1,5 +1,19 @@
 # Sprint progress — RoboRacer
 
+## 2026-09-09 — RR-CAD-08 code-CAD regeneration and geometry tests
+
+Completed the day-2 CAD tooling task. CadQuery is installed in an isolated environment and
+pinned in [`cad/requirements.lock`](../cad/requirements.lock) only after a STEP export/reimport
+smoke test. [`cad/generate.py`](../cad/generate.py) regenerates the `mast_tube` family from
+the registered parameters and refuses anything missing, pending, mis-united or invalid;
+[11 tests](../cad/tests/test_geometry.py) hold it to [`cad/contract.json`](../cad/contract.json)
+and prove failure on every bad-input class the task names. Geometry CI is shipped as an
+appliable patch under `ci-proposed/` because the PR token lacks workflow scope. No CAD model of a
+fixture, no physical part and no owner approval; owner gates are unchanged. Sole status is in
+[CAD_TASKS.csv](CAD_TASKS.csv). [Verification](../evidence/task-2026-09-09/README.md).
+Branch `task/priority-two-20260909`, stacked on the day-1 branch.
+Next check: `python -m pytest cad/tests -q`.
+
 ## 2026-09-08 — RR-CAD-01 input register
 
 Completed the existing highest-priority ready CAD-input task; its sole status is

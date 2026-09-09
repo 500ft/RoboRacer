@@ -1,0 +1,15 @@
+{
+ "generate": {
+  "rc": 0,
+  "seconds": 2.2,
+  "stdout": "mast_tube: volume 8717.920 mm^3  mass 23.538 g  bbox [20.0, 20.0, 100.0]  -> evidence/task-2026-09-09/cad-out\n"
+ },
+ "pytest": {
+  "rc": 0,
+  "seconds": 2.7,
+  "tail": "st_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:74: PyparsingDeprecationWarning: 'setResultsName' deprecated - use 'set_results_name'\n    AttribQueryOptions = Literal(\"i\").setResultsName(\"AttribQueryOptions\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n11 passed, 7 warnings in 2.14s\n"
+ },
+ "apply_check": {
+  "rc": 0
+ }
+}

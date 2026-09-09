@@ -31,3 +31,18 @@ git commit -m "ci: gate the dynamics-loader and replay-metrics tests"
 
 Once applied, delete this directory — it exists only to carry the change across the
 permission gap.
+
+
+---
+
+## Second proposal — `cad-geometry-workflow.patch` (RR-CAD-08)
+
+Adds `.github/workflows/cad-geometry.yml`: installs the pinned CadQuery toolchain from
+`cad/requirements.lock`, regenerates the mast geometry from `cad/roboracer/parameters.csv`, and
+runs `cad/tests` (11 tests: contract, negative controls, version lock). Same reason it is a
+patch: the PR token has no `workflow` scope. `git apply --check` passes.
+
+```bash
+git apply ci-proposed/cad-geometry-workflow.patch
+git add .github/workflows/cad-geometry.yml && git commit -m "ci: add CAD geometry job (RR-CAD-08)"
+```
