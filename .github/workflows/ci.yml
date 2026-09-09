@@ -30,4 +30,5 @@ jobs:
         python experiments/test_bag_evidence.py
         python experiments/validate_item11.py
         python experiments/test_mast_physical_validation.py
+        python experiments/test_cad_inputs.py
         python experiments/test_final_report.py

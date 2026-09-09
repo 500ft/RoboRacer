@@ -1,0 +1,31 @@
+parameter,value,unit,evidence_state,source,release_requirement
+mast_length,100,mm,design_choice,experiments/mast_fea.py,Inspect effective free length after clamp installation
+mast_outer_diameter,20,mm,design_choice,experiments/mast_fea.py,Inspect delivered stock OD and tolerance
+mast_wall_thickness,1.5,mm,design_choice,experiments/mast_fea.py,Inspect wall at multiple positions
+youngs_modulus,68900,N/mm^2,model_assumption,experiments/mast_fea.py,Replace assumed 6061-T6 property with reviewed material basis
+density,2700,kg/m^3,model_assumption,experiments/mast_fea.py,Record stock material provenance
+tip_body_mass,0.130,kg,reported_vendor_nominal,docs/design/16_mechanical_design_analysis.md,Existing study cites UST-10LX body datasheet; verify actual purchased revision
+tip_bracket_mass,0.030,kg,model_assumption,docs/design/16_mechanical_design_analysis.md,Replace allowance with actual bracket mass
+tip_cable_mass,0.015,kg,model_assumption,docs/design/16_mechanical_design_analysis.md,Weigh installed moving cable portion
+tip_total_mass,0.175,kg,model_assumption,experiments/mast_fea.py,Sum body plus bracket and cable assumptions; not weighed assembly
+model_wheelbase,0.3302,m,model_assumption,docs/design/14_chassis_drivetrain_actuators.md,Simulation geometry only
+selected_chassis_wheelbase,0.324,m,reported_vendor_nominal,docs/design/14_chassis_drivetrain_actuators.md,Previously cited Slash 4x4 nominal; inspect actual chassis
+clean_sim_peak_lateral_accel,19.436448595,m/s^2,committed_simulation,runs/ride_quality_baseline/summary.json,Not physical accelerometer data
+shock_multiplier,50,1,model_assumption,experiments/mast_fea.py,Assumed crash load; not measured operating acceleration
+crash_safety_factor,1.5,1,model_assumption,experiments/mast_fea.py,Strength case only; not a bench test load instruction
+gravity,9.81,m/s^2,model_assumption,experiments/mast_fea.py,Retain calculation convention
+nominal_fea_deflection,0.176,mm,committed_simulation,runs/mast_fea/fea_summary.txt,Historical nominal model only; not as-built reference
+nominal_reference_load,128.76,N,protocol,docs/specs/mast-physical-validation/design.md,Rounded reference divisor; formula crash load is 128.75625 N
+force_target_1,4,N,protocol,docs/specs/mast-physical-validation/design.md,Calibrated actual force retained separately
+force_target_2,8,N,protocol,docs/specs/mast-physical-validation/design.md,Calibrated actual force retained separately
+force_target_3,12,N,protocol,docs/specs/mast-physical-validation/design.md,Calibrated actual force retained separately
+force_target_4,16,N,protocol,docs/specs/mast-physical-validation/design.md,Calibrated actual force retained separately
+force_target_5,20,N,protocol,docs/specs/mast-physical-validation/design.md,Calibrated actual force retained separately
+indicator_resolution_limit,0.001,mm,protocol,docs/CAD_MEASUREMENT_CONTRACT.md,Independent tip and root stations both meet this limit
+fixture_stiffness_ratio_min,10,1,protocol,docs/CAD_MEASUREMENT_CONTRACT.md,Each axis at actual load point; does not bound root rotation
+clamp_engagement,,mm,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Owner supplies actual clamp geometry and fastener configuration
+clamp_bolt_pitch,,mm,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure deck-side mating datum; full deck CAD not required
+lidar_bracket_bolt_pitch,,mm,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Identify exact sensor and bracket drawing
+optical_center_offset,,mm,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure actual optical-center offset from tube tip
+actual_load_height,,mm,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure load line relative to clamp datum
+root_rotation_station_spacing,,mm,pending,docs/CAD_MEASUREMENT_CONTRACT.md,Choose measured baseline and propagate angular uncertainty

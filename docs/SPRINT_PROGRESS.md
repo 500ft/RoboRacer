@@ -1,5 +1,17 @@
 # Sprint progress — RoboRacer
 
+## 2026-09-08 — RR-CAD-01 input register
+
+Completed the existing highest-priority ready CAD-input task; its sole status is
+in [CAD_TASKS.csv](CAD_TASKS.csv), not a duplicate sprint row. Historical sprint
+CSV remains byte-preserved. [Inputs](../cad/roboracer/design-inputs.md) and
+[verification](../evidence/task-2026-09-08/README.md) distinguish design/vendor
+values from unavailable fit/measurement inputs. No CAD model, physical test or
+owner approval. RR-CAD-08 is now ready for a later software tooling task; owner
+interface approval still blocks real geometry acceptance and fabrication.
+Branch `task/priority-one-20260908`; PR records committed/pushed identity.
+Next check: `python experiments/test_cad_inputs.py`.
+
 ## 2026-09-06 — Reviewer-driven CAD amendment
 
 This entry supersedes the earlier CAD allocation and readiness wording. The same CAD PR is now draft, pending the owner planning-ledger placement decision. [Review disposition](CAD_REVIEW_DISPOSITION.md) records that block; [CAD_PLAN.md](CAD_PLAN.md) and [CAD_TASKS.csv](CAD_TASKS.csv) contain revised priorities, separate tooling estimates and explicit parked work. No CAD model or new measurement was produced. Original integrity-sprint tasks/evidence remain unchanged. Next work is limited to active input-register tasks and unresolved owner decisions, not the parked portfolio-wide CAD program.
