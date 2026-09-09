@@ -2,8 +2,10 @@
 # (20 x 10 x 5 box: volume 1000.000000 -> 1000.000000, relative difference 0). RR-CAD-08.
 # cad/tests/test_geometry.py::test_installed_versions_match_lock asserts the running
 # environment matches these lines, so CI cannot drift silently.
+# Direct-package version constraints, consumed by conda install --file.
+# Not a platform-specific or transitive/build-hash lock.
 python==3.11.16
 cadquery==2.8.0
-cadquery-ocp==7.9.3.1
+ocp==7.9.3.1
 numpy==2.4.6
 pytest==9.1.1

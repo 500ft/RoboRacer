@@ -1,6 +1,24 @@
 # Sprint progress — RoboRacer
 
-## 2026-09-09 — RR-CAD-08 code-CAD regeneration and geometry tests
+## 2026-09-09 — adversarial CAD review amendment
+
+The original day-2 completion statement below was premature: a proposed workflow
+is not running CI. RR-CAD-08 is now `in_progress` pending a green hosted CAD job.
+The workflow is installed and existing CI also targets day-1 stack bases. Current
+authentication includes workflow permission; the old restriction is historical.
+
+Baseline 11 CAD tests passed. Eleven regression cases then failed on the
+original implementation: nonfinite numeric inputs, populated pending/blank states,
+duplicate parameter rows, three unchecked dependency versions, and two undetected
+STEP round-trip metric changes. Minimal fixes produce 22 passing CAD tests.
+The direct-package constraints are not a platform/transitive build lock.
+See [review evidence](../evidence/review-2026-09-09/README.md).
+Owner gates, recorded dimensions, registered thresholds, original model exports,
+and the historical sprint ledger are unchanged. No fabrication or measurement.
+Next action: push the amended PR, observe both hosted jobs, then close only the
+tooling task if its installed geometry job passes.
+
+## 2026-09-09 — RR-CAD-08 code-CAD regeneration and geometry tests (historical initial handoff)
 
 Completed the day-2 CAD tooling task. CadQuery is installed in an isolated environment and
 pinned in [`cad/requirements.lock`](../cad/requirements.lock) only after a STEP export/reimport

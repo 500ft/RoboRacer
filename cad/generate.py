@@ -28,7 +28,12 @@ def load_parameters(path: Path) -> dict:
     if not path.is_file():
         raise GeometryInputError(f"parameter file not found: {path}")
     rows = list(csv.DictReader(path.open(encoding="utf-8")))
-    have = {r["parameter"]: r for r in rows}
+    have = {}
+    for row in rows:
+        name = row["parameter"]
+        if name in have:
+            raise GeometryInputError(f"duplicate parameter in register: {name}")
+        have[name] = row
     out = {}
     for name, unit in REQUIRED.items():
         if name not in have:
@@ -36,12 +41,16 @@ def load_parameters(path: Path) -> dict:
         r = have[name]
         if r.get("value", "").strip() == "":
             raise GeometryInputError(f"required parameter has no value (evidence_state={r.get('evidence_state')}): {name}")
+        if r.get("evidence_state", "").strip() in {"", "pending"}:
+            raise GeometryInputError(f"required parameter has unresolved evidence state: {name}")
         if r.get("unit", "").strip() != unit:
             raise GeometryInputError(f"unit mismatch for {name}: register says {r.get('unit')!r}, generator expects {unit!r}")
         try:
             out[name] = float(r["value"])
         except ValueError:
             raise GeometryInputError(f"non-numeric value for {name}: {r['value']!r}")
+        if not math.isfinite(out[name]):
+            raise GeometryInputError(f"required parameter must be finite: {name}")
         out[f"{name}__evidence_state"] = r.get("evidence_state", "")
     out["__pending_in_register"] = sorted(n for n, r in have.items() if r.get("value", "").strip() == "")
     return out
@@ -77,11 +86,14 @@ def sha256(path: Path) -> str:
 def versions() -> dict:
     import platform, importlib.metadata as md
     v = {"python": platform.python_version()}
-    for k in ("cadquery", "cadquery-ocp", "numpy"):
+    for k in ("cadquery", "cadquery-ocp", "numpy", "pytest"):
         try: v[k] = md.version(k)
         except md.PackageNotFoundError: pass
     try:
         import OCP; v["OCP"] = getattr(OCP, "__version__", "unknown")
+        v["ocp"] = v["OCP"]  # conda-forge package name; pip uses cadquery-ocp
+        # Conda-forge may provide OCP without Python distribution metadata.
+        v.setdefault("cadquery-ocp", v["OCP"])
     except Exception: pass
     return v
 

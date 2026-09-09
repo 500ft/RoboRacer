@@ -2,6 +2,12 @@
 
 ## Latest follow-up — 2026-09-09
 
+[Day-2 adversarial review](../evidence/review-2026-09-09/README.md) supersedes
+the initial completion claim below: RR-CAD-08 is in progress until the installed
+geometry workflow runs green. The original patch-only delivery did not meet its
+CI acceptance criterion. Input admission, full direct-package version checking,
+and STEP round-trip metric checks are hardened with reproduced regressions.
+
 [RR-CAD-08 geometry-tooling handoff](../evidence/task-2026-09-09/README.md) adds a parameter-driven
 CadQuery generator, a reviewed geometry contract with 11 fail-closed tests, and a pinned
 toolchain. It regenerates model geometry from the register; it is not a fixture design, part or

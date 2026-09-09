@@ -1,5 +1,17 @@
 # Proposed CI change — not active
 
+## Review amendment — 2026-09-09
+
+The CAD proposal is now installed as
+[`.github/workflows/cad-geometry.yml`](../.github/workflows/cad-geometry.yml).
+Current-session authentication was verified by the parent reviewer to include
+workflow permission; the earlier token restriction below is historical, not a
+current blocker. Do not reapply the CAD patch: it is retained only as the original
+proposal. Hosted CAD verification is pending until the amended PR runs green.
+The installed job reads version constraints directly from `cad/requirements.lock`
+and accepts PRs to main or a day-1 stack base. Those constraints pin five direct
+packages; they are not a platform/build/transitive dependency lock.
+
 `ci-proposed/ci-gate-new-tests.patch` contains a workflow change that **is not installed**. Nothing in this
 directory is executed by GitHub Actions; it only takes effect once someone applies it.
 

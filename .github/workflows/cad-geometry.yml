@@ -1,0 +1,34 @@
+name: CAD geometry
+
+on:
+  push:
+    branches: [main]
+    paths: ["cad/**", ".github/workflows/cad-geometry.yml"]
+  pull_request:
+    branches: [main, "task/priority-one-*"]
+    paths: ["cad/**", ".github/workflows/cad-geometry.yml"]
+
+jobs:
+  geometry:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: cad-geometry
+          python-version: "3.11"
+          channels: conda-forge
+          channel-priority: strict
+      - name: Install registered CAD toolchain constraints
+        run: conda install -y --file cad/requirements.lock
+      - name: Regenerate geometry from the registered parameters
+        run: python cad/generate.py --parameters cad/roboracer/parameters.csv --output ${{ runner.temp }}/cad-out
+      - name: Geometry tests (contract, negative controls, version constraints)
+        run: python -m pytest cad/tests -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cad-geometry-${{ github.sha }}
+          path: ${{ runner.temp }}/cad-out

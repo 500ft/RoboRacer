@@ -1,5 +1,11 @@
 # RR-CAD-08 verification — 2026-09-09
 
+**Review amendment:** this is the original day-2 evidence snapshot, not the final
+acceptance verdict. [Adversarial review](../review-2026-09-09/README.md) reproduced
+admission/version/round-trip gaps and corrects the premature completion claim.
+The CAD workflow is now installed; hosted verification is pending. The historical
+exports below are preserved rather than silently regenerated under revised code.
+
 Base: `04e3ee74a513575eaa9f0de90e3209ebef01e010` (head of the day-1 branch `task/priority-one-20260908`, PR #12). Candidate
 identity is the containing PR head. No physical specimen, fabrication or measurement is
 claimed; this task delivers tooling that regenerates and tests **model** geometry from the

@@ -46,6 +46,7 @@ def test_regenerates_and_matches_contract(tmp_path):
 
 def test_step_roundtrip_preserves_volume(tmp_path):
     r = G.generate(PARAMS, tmp_path)
+    _check_contract(r["measured_after_step_reimport"], CONTRACT["expected"], CONTRACT["tolerances"])
     a, b = r["measured_direct"]["volume_mm3"], r["measured_after_step_reimport"]["volume_mm3"]
     assert abs(a - b) <= CONTRACT["tolerances"]["step_roundtrip_volume_rel"] * a
 
@@ -93,5 +94,48 @@ def test_cli_refuses_with_exit_2(tmp_path):
 def test_installed_versions_match_lock():
     lock = dict(l.split("#")[0].strip().split("==") for l in (REPO / "cad" / "requirements.lock").read_text().splitlines() if "==" in l.split("#")[0])
     v = G.versions()
-    for k in ("cadquery", "python"):
+    for k in lock:
         assert v.get(k) == lock.get(k), f"{k}: installed {v.get(k)} != locked {lock.get(k)}"
+
+
+@pytest.mark.parametrize("value", ["NaN", "inf", "-inf"])
+def test_nonfinite_required_input_refused(tmp_path, value):
+    p = _rewrite(PARAMS, tmp_path / "p.csv", _set(BLANK, value=value))
+    with pytest.raises(G.GeometryInputError, match="finite"):
+        G.load_parameters(p)
+
+
+@pytest.mark.parametrize("state", ["pending", ""])
+def test_populated_unapproved_input_refused(tmp_path, state):
+    p = _rewrite(PARAMS, tmp_path / "p.csv", _set(BLANK, evidence_state=state))
+    with pytest.raises(G.GeometryInputError, match="evidence state"):
+        G.generate(p, tmp_path / "out")
+    assert not (tmp_path / "out").exists()
+
+
+def test_duplicate_parameter_refused(tmp_path):
+    p = _rewrite(PARAMS, tmp_path / "p.csv", lambda rows: rows + [dict(rows[0])])
+    with pytest.raises(G.GeometryInputError, match="duplicate parameter"):
+        G.load_parameters(p)
+
+
+@pytest.mark.parametrize("key", ["ocp", "numpy", "pytest"])
+def test_version_lock_rejects_dependency_drift(monkeypatch, key):
+    changed = G.versions() | {key: "0.0.0-review-negative-control"}
+    monkeypatch.setattr(G, "versions", lambda: changed)
+    with pytest.raises(AssertionError):
+        test_installed_versions_match_lock()
+
+
+@pytest.mark.parametrize("mutation", [{"bbox_mm": [1.0, 1.0, 1.0]}, {"n_solids": 2}])
+def test_roundtrip_gate_rejects_nonvolume_drift(tmp_path, monkeypatch, mutation):
+    original = G.measure
+    calls = 0
+    def changed(shape):
+        nonlocal calls
+        calls += 1
+        metrics = original(shape)
+        return metrics | mutation if calls == 2 else metrics
+    monkeypatch.setattr(G, "measure", changed)
+    with pytest.raises(AssertionError):
+        test_step_roundtrip_preserves_volume(tmp_path)
