@@ -1,5 +1,13 @@
 # RoboRacer sprint review index — software candidate, partial project handoff
 
+## Day-3 preparation — 2026-09-09
+
+Six request-sheet tests cover exact pending-row coverage, future rows, invalid units, a filled pending value, duplicates and snapshot drift. 28 CAD tests pass. The failed 174.7 Hz baseline is distinguished from the selected nominal 285.5 Hz FE result; static acceptance is not repurposed as a modal verdict.
+
+Review [DAY3_PLAN.md](DAY3_PLAN.md), [deliverable](../cad/roboracer/fixture-preparation.md), and [commands/evidence](../evidence/task-day3-2026-09-09/README.md). Base: `44491a62d4418294d14143466c757010b1694ba4`; new PR branch: `task/day-three-20260909`. No original Owner/External gate is closed. Final source identity is the PR head, reported in its delivery record rather than embedded circularly here.
+
+As-built dimensions, calibrated uncertainty and pre-load reference freeze still required.
+
 ## Hosted tooling acceptance — 2026-09-09
 
 RR-CAD-08 is now **done**: hosted geometry and existing CI passed for source

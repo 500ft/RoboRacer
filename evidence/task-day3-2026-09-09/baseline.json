@@ -1,0 +1,20 @@
+{
+  "date": "2026-09-09",
+  "base": "44491a62d4418294d14143466c757010b1694ba4",
+  "command": "/Users/redhose/.claude-science/conda/envs/cadq/bin/python -m pytest cad/tests -q; PYTHONPATH=gym python experiments/test_mast_physical_validation.py; python experiments/test_cad_inputs.py",
+  "initial": {
+    "chunk_id": "2b2a21",
+    "wall_time_seconds": 1.002525083,
+    "session_id": 12560,
+    "original_token_count": 14,
+    "output": "44491a62d4418294d14143466c757010b1694ba4\nPython 3.11.8\n"
+  },
+  "completion": {
+    "chunk_id": "ddb81f",
+    "wall_time_seconds": 6.25e-7,
+    "exit_code": 0,
+    "original_token_count": 657,
+    "output": "......................                                                   [100%]\n=============================== warnings summary ===============================\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:50: PyparsingDeprecationWarning: 'addParseAction' deprecated - use 'add_parse_action'\n    number.addParseAction(lambda t: float(t[0]))  # convert to float\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:51: PyparsingDeprecationWarning: 'addParseAction' deprecated - use 'add_parse_action'\n    string_ = quotedString.addParseAction(lambda t: t[0][1:-1])  # remove quotes\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:57: PyparsingDeprecationWarning: 'oneOf' deprecated - use 'one_of'\n    Relation = oneOf([\"==\", \"!=\", \"<\", \"<=\", \">\", \">=\", \"?\", \"!?\"])\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:63: PyparsingDeprecationWarning: 'setResultsName' deprecated - use 'set_results_name'\n    ).setResultsName(\"EntityQuery\")\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:65: PyparsingDeprecationWarning: 'infixNotation' deprecated - use 'infix_notation'\n    InfixBoolQuery = infixNotation(\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:72: PyparsingDeprecationWarning: 'setResultsName' deprecated - use 'set_results_name'\n    ).setResultsName(\"AttribQuery\")\n\ncad/tests/test_geometry.py::test_regenerates_and_matches_contract\n  /Users/redhose/.claude-science/conda/envs/cadq/lib/python3.11/site-packages/ezdxf/queryparser.py:74: PyparsingDeprecationWarning: 'setResultsName' deprecated - use 'set_results_name'\n    AttribQueryOptions = Literal(\"i\").setResultsName(\"AttribQueryOptions\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n22 passed, 7 warnings in 3.83s\n....................\n----------------------------------------------------------------------\nRan 20 tests in 1.015s\n\nOK\n...\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK\n"
+  },
+  "scope": "Baseline checks are repository integrity checks, not scientific validation"
+}

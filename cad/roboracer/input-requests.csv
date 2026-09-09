@@ -1,0 +1,7 @@
+parameter,unit,acquisition,value,status,source,required_evidence
+clamp_engagement,mm,design_then_inspect,,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Owner supplies actual clamp geometry and fastener configuration
+root_rotation_station_spacing,mm,design_then_inspect,,pending,docs/CAD_MEASUREMENT_CONTRACT.md,Choose measured baseline and propagate angular uncertainty
+actual_load_height,mm,measurement,,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure load line relative to clamp datum
+clamp_bolt_pitch,mm,measurement,,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure deck-side mating datum; full deck CAD not required
+optical_center_offset,mm,measurement,,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Measure actual optical-center offset from tube tip
+lidar_bracket_bolt_pitch,mm,vendor_drawing,,pending,docs/specs/mast-physical-validation/campaign-readiness.md,Identify exact sensor and bracket drawing

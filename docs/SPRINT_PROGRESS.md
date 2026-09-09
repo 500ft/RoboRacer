@@ -1,5 +1,11 @@
 # Sprint progress — RoboRacer
 
+## Day-3 work — 2026-09-09
+
+Both reviewed PR layers merged into main; new work starts from `44491a62d4418294d14143466c757010b1694ba4` on `task/day-three-20260909`. Six request-sheet tests cover exact pending-row coverage, future rows, invalid units, a filled pending value, duplicates and snapshot drift. 28 CAD tests pass. The failed 174.7 Hz baseline is distinguished from the selected nominal 285.5 Hz FE result; static acceptance is not repurposed as a modal verdict.
+
+The [evidence record](../evidence/task-day3-2026-09-09/README.md) contains checks and limits. Work is locally verified and not yet recorded here as pushed/merged. Current edits belong to this task; original checkouts were preserved. Next: finish verification, commit the bounded change and open the new PR; preserve all stated external gates.
+
 ## Hosted tooling acceptance — 2026-09-09
 
 RR-CAD-08 is now **done**: hosted geometry and existing CI passed for source
