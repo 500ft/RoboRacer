@@ -54,7 +54,7 @@ Two genuine ROS 2 middleware recordings passed their source-specific gates:
 - The project bridge supplied native achieved steering and recovered Gym's known `C_Sf` and `C_Sr` through the complete bag-to-fit pipeline.
 - Stock `f1tenth_gym_ros` at `883394df0964c555ee05bea69c3002daf6f2d405` supplied only `/ego_racecar/odom` and `/drive`; it passed ingestion and excitation checks and was not used for parameter identification.
 
-Raw bags were validated locally through deterministic ZIP, SHA-256, reconversion, and byte-identical telemetry checks. Both bags are now published as GitHub release assets under tag [`v11-ros-bag`](https://github.com/500ft/RoboRacer/releases/tag/v11-ros-bag), and `bags/MANIFEST.yaml` records their byte-size and SHA-256 chain of custody (verify with `python experiments/bag_evidence.py verify <name>`).
+Raw bags were validated locally through deterministic ZIP, SHA-256, reconversion, and byte-identical telemetry checks. Both bags are now published as GitHub release assets under tag [`v11-ros-bag`](https://github.com/500ft/autonomous-racing-systems/releases/tag/v11-ros-bag), and `bags/MANIFEST.yaml` records their byte-size and SHA-256 chain of custody (verify with `python experiments/bag_evidence.py verify <name>`).
 
 ## Enriched Identification
 
@@ -134,4 +134,3 @@ This is a controlled simulator-recovery and ROS-ingestion result. Physical `C_Sf
 
 if __name__ == "__main__":
     main()
-

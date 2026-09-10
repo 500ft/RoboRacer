@@ -1,195 +1,142 @@
-# RoboRacer Modeling, Controls, and Mechanical Design
+# Autonomous Racing Systems
 
-Planned mechanical parts and assemblies are listed in [CAD_ITEMS.md](docs/CAD_ITEMS.md). This is a design inventory, not completed CAD or hardware evidence.
+Vehicle modeling, control, telemetry, and sensor-mount engineering for a
+F1TENTH-scale autonomous race car.
 
-**A Python and ROS 2 suite for autonomous-racing dynamics, system
-identification, control, state estimation, telemetry analysis, and LiDAR-mast
-design.**
+[![CI](https://github.com/500ft/autonomous-racing-systems/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/500ft/autonomous-racing-systems/actions/workflows/ci.yml)
+[![Docker](https://github.com/500ft/autonomous-racing-systems/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/500ft/autonomous-racing-systems/actions/workflows/docker.yml)
+[![Evidence: simulation and nominal CAD](https://img.shields.io/badge/evidence-simulation%20%2B%20nominal%20CAD-465B70)](#evidence-snapshot)
+[![License: MIT](https://img.shields.io/badge/license-MIT-276C6B)](LICENSE)
 
-[![CI](https://github.com/500ft/RoboRacer/actions/workflows/ci.yml/badge.svg)](https://github.com/500ft/RoboRacer/actions/workflows/ci.yml)
-[![Docker](https://github.com/500ft/RoboRacer/actions/workflows/docker.yml/badge.svg)](https://github.com/500ft/RoboRacer/actions/workflows/docker.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-276c6b)](LICENSE)
+[Start here](docs/START_HERE.md) · [Results](reports/final_report.md) ·
+[Quick start](#quick-start) · [Documentation](#documentation) ·
+[Contribute](CONTRIBUTING.md)
 
-**[Results](reports/final_report.md) · [Reproduce](#reproduce-the-study) · [Data and figures](docs/data-and-figures.md) · [ROS 2](#ros-2-workflow)**
+![Conceptual overview of the modeling, control, telemetry, and mechanical evidence paths](docs/media/project-overview.svg)
 
-![Identified dynamic bicycle model tracking yaw rate and slip angle through the held-out validation segment](reports/figures/dynamic_parameter_fit.png)
+*Project overview, not a photograph, CAD assembly, or physical test result.*
 
-*One-step yaw-rate and slip-angle predictions of the identified dynamic
-bicycle model against F1TENTH Gym telemetry, with the held-out validation
-segment right of the dashed line. Evidence state: simulation. Details in
-[`reports/dynamic_parameter_identification.md`](reports/dynamic_parameter_identification.md);
-the [figure guide](docs/data-and-figures.md) traces each plot to code and
-inputs.*
+## About
 
-## Overview
+An autonomous vehicle needs more than a controller that completes one lap.
+Its models must explain the recorded motion, its telemetry must be usable by
+other tools, and its sensor mounting must meet a defensible mechanical design.
 
-The repository provides a repeatable path from F1TENTH Gym or ROS 2 telemetry
-to model checks, parameter fits, controller and estimator comparisons, and
-engineering reports. A parallel mechanical lane evaluates a LiDAR mast with
-hand calculations and FEA.
+This repository connects those tasks in two engineering lanes:
 
-```mermaid
-flowchart LR
-    classDef input    fill:#bbdefb,stroke:#1565c0,stroke-width:2px,color:#1f2933,font-weight:bold;
-    classDef process  fill:#b2dfdb,stroke:#00796b,stroke-width:2px,color:#1f2933;
-    classDef core     fill:#e1bee7,stroke:#7b1fa2,stroke-width:2px,color:#1f2933,font-weight:bold;
-    classDef decision fill:#fff9c4,stroke:#f9a825,stroke-width:2px,color:#1f2933,font-weight:bold;
-    classDef endpoint fill:#f8bbd0,stroke:#c2185b,stroke-width:2px,color:#1f2933,font-weight:bold;
+- **Vehicle systems:** dynamics replay, parameter identification, controller
+  comparisons, state estimation, and a shared Gym/ROS 2 telemetry format.
+- **Mechanical design:** a LiDAR-mast load case, hand calculations, finite
+  element analysis, nominal parametric CAD, and a physical-test contract.
 
-    S[/F1TENTH Gym/]:::input --> T[Normalized telemetry]:::process
-    R[/ROS 2 bag/]:::input --> T
-    T --> Q{Quality and excitation gates}:::decision
-    Q --> M{{Model replay and identification}}:::core
-    Q --> C[Control and estimation studies]:::process
-    M --> O([Reports, metrics, and figures]):::endpoint
-    C --> O
-    L[/Simulation load envelope/]:::input --> D[Mast hand calc and FEA]:::process
-    D --> O
-```
+The result is a reviewable analysis pipeline with source-linked reports, not
+a claim of a field-validated race car. The project retains its
+[F1TENTH/RoboRacer lineage](docs/upstream_roboracer_sources.md); package and ROS
+interface names are unchanged by the repository rename.
 
-*Shapes: parallelogram = input · rectangle = process · diamond = gate · hexagon = core method · pill = endpoint.*
+## Evidence snapshot
 
-Most vehicle results are simulation outputs. The enriched ROS 2 regression
-captures exercise the telemetry path but are not physical vehicle tests. Mast
-results are calculations and FEA; the physical compliance campaign is pending.
+| Engineering result | What the repository demonstrates | Source |
+| --- | --- | --- |
+| Vehicle identification | Dynamic bicycle-model fitting with a held-out telemetry segment; simulator data, not physical vehicle identification | [Identification study](reports/dynamic_parameter_identification.md) |
+| Control and estimation | Pure pursuit, LQR, MPC, and EKF comparisons under documented simulation scenarios | [Controllers](reports/controller_comparison.md), [EKF](reports/ekf_study.md) |
+| Telemetry integration | ROS 2 bag conversion with portable, simulator-backed regression captures | [Bridge evidence](evidence/item11/report.md) |
+| Mast redesign | Selected nominal FEA predicts a 285.5 Hz first mode; 174.7 Hz belongs to the rejected baseline hand model | [Mechanical analysis](docs/design/16_mechanical_design_analysis.md), [FEA output](runs/mast_fea/fea_summary.txt) |
+| Parametric geometry | A nominal mast tube regenerates from its parameter register and survives STEP round-trip checks | [Generator](cad/generate.py), [Geometry contract](cad/contract.json) |
+| Physical compliance | Test protocol and evidence evaluator exist; measured agreement has not been established | [Frozen protocol](docs/specs/mast-physical-validation/design.md) |
 
-## Reproduce the study
+![Identified bicycle-model yaw-rate and slip-angle predictions against simulator telemetry, with the held-out segment marked](reports/figures/dynamic_parameter_fit.png)
 
-The legacy Gym stack is pinned to Python 3.9 and older numerical packages:
+*Simulation result: the segment right of the dashed line is held out from the
+fit. Read the [study](reports/dynamic_parameter_identification.md) for the split
+and limitations; [figure lineage](docs/data-and-figures.md) identifies the inputs
+and generator. This is not independent physical-vehicle validation.*
 
-```bash
-conda env create -f environment.yml
-conda activate f1tenth-gym
-python -m pip install -e .
-./run_all.sh
-```
+## Quick start
 
-Longer controller and robustness studies are opt-in:
+For a bounded first check, use the portable report environment. This path
+does not launch ROS, drive a vehicle, or regenerate the full simulation study.
+Prerequisites: Git and **Python 3.10**, matching the portable CI workflow.
 
 ```bash
-RUN_FULL_MPC=1 RUN_ROBUSTNESS=1 ./run_all.sh
-```
-
-For the portable report and telemetry regression checks used by CI:
-
-```bash
+git clone https://github.com/500ft/autonomous-racing-systems.git
+cd autonomous-racing-systems
+python3.10 -m venv .venv
+source .venv/bin/activate
 python -m pip install -r requirements-item11-regression.txt
 python -m pip install -r requirements-report.txt
+PYTHONPATH=gym python experiments/test_cad_inputs.py
 PYTHONPATH=gym python experiments/test_final_report.py
 ```
 
-Each figure group, its direct input artifacts, and its standalone command are
-listed in [`docs/data-and-figures.md`](docs/data-and-figures.md). The full chain
-can take longer than the portable CI checks and requires the pinned Gym
-environment.
+Expected: both test commands finish with `OK`. They check registered design
+inputs and source-linked report content, including a temporary PDF build;
+they do not establish physical agreement or run the complete evidence suite.
 
-## ROS 2 workflow
-
-The sidecar package is in `ros2_ws/src/f1tenth_modeling` and uses standard
-odometry and drive topics, with `/f1tenth/internal_state` as optional simulator
-enrichment.
-
-```bash
-cd ros2_ws
-colcon build --symlink-install
-source install/setup.bash
-ros2 launch f1tenth_modeling sysid_excitation.launch.py
-```
-
-Convert a bag into the shared telemetry schema:
-
-```bash
-python experiments/rosbag_to_telemetry.py \
-  --bag path/to/rosbag \
-  --output runs/ros2_sysid_steering_excitation/telemetry.csv \
-  --metadata runs/ros2_sysid_steering_excitation/metadata.json \
-  --quality runs/ros2_sysid_steering_excitation/quality_metrics.csv
-```
-
-See the setup notes for
-[`macOS`](docs/ros2_verification_robostack_macos.md) and
-[`Ubuntu 22.04`](docs/ros2_verification_ubuntu_humble.md).
+The [reproduction guide](docs/START_HERE.md#reproduce-by-environment) separates
+the full portable checks, legacy Gym experiments, ROS 2 integration, and pinned
+CadQuery environment. Keep these environments separate: their dependency
+versions intentionally differ.
 
 ## Documentation
 
-| Document | Purpose |
+| Start with | Use it to |
 | --- | --- |
-| [`reports/final_report.md`](reports/final_report.md) | Integrated modeling, controls, estimation, and mast results |
-| [`docs/data-and-figures.md`](docs/data-and-figures.md) | Evidence classes, data flow, plot generators, inputs, and commands |
-| [`docs/figure-manifest.json`](docs/figure-manifest.json) | Machine-readable generator/input/output map |
-| [`docs/vehicle_model.md`](docs/vehicle_model.md) | Vehicle equations and assumptions |
-| [`docs/telemetry_data_dictionary.md`](docs/telemetry_data_dictionary.md) | Shared telemetry schema |
-| [`docs/parameter_inventory.md`](docs/parameter_inventory.md) | Parameter sources and status |
-| [`reports/controller_comparison.md`](reports/controller_comparison.md) | Pure pursuit, LQR, and MPC comparison |
-| [`reports/ekf_study.md`](reports/ekf_study.md) | Estimation noise and dropout study |
-| [`docs/design/`](docs/design/) | Mechanical requirements, analysis, and FEA setup |
-| [`docs/specs/mast-physical-validation/`](docs/specs/mast-physical-validation/) | Frozen compliance-test protocol |
-
-## Repository map
+| [Reading and reproduction guide](docs/START_HERE.md) | Choose a recruiter, reviewer, or contributor route |
+| [Integrated report](reports/final_report.md) | Review the modeling, controls, estimation, and mast results |
+| [Data and figures](docs/data-and-figures.md) | Trace a figure back to its inputs and generator |
+| [Vehicle model](docs/vehicle_model.md) | Inspect equations and assumptions |
+| [Telemetry dictionary](docs/telemetry_data_dictionary.md) | Understand the shared data format |
+| [Parameter inventory](docs/parameter_inventory.md) | Distinguish configured, identified, and measured inputs |
+| [Fixture preparation](cad/roboracer/fixture-preparation.md) | Inspect the mast interface and metrology decisions |
+| [CAD inventory](docs/CAD_ITEMS.md) | See planned parts without confusing them with completed geometry |
+| [Review index](docs/REVIEW_READY.md) | Find verification records and unresolved gates |
 
 ```text
-gym/          F1TENTH simulator package
-experiments/  simulation, telemetry, controls, estimation, and mast scripts
-runs/         generated telemetry, metrics, parameters, and solver summaries
-reports/      study reports and result figures
-ros2_ws/      ROS 2 telemetry and excitation sidecar
-evidence/     portable ROS-backed regression captures
-docs/         models, schemas, setup notes, designs, and figure lineage
+gym/          F1TENTH simulator package and dynamics
+experiments/  replay, identification, control, telemetry, and mast checks
+reports/      engineering reports and result figures
+runs/         study inputs, generated metrics, and solver summaries
+ros2_ws/      f1tenth_modeling ROS 2 sidecar
+cad/          parameter-driven nominal geometry and contract tests
+evidence/     provenance and portable regression captures
+docs/         models, interfaces, test protocols, and reading guides
 ```
 
-## Status and roadmap
+## Next engineering gate
 
-Done (evidence state: simulation):
+The next mechanical result is **static mast compliance**, not another render.
+Resolve the actual mount, tip assembly, load height, and fixture observability;
+then freeze inspection-linked as-built predictions before applying campaign
+loads. The [measurement contract](docs/CAD_MEASUREMENT_CONTRACT.md) specifies
+fixture stiffness, root-motion observations, and uncertainty requirements.
 
-- System identification of the dynamic bicycle model with a held-out
-  validation segment
-  ([`reports/dynamic_parameter_identification.md`](reports/dynamic_parameter_identification.md)),
-  plus noise robustness
-  ([`reports/parameter_id_robustness.md`](reports/parameter_id_robustness.md)).
-- RK4/Euler integrator convergence study
-  ([`reports/integrator_convergence.md`](reports/integrator_convergence.md))
-  and kinematic-model replay comparison
-  ([`reports/model_vs_gym_comparison.md`](reports/model_vs_gym_comparison.md)).
-- Pure pursuit, LQR, and MPC comparison
-  ([`reports/controller_comparison.md`](reports/controller_comparison.md)),
-  EKF study ([`reports/ekf_study.md`](reports/ekf_study.md)), and failure-mode
-  FMEA ([`reports/failure_mode_fmea.md`](reports/failure_mode_fmea.md)).
-- ROS 2 bag-to-telemetry bridge with portable regression evidence
-  ([`evidence/item11/report.md`](evidence/item11/report.md)) — simulator-backed
-  captures, not physical vehicle tests.
+The existing ±15% static agreement band is **not** a modal tap-test criterion.
+Sensor/cable mass and the installed thermal mounting arrangement also need
+confirmation before the nominal FEA can represent the built assembly.
 
-Done (evidence state: hand calculation and FEA):
+Physical vehicle telemetry, a completed mounting fixture, and measured mast
+compliance remain outside the demonstrated results. Nominal STEP geometry
+does not close any of those gates. The [review index](docs/REVIEW_READY.md)
+and existing task ledger retain the detailed work status.
 
-- LiDAR-mast load case, hand calculations, static FEA, mesh convergence, and
-  modal analysis ([`docs/design/16_mechanical_design_analysis.md`](docs/design/16_mechanical_design_analysis.md)).
+## Contributing
 
-Pending:
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing models, evidence, or
+generated outputs. A useful pull request identifies the affected contract,
+records its environment and checks, and links the result to its inputs.
 
-- [Evidence-integrity sprint](docs/SPRINT_ROADMAP.md): the mast evaluator now
-  requires a complete paired trial matrix and traceable campaign/reference
-  artifacts. Synthetic checks are labeled `SIMULATED_AGREEMENT`, never physical
-  validation; [review evidence](docs/REVIEW_READY.md) distinguishes software
-  results from the still-pending apparatus.
+Use [issues](https://github.com/500ft/autonomous-racing-systems/issues) for a
+reproducible defect or a scoped engineering proposal. Do not substitute a
+simulation output for a pending physical measurement.
 
-- Physical mast compliance measurement. The FEA-predicted tip deflection
-  (0.176 mm at the committed load case) has not been measured; the frozen
-  test protocol is in
-  [`docs/specs/mast-physical-validation/`](docs/specs/mast-physical-validation/).
-- Parametric CAD for the mast and deck interface (analyses use idealized tube
-  geometry).
-- No physical-vehicle telemetry result is present.
+## Attribution and license
 
-## Compatibility
+Released under the [MIT License](LICENSE), retaining the original simulator
+copyright notice. The [upstream source register](docs/upstream_roboracer_sources.md)
+records reference repositories, licenses, and revision pins.
 
-- Use `environment.yml` for the legacy Gym simulator.
-- GUI rendering requires OpenGL; headless experiments and report checks do not.
-- Keep ROS 2 dependencies separate from the legacy Gym environment.
-
-## Citation and license
-
-The simulator lineage and source references are documented in
-[`docs/upstream_roboracer_sources.md`](docs/upstream_roboracer_sources.md).
-This repository is available under the [MIT License](LICENSE).
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) before changing generated artifacts or
-portable regression evidence.
+When citing this work, identify the repository revision and the particular
+report or dataset used; cite upstream work separately where applicable. The
+[repository identity note](docs/REPOSITORY_IDENTITY.md) explains historical names
+and preserves the distinction between project branding and software APIs.

@@ -214,7 +214,7 @@ def publish(args: argparse.Namespace) -> None:
                 check=True,
             )
         storage = "github-release"
-        url = f"https://github.com/500ft/RoboRacer/releases/download/{args.git_tag}/{asset_path.name}"
+        url = f"https://github.com/500ft/autonomous-racing-systems/releases/download/{args.git_tag}/{asset_path.name}"
     entry = {
         "name": args.name,
         "source": args.source,

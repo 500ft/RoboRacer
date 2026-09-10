@@ -7,14 +7,16 @@ import json
 import subprocess
 import sys
 import tempfile
+from argparse import Namespace
 from pathlib import Path
+from unittest.mock import patch
 
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "experiments"))
 
-from bag_evidence import deterministic_zip, sha256_file, validate_manifest
+from bag_evidence import deterministic_zip, publish, sha256_file, validate_manifest
 from generate_synthetic_rosbag import create_bag
 from rosbag_to_telemetry import convert_bag
 
@@ -37,6 +39,33 @@ def main() -> None:
             raise AssertionError("bag ZIP output is not deterministic")
 
         converter = REPO_ROOT / "experiments" / "rosbag_to_telemetry.py"
+        # Exercise the publication metadata path offline: no GitHub command runs.
+        # A repository rename must not make future records publish legacy URLs.
+        args = Namespace(
+            bag=bag, telemetry=telemetry, converter=converter,
+            asset_dir=temp / "release", name="synthetic", dry_run=False,
+            manifest=temp / "release-manifest.yaml", git_tag="test-tag",
+            source="synthetic-test", topic=["/drive"], upstream_revision="",
+            record_command="generated fixture", rtf_preflight=None,
+            rtf_final=None, converter_command="offline fixture",
+        )
+        with patch("bag_evidence.REPO_ROOT", (temp / "repo").resolve()), \
+             patch("bag_evidence.shutil.which", return_value="gh"), \
+             patch("bag_evidence.git_revision", return_value="test-revision"), \
+             patch("bag_evidence.subprocess.check_output", side_effect=["", "test-revision"]), \
+             patch("bag_evidence.subprocess.run", return_value=Namespace(returncode=0)), \
+             patch("bag_evidence.upsert_entry") as record:
+            publish(args)
+        published = record.call_args.args[1]
+        expected_url = (
+            "https://github.com/500ft/autonomous-racing-systems/"
+            "releases/download/test-tag/synthetic.zip"
+        )
+        if published["url"] != expected_url:
+            raise AssertionError(f"release metadata uses stale repository: {published['url']}")
+        if published["storage"] != "github-release" or published["access"] != "public":
+            raise AssertionError("publication storage contract changed during rename")
+
         entry = {
             "name": "synthetic",
             "source": "synthetic-test",
