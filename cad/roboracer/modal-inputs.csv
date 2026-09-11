@@ -1,0 +1,11 @@
+parameter,value,unit,evidence_state,source,release_requirement
+as_built_f1_prediction,,Hz,pending,cad/roboracer/fixture-preparation.md,As-built modal model on inspected geometry with installed sensor/bracket/cable mass and measured root restraint; commit its source and this value before any tap record exists
+model_discrepancy_tolerance_rel,,1,pending,cad/roboracer/fixture-preparation.md,Owner decision recorded before any modal record; distinct from measurement uncertainty (the static protocol uses 0.15 for a different observable; the nominal hand-vs-FEA f1 gap is 0.135 - both are information only)
+stiffness_rel_std_uncertainty,,1,pending,docs/CAD_MEASUREMENT_CONTRACT.md,u_k/k from inspected L/OD/wall tolerances the reviewed material basis and the measured root flexibility from the static campaign
+modal_mass_rel_std_uncertainty,,1,pending,cad/roboracer/fixture-preparation.md,u_m/m from weighed body bracket and moving cable plus the installed accelerometer/cable mass
+accelerometer_installed_mass,,kg,pending,cad/roboracer/fixture-preparation.md,Weigh the installed sensor and moving cable; enter into the modal mass and its uncertainty rather than assuming negligible
+daq_sample_rate,,Hz,pending,cad/roboracer/fixture-preparation.md,Record the actual rate and anti-aliasing filter; must resolve the predicted f1 with margin
+record_duration,,s,pending,cad/roboracer/fixture-preparation.md,Frequency resolution is 1/T; choose T so the bin width is small against the band half-width and record the actual value
+excitation_location_from_root,,mm,pending,cad/roboracer/fixture-preparation.md,Excite bending away from the root node on both axes; record the measured location
+response_location_from_root,,mm,pending,cad/roboracer/fixture-preparation.md,Observe near the tip on both axes; record the measured location
+taps_per_axis,,1,pending,cad/roboracer/fixture-preparation.md,Number of repeats per axis fixed before acquisition; repeatability enters the measurement uncertainty

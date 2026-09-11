@@ -15,11 +15,13 @@ Status: proposed fixture decisions, no fabrication or physical validation. [Inpu
 
 The [frozen physical protocol](../../docs/specs/mast-physical-validation/design.md) tests **static compliance only** at 4/8/12/16/20 N, both axes, at least three load/unload cycles. Its ±15% agreement and U95 ≤10% are not automatically modal-test thresholds. The 200 Hz guard is a design criterion, not proof of real motor excitation separation.
 
-Decision: finish static compliance first; keep tap testing as a separate prospective protocol. Before that protocol is frozen, identify accelerometer/DAQ bandwidth and anti-aliasing, installed sensor/cable mass, excitation/response locations on both axes, record duration/frequency resolution, repeatability and an as-built modal model. Excite bending away from the root node and observe near the tip; quantify mass loading rather than assuming a sensor is negligible. No pass band is invented from a register that has no calibrated modal uncertainty.
+Decision: finish static compliance first; keep tap testing as a separate prospective protocol. Before that protocol is frozen, identify accelerometer/DAQ bandwidth and anti-aliasing, installed sensor/cable mass, excitation/response locations on both axes, record duration/frequency resolution, repeatability and an as-built modal model. Excite bending away from the root node and observe near the tip; quantify mass loading rather than assuming a sensor is negligible. No pass band is invented from a register that has no calibrated modal uncertainty. The preregistration [skeleton](../../docs/specs/mast-modal-tap-test/preregistration.md) (2026-09-11) freezes the hypothesis, prediction sources and band form and refuses a numeric band until every row of [modal-inputs.csv](modal-inputs.csv) is filled (`python experiments/tap_test_prereg.py --release`).
 
 For the first-mode approximation, f ∝ √(k/m), so uncorrelated relative standard uncertainties propagate as u_f/f ≈ 0.5√[(u_k/k)²+(u_m/m)²]. Installed root flexibility, mode identification and timing uncertainty also matter; they are not supplied by nominal CAD. An acceptance band must distinguish model discrepancy tolerance from measurement uncertainty and be committed before acquiring modal results.
 
 ## Static fixture geometry contract before CAD
+
+Committed 2026-09-11 as [fixture-contract.json](fixture-contract.json), generated from the register by `python cad/fixture_contract.py` (`--check` for staleness; `--release` exits 2 REFUSED while any clause is pending). Six clauses are evaluable from registered rows; five wait on the measurement sitting below.
 
 Apply [the existing measurement contract](../../docs/CAD_MEASUREMENT_CONTRACT.md), including ≥10× specimen translational stiffness **in each axis**, independent tip/root stations ≤0.001 mm resolution, independent root-rotation observation, filled uncertainty and pre-load as-built reference freeze.
 

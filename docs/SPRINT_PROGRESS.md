@@ -1,5 +1,15 @@
 # Sprint progress — RoboRacer
 
+## 2026-09-11 — RR-D04 fixture contract and tap-test preregistration skeleton
+
+Two day-3 recommendations that had not been implemented (and were omitted from an earlier status
+summary) are now committed fail-closed: `cad/roboracer/fixture-contract.json` (11 clauses, 6 evaluable
+from the register, 5 pending on the RR-CAD-02 sitting; `--release` exits 2) and
+`docs/specs/mast-modal-tap-test/preregistration.md` (hypothesis, prediction sources and band form
+frozen; numeric band REFUSED while all 10 modal inputs are pending). 174.7 Hz is the rejected baseline,
+not the tap-test target. 36 CAD tests pass. Nothing modelled, fabricated or measured; RR-S02 and
+RR-CAD-02 remain owner gates. [Evidence](../evidence/task-2026-09-11/README.md).
+
 ## Day-3 work — 2026-09-09
 
 Delivery update: the preparation was committed as 500ft and pushed; [day-3 PR](https://github.com/500ft/RoboRacer/pull/14) is open against main. Initial implementation source: `b1a3120bce422a8bbd334c2006b04533a6632a8a` (later review/documentation commits are visible in the PR). This supersedes the pre-push stopping state below. Original day-1/day-2 PRs are merged; this new PR is not merged. Resume from the named unresolved project gates in [DAY3_PLAN.md](DAY3_PLAN.md), not from the already completed push step.

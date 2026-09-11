@@ -55,5 +55,78 @@ class CadInputTests(unittest.TestCase):
         self.assertNotEqual(self.value('model_wheelbase'), self.value('selected_chassis_wheelbase'))
 
 
+class TapTestPreregTests(unittest.TestCase):
+    """The modal preregistration is fail-closed: no band until every modal input is filled."""
+
+    @classmethod
+    def setUpClass(cls):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('tap_test_prereg', ROOT / 'experiments/tap_test_prereg.py')
+        cls.P = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.P)
+
+    def modal_rows(self):
+        with (ROOT / 'cad/roboracer/modal-inputs.csv').open(newline='') as handle:
+            return list(csv.DictReader(handle))
+
+    def test_committed_document_is_current_and_band_refused(self):
+        self.assertEqual(self.P.main(['--check']), 0)
+        self.assertEqual(self.P.main(['--release']), 2)
+        text = (ROOT / 'docs/specs/mast-modal-tap-test/preregistration.md').read_text()
+        self.assertIn('band REFUSED', text)
+        self.assertNotRegex(text, r'Band: \d')
+
+    def test_modal_register_is_all_pending_with_no_values(self):
+        rows = self.modal_rows()
+        self.assertTrue(rows)
+        for row in rows:
+            with self.subTest(parameter=row['parameter']):
+                self.assertEqual(row['evidence_state'], 'pending')
+                self.assertEqual(row['value'], '')
+                self.assertIn(row['unit'], {'Hz', '1', 'kg', 's', 'mm'})
+                self.assertTrue((ROOT / row['source']).is_file())
+
+    def test_nominal_hand_f1_uses_repository_formula(self):
+        reg = self.P._read(self.P.REGISTER)
+        hand = self.P.nominal_hand_f1(reg)
+        self.assertAlmostEqual(hand['f1_hz'], 330.07414641340273, places=9)
+        self.assertAlmostEqual(hand['k_eff_n_per_m'], 775983.6594264036, places=6)
+        self.assertAlmostEqual(self.P.committed_fea_f1(), 285.5)
+        self.assertAlmostEqual(self.P.rejected_baseline_f1(), 174.7)
+
+    def test_filled_register_yields_band_in_committed_form_positive_control(self):
+        import tempfile
+        rows = self.modal_rows()
+        synthetic = {'as_built_f1_prediction': '300', 'model_discrepancy_tolerance_rel': '0.10',
+                     'stiffness_rel_std_uncertainty': '0.04', 'modal_mass_rel_std_uncertainty': '0.03',
+                     'accelerometer_installed_mass': '0.005', 'daq_sample_rate': '5000', 'record_duration': '2',
+                     'excitation_location_from_root': '60', 'response_location_from_root': '95', 'taps_per_axis': '10'}
+        for row in rows:
+            row['value'], row['evidence_state'] = synthetic[row['parameter']], 'protocol'  # test-only numbers
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'modal.csv'
+            with path.open('w', newline='') as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
+            b = self.P.band(self.P._read(path))
+        u_model = 0.5 * math.sqrt(0.04**2 + 0.03**2)
+        u_res = 1 / (2 * 300 * math.sqrt(12))
+        half = 0.10 + 2 * math.sqrt(u_model**2 + u_res**2)
+        self.assertEqual(b['pending_inputs'], [])
+        self.assertAlmostEqual(b['half_width_rel'], half)
+        self.assertAlmostEqual(b['band_hz'][0], 300 * (1 - half))
+        self.assertAlmostEqual(b['band_hz'][1], 300 * (1 + half))
+
+    def test_pending_row_with_a_value_is_refused(self):
+        import tempfile
+        rows = self.modal_rows()
+        rows[0]['value'] = '300'
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'modal.csv'
+            with path.open('w', newline='') as handle:
+                writer = csv.DictWriter(handle, fieldnames=list(rows[0])); writer.writeheader(); writer.writerows(rows)
+            with self.assertRaises(self.P.PreregInputError):
+                self.P._read(path)
+
+
 if __name__ == '__main__':
     unittest.main()

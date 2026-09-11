@@ -1,5 +1,15 @@
 # RoboRacer sprint review index — software candidate, partial project handoff
 
+## 2026-09-11 — RR-D04 fixture contract and tap-test preregistration skeleton
+
+Two day-3 recommendations that had not been implemented (and were omitted from an earlier status
+summary) are now committed fail-closed: `cad/roboracer/fixture-contract.json` (11 clauses, 6 evaluable
+from the register, 5 pending on the RR-CAD-02 sitting; `--release` exits 2) and
+`docs/specs/mast-modal-tap-test/preregistration.md` (hypothesis, prediction sources and band form
+frozen; numeric band REFUSED while all 10 modal inputs are pending). 174.7 Hz is the rejected baseline,
+not the tap-test target. 36 CAD tests pass. Nothing modelled, fabricated or measured; RR-S02 and
+RR-CAD-02 remain owner gates. [Evidence](../evidence/task-2026-09-11/README.md).
+
 ## Day-3 preparation — 2026-09-09
 
 Six request-sheet tests cover exact pending-row coverage, future rows, invalid units, a filled pending value, duplicates and snapshot drift. 28 CAD tests pass. The failed 174.7 Hz baseline is distinguished from the selected nominal 285.5 Hz FE result; static acceptance is not repurposed as a modal verdict.
