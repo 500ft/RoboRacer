@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "draft_blocked",
+  "source_parameters": "cad/roboracer/parameters.csv",
+  "datum": null,
+  "drawing_revision": null,
+  "reviewed_by": null,
+  "dimensions": {
+    "tube_volume": {"value": null, "unit": "mm^3", "tolerance_abs": null, "source": null},
+    "mast_length": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "mast_outer_diameter": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "mast_wall_thickness": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "clamp_engagement": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "clamp_bolt_pitch": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "lidar_bracket_bolt_pitch": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "optical_center_offset": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "actual_load_height": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
+    "root_rotation_station_spacing": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null}
+  },
+  "bolt_coordinates_mm": null,
+  "bolt_coordinate_tolerance_mm": null,
+  "bolt_source": null,
+  "indicator_access": {"tip_x": null, "tip_y": null, "root_x": null, "root_y": null, "rotation": null},
+  "acceptance_boundary": "MODEL_GEOMETRY_MATCH_ONLY is a comparison of supplied CAD observations to reviewed targets, not automatic STEP extraction, fit/interference proof, stiffness, calibration, physical commissioning, or fabrication release. Unknown targets and tolerances must not be copied from nominal tube-only cad/contract.json. RR-CAD-02/04/05/06/07 remain blocked.",
+  "separate_release_gates": "docs/CAD_MEASUREMENT_CONTRACT.md: fixture/specimen stiffness >=10 each axis; independent tip/root resolution <=0.001 mm; independent root rotation; filled reviewed fitted-compliance U95 <=10%; inspection-linked as-built pre-load reference freeze."
+}

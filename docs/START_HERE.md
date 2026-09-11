@@ -140,3 +140,7 @@ Read the [upstream register](upstream_roboracer_sources.md),
 [license](../LICENSE), and [contribution rules](../CONTRIBUTING.md) before reusing
 code or changing an interface. Record the source commit in any external review
 or citation.
+
+## September 11 completion correction
+
+Read the [item-by-item correction](COMPLETION_RECONCILIATION.md) before interpreting a prepared protocol, software check, or search export as a completed research gate. It identifies actual deliverables and the remaining measurement, review, or source-reading work separately.
