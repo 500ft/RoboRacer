@@ -32,3 +32,7 @@ jobs:
         python experiments/test_mast_physical_validation.py
         python experiments/test_cad_inputs.py
         python experiments/test_final_report.py
+    - name: Check README links, identity and negative controls
+      run: |
+        python tools/check_presentation.py . "Autonomous Racing Systems" autonomous-racing-systems
+        python tools/test_presentation.py
