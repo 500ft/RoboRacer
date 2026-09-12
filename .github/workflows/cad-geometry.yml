@@ -3,10 +3,10 @@ name: CAD geometry
 on:
   push:
     branches: [main]
-    paths: ["cad/**", ".github/workflows/cad-geometry.yml"]
+    paths: ["cad/**", "docs/specs/mast-physical-validation/modal-*", ".github/workflows/cad-geometry.yml"]
   pull_request:
     branches: [main, "task/priority-one-*"]
-    paths: ["cad/**", ".github/workflows/cad-geometry.yml"]
+    paths: ["cad/**", "docs/specs/mast-physical-validation/modal-*", ".github/workflows/cad-geometry.yml"]
 
 jobs:
   geometry:

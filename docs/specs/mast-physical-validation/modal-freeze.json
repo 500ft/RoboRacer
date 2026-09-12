@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "draft_blocked",
+  "baseline_kind": null,
+  "reference_hz": {"x": null, "y": null},
+  "settings": {
+    "sample_rate_hz": null,
+    "record_duration_s": null,
+    "frequency_resolution_hz": null,
+    "analysis_low_hz": null,
+    "analysis_high_hz": null,
+    "antialias_passband_hz": null,
+    "antialias_stopband_hz": null,
+    "antialias_attenuation_db": null,
+    "repeats_per_axis": null,
+    "model_discrepancy_fraction": null,
+    "max_relative_u95": null,
+    "min_coherence": null,
+    "max_repeatability_fraction": null,
+    "max_sensor_mass_fraction": null
+  },
+  "records": {
+    "specimen_and_drawing": null,
+    "inspection_and_installed_mass": null,
+    "model_source_commit": null,
+    "inspection_linked_reference_commit": null,
+    "instrument_ids_calibration_bandwidth": null,
+    "excitation_response_coordinates_both_axes": null,
+    "clamp_and_cable_configuration": null,
+    "sensor_loading_correction": null,
+    "timing_antialias_characterization": null,
+    "uncertainty_budget": null,
+    "mode_pairing_estimator_window_damping": null,
+    "exclusions_quality_retest_rule": null,
+    "threshold_rationale_and_reviewer": null
+  }
+}

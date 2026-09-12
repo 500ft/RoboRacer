@@ -34,3 +34,38 @@ After fabrication, commit and push inspection-linked, axis-specific as-built pre
 Use the generated sheet to identify the actual bracket pattern/optical-center datum, root clamp bolts/engagement, installed load height and root observation spacing. Add weighed body/bracket/moving cable masses and calibrated force/displacement records to the campaign evidence. The model's 50g crash load is not a bench loading instruction. The manufacturer sensor shock specification is not proof that the complete assembly tolerates that assumed crash.
 
 These measurements and installed hardware identities cannot be looked up for an unknown physical assembly. RR-CAD-02 and the physical campaign remain blocked; the fabrication route and observability design are now explicit.
+
+## Completion correction — 2026-09-11
+
+The preparation above did not deliver the executable fixture geometry contract
+or a standalone modal preregistration draft. RR-CAD-09 and RR-S11 now track
+those omitted software/document deliverables in the existing task ledgers.
+The [fixture contract](fixture-contract.json) exists with null targets and
+tolerances; it does **not** mean fixture CAD, inspection or metrology is done.
+The [modal preregistration](../../docs/specs/mast-physical-validation/modal-preregistration.md)
+exists as DRAFT/BLOCKED, not the previously deferred frozen protocol.
+
+```sh
+python cad/fixture_contract.py --check-draft
+python cad/fixture_contract.py --geometry path/to/cad-observations.json
+```
+
+Draft schema checking prints `DRAFT_BLOCKED`; exit 0 does not release geometry.
+Default comparison exits 2 while inputs are unresolved. Before comparison,
+the owner/reviewer must supply datum definition, drawing revision, reviewed
+targets with absolute tolerances and sources, ordered bolt x/y/z coordinates
+in that datum, and independent tip/root/rotation access review. All six pending
+register interfaces are represented; no unknown interface has been guessed.
+`tube_volume` means the ideal exposed tube reference segment with length
+`mast_length` (effective free length), not the entire clamped stock or assembly.
+Finite wall/OD and analytic tube volume consistency are checked.
+
+Geometry observation JSON carries `drawing_revision`, the identical `datum`,
+`dimensions` (same keys with finite numbers), `units` (same keys with exact
+contract units), and `bolt_coordinates_mm` in the same bolt order. Extract
+these from regenerated/reimported CAD and review the extraction; this helper
+does not itself parse STEP. A successful comparison says only
+`MODEL_GEOMETRY_MATCH_ONLY`, not fixture structural acceptance, interference
+clearance, as-built evidence or hardware readiness. The existing tube-only
+STEP tests remain separate. RR-CAD-02/04/05/06/07 and physical testing remain
+blocked as previously recorded.
