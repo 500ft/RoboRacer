@@ -44,9 +44,41 @@ def test_committed_draft_is_not_geometry_acceptance():
         module.compare_geometry(contract, {})
 
 
-def test_synthetic_geometry_match_is_explicitly_limited():
+def _release_grade_register(tmp_path):
+    """A synthetic register with every row filled at a release-grade state, for tests that need a
+    COMPLETE contract. Nothing in it is a measurement."""
+    rows = list(_csv.DictReader(module.REGISTER.open(encoding="utf-8", newline="")))
+    for r in rows:
+        if r["evidence_state"] == "pending":
+            r["value"], r["evidence_state"], r["source"] = "25", "inspection", "synthetic inspection record"
+        elif r["evidence_state"] in ("model_assumption", "design_choice", "reported_vendor_nominal", "committed_simulation"):
+            r["evidence_state"], r["source"] = "inspection", "synthetic inspection record"
+    p = tmp_path / "parameters.csv"
+    with p.open("w", encoding="utf-8", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=list(rows[0])); w.writeheader(); w.writerows(rows)
+    return p
+
+
+def _complete_with_register(tmp_path):
     contract, observations = complete()
-    assert module.compare_geometry(contract, observations) == "MODEL_GEOMETRY_MATCH_ONLY"
+    reg = _release_grade_register(tmp_path)
+    contract["derived_from_register"] = module.build_derived(module.load_register(reg))
+    return contract, observations, reg
+
+
+def test_synthetic_geometry_match_is_explicitly_limited(tmp_path):
+    contract, observations, reg = _complete_with_register(tmp_path)
+    assert module.complete_contract_blockers(contract, reg) == []
+    assert module.compare_geometry(contract, observations, reg) == "MODEL_GEOMETRY_MATCH_ONLY"
+
+
+def test_geometry_mode_refuses_the_same_incomplete_contract_release_refuses(tmp_path):
+    # Review 2026-09-12: release and geometry must use ONE complete-contract schema.
+    contract, observations, reg = _complete_with_register(tmp_path)
+    contract["indicator_access"]["root_x"] = None
+    assert any("indicator_access.root_x" in b for b in module.complete_contract_blockers(contract, reg))
+    with pytest.raises(ValueError, match="not complete"):
+        module.compare_geometry(contract, observations, reg)
 
 
 @pytest.mark.parametrize("change", ["wall", "volume"])
@@ -189,4 +221,50 @@ def test_release_still_refuses_when_only_the_review_fields_are_filled():
     contract, _ = complete()          # #17's synthetic reviewed contract: targets filled, register untouched
     contract["derived_from_register"] = _committed()["derived_from_register"]
     blockers = module.release_blockers(contract)
-    assert all("derived clause pending" in b for b in blockers) and len(blockers) == 5, blockers
+    assert sum("derived clause pending" in b for b in blockers) == 5, blockers
+    assert any("not release-grade" in b for b in blockers), "design_choice/model_assumption rows must block release"
+
+
+# ── review 2026-09-12: RELEASABLE was returned on placeholders, missing metrology fields, not_evidence rows ──
+def test_placeholder_review_strings_are_blockers(tmp_path):
+    contract, _, reg = _complete_with_register(tmp_path)
+    contract["reviewed_by"], contract["bolt_source"], contract["datum"] = "TBD", "?", "x"
+    b = module.complete_contract_blockers(contract, reg)
+    assert sum("placeholder" in x for x in b) == 3, b
+
+
+def test_missing_indicator_positions_and_bolt_tolerance_are_blockers(tmp_path):
+    contract, _, reg = _complete_with_register(tmp_path)
+    contract["indicator_access"] = {k: None for k in contract["indicator_access"]}
+    contract["bolt_coordinate_tolerance_mm"] = None
+    b = module.complete_contract_blockers(contract, reg)
+    assert sum("indicator_access." in x for x in b) == 5 and any("bolt_coordinate_tolerance_mm" in x for x in b), b
+
+
+def test_malformed_targets_are_blockers(tmp_path):
+    contract, _, reg = _complete_with_register(tmp_path)
+    contract["bolt_coordinates_mm"] = [[0, 0]]                       # x/y only
+    contract["dimensions"]["tube_volume"]["value"] = 1.0             # inconsistent with OD/wall/length
+    contract["dimensions"]["mast_length"]["tolerance_abs"] = -1
+    b = module.complete_contract_blockers(contract, reg)
+    assert any("bolt_coordinates_mm malformed" in x for x in b) and any("tube_volume target" in x for x in b) and any("tolerance -1" in x for x in b), b
+
+
+def test_unsupported_evidence_state_and_missing_source_are_refused(tmp_path):
+    def poison(rows):
+        for r in rows:
+            if r["evidence_state"] == "pending": r["value"], r["evidence_state"], r["source"] = "1", "not_evidence", ""
+    with pytest.raises(module.ContractInputError, match="unsupported evidence_state"):
+        module.load_register(_write_register(tmp_path, poison))
+    def sourceless(rows):
+        for r in rows:
+            if r["parameter"] == "mast_length": r["source"] = ""
+    with pytest.raises(module.ContractInputError, match="no source"):
+        module.load_register(_write_register(tmp_path, sourceless))
+
+
+def test_release_cli_complete_verdict_is_input_review_only(tmp_path):
+    contract, _, reg = _complete_with_register(tmp_path)
+    cp = tmp_path / "c.json"; cp.write_text(json.dumps(contract))
+    p = subprocess.run([sys.executable, str(ROOT / "cad/fixture_contract.py"), "--release", "--contract", str(cp), "--parameters", str(reg)], capture_output=True, text=True)
+    assert p.returncode == 0 and "CONTRACT_COMPLETE" in p.stdout and "not claimed" in p.stdout, p.stdout + p.stderr

@@ -51,3 +51,22 @@ hand, not the rejected 174.7 Hz baseline) changes here.
 Verification: `python cad/fixture_contract.py --check` current; `--release` REFUSED with 16
 named blockers; `--check-draft` DRAFT_BLOCKED; `pytest cad/tests/test_fixture_contract.py` 33
 passed. `test_geometry.py` needs the pinned CadQuery environment and is unaffected.
+
+### Same-day repair after review (2026-09-12)
+
+The review reproduced `--release` returning RELEASABLE with `evidence_state=not_evidence` rows carrying
+empty sources, placeholder review strings (`TBD`, `?`, `x`), all indicator positions missing and no bolt
+tolerance. Reproduced here. Cause: `release_blockers` checked presence, not validity, and `--geometry`
+ran its own, different field checks.
+
+Fix: one `complete_contract_blockers()` shared by `--release` and `--geometry`. It rejects placeholder
+strings in every review field and source, requires every indicator position and a positive bolt
+tolerance, checks tolerances are positive and smaller than their targets, checks the tube targets are
+numerically consistent (wall < OD/2, volume matches OD/wall/length within tolerance), validates bolt
+coordinates as x/y/z, and requires every register row to be at a release-grade evidence state
+(`inspection`, `drawing`, `calibration_record`, `owner_decision`, `protocol`). The register loader
+refuses evidence states outside an explicit allowed set and any non-pending row without a source.
+The passing verdict is renamed `CONTRACT_COMPLETE` and printed with the statement that geometry
+comparison and physical validation are separate gates and not claimed. 44 tests pass, including six on
+the review's reproductions and five byte-pin-free ledger rules (`test_cad_ledger_rules.py`) that carry
+the purpose of the embedded validator without pinning `SPRINT_TASKS.csv` to a snapshot.
