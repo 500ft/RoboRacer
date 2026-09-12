@@ -6,21 +6,300 @@
   "drawing_revision": null,
   "reviewed_by": null,
   "dimensions": {
-    "tube_volume": {"value": null, "unit": "mm^3", "tolerance_abs": null, "source": null},
-    "mast_length": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "mast_outer_diameter": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "mast_wall_thickness": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "clamp_engagement": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "clamp_bolt_pitch": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "lidar_bracket_bolt_pitch": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "optical_center_offset": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "actual_load_height": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null},
-    "root_rotation_station_spacing": {"value": null, "unit": "mm", "tolerance_abs": null, "source": null}
+    "tube_volume": {
+      "value": null,
+      "unit": "mm^3",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "mast_length": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "mast_outer_diameter": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "mast_wall_thickness": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "clamp_engagement": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "clamp_bolt_pitch": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "lidar_bracket_bolt_pitch": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "optical_center_offset": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "actual_load_height": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    },
+    "root_rotation_station_spacing": {
+      "value": null,
+      "unit": "mm",
+      "tolerance_abs": null,
+      "source": null
+    }
   },
   "bolt_coordinates_mm": null,
   "bolt_coordinate_tolerance_mm": null,
   "bolt_source": null,
-  "indicator_access": {"tip_x": null, "tip_y": null, "root_x": null, "root_y": null, "rotation": null},
+  "indicator_access": {
+    "tip_x": null,
+    "tip_y": null,
+    "root_x": null,
+    "root_y": null,
+    "rotation": null
+  },
   "acceptance_boundary": "MODEL_GEOMETRY_MATCH_ONLY is a comparison of supplied CAD observations to reviewed targets, not automatic STEP extraction, fit/interference proof, stiffness, calibration, physical commissioning, or fabrication release. Unknown targets and tolerances must not be copied from nominal tube-only cad/contract.json. RR-CAD-02/04/05/06/07 remain blocked.",
-  "separate_release_gates": "docs/CAD_MEASUREMENT_CONTRACT.md: fixture/specimen stiffness >=10 each axis; independent tip/root resolution <=0.001 mm; independent root rotation; filled reviewed fitted-compliance U95 <=10%; inspection-linked as-built pre-load reference freeze."
+  "separate_release_gates": "docs/CAD_MEASUREMENT_CONTRACT.md: fixture/specimen stiffness >=10 each axis; independent tip/root resolution <=0.001 mm; independent root rotation; filled reviewed fitted-compliance U95 <=10%; inspection-linked as-built pre-load reference freeze.",
+  "derived_from_register": {
+    "derived_version": "2026-09-12",
+    "source_parameters": "cad/roboracer/parameters.csv",
+    "clauses": [
+      {
+        "id": "effective_free_length",
+        "requirement": "Inspected effective free length from clamp datum to load line equals the registered mast_length",
+        "inputs": [
+          "mast_length"
+        ],
+        "status": "evaluable",
+        "evidence_state": "design_choice",
+        "value": 100.0,
+        "unit": "mm",
+        "verification": "Inspect effective free length after clamp installation"
+      },
+      {
+        "id": "specimen_bending_stiffness",
+        "requirement": "Ideal cantilever stiffness of the registered specimen; the scale every fixture term is compared against",
+        "inputs": [
+          "mast_length",
+          "mast_outer_diameter",
+          "mast_wall_thickness",
+          "youngs_modulus"
+        ],
+        "status": "evaluable",
+        "evidence_state": "model_assumption",
+        "formula": "k = 3*E*I/L^3, I = pi*(D^4 - (D-2t)^4)/64",
+        "value": 775.9836594264038,
+        "unit": "N/mm",
+        "note": "Model quantity (E is a model_assumption). Recompute from the as-built stiffness once inspected; not an as-built value."
+      },
+      {
+        "id": "fixture_translational_stiffness_min",
+        "requirement": "Load-point fixture translational stiffness >= fixture_stiffness_ratio_min x specimen stiffness on EACH axis at the actual force line",
+        "inputs": [
+          "mast_length",
+          "mast_outer_diameter",
+          "mast_wall_thickness",
+          "youngs_modulus",
+          "fixture_stiffness_ratio_min"
+        ],
+        "status": "evaluable",
+        "evidence_state": "model_assumption",
+        "formula": "k_fixture_min = fixture_stiffness_ratio_min * k",
+        "value": 7759.8365942640385,
+        "unit": "N/mm",
+        "axes": [
+          "x",
+          "y"
+        ],
+        "verification": "Physical commissioning at the load point; a rigid CAD solid is not stiffness evidence. Ratio does not bound root rotation."
+      },
+      {
+        "id": "indicator_resolution",
+        "requirement": "Independent tip AND root indicator stations, each at or below indicator_resolution_limit, with fixed reference supports and recorded measurement directions",
+        "inputs": [
+          "indicator_resolution_limit"
+        ],
+        "status": "evaluable",
+        "evidence_state": "protocol",
+        "value": 0.001,
+        "unit": "mm",
+        "axes": [
+          "x",
+          "y"
+        ],
+        "verification": "Instrument IDs and calibration records in the campaign evidence"
+      },
+      {
+        "id": "ideal_tip_signal_range",
+        "requirement": "Ideal-beam tip displacement across the protocol force range, for count-resolution planning only",
+        "inputs": [
+          "mast_length",
+          "mast_outer_diameter",
+          "mast_wall_thickness",
+          "youngs_modulus",
+          "force_target_1",
+          "force_target_5"
+        ],
+        "status": "evaluable",
+        "evidence_state": "model_assumption",
+        "formula": "delta = F / k",
+        "value": {
+          "at_force_target_1_um": 5.15474772104962,
+          "at_force_target_5_um": 25.773738605248102
+        },
+        "unit": "um",
+        "note": "Planning scale; the frozen gate is on the fitted slope, not pointwise counts."
+      },
+      {
+        "id": "root_rotation_observation",
+        "requirement": "Root rotation is observed with two spatially separated root stations over a measured baseline; a single root translation channel cannot observe rotation",
+        "inputs": [
+          "indicator_resolution_limit",
+          "root_rotation_station_spacing",
+          "actual_load_height"
+        ],
+        "status": "pending",
+        "evidence_state": "pending",
+        "pending_inputs": [
+          "root_rotation_station_spacing",
+          "actual_load_height"
+        ],
+        "release_requirement": {
+          "root_rotation_station_spacing": "Choose measured baseline and propagate angular uncertainty",
+          "actual_load_height": "Measure load line relative to clamp datum"
+        },
+        "formula": "angular_std_urad = differential_quantization_std_um / root_rotation_station_spacing_mm * 1e3; tip_equivalent_um = angular_std_urad * actual_load_height_mm * 1e-3",
+        "value": {
+          "single_station_quantization_std_um": 0.2886751345948129,
+          "differential_quantization_std_um": 0.4082482904638631,
+          "angular_std_urad": null,
+          "tip_equivalent_um": null
+        },
+        "note": "Quantization-only planning terms assume independent uniform rounding; calibration, hysteresis and drift are still required in the filled error budget."
+      },
+      {
+        "id": "load_line_height",
+        "requirement": "Force line height above the clamp datum, measured; equals the lever used in every stiffness and rotation term",
+        "inputs": [
+          "actual_load_height"
+        ],
+        "status": "pending",
+        "evidence_state": "pending",
+        "pending_inputs": [
+          "actual_load_height"
+        ],
+        "release_requirement": {
+          "actual_load_height": "Measure load line relative to clamp datum"
+        },
+        "unit": "mm"
+      },
+      {
+        "id": "clamp_engagement",
+        "requirement": "Root clamp engagement length and fastener configuration reproduce the actual mast root restraint",
+        "inputs": [
+          "clamp_engagement"
+        ],
+        "status": "pending",
+        "evidence_state": "pending",
+        "pending_inputs": [
+          "clamp_engagement"
+        ],
+        "release_requirement": {
+          "clamp_engagement": "Owner supplies actual clamp geometry and fastener configuration"
+        },
+        "unit": "mm"
+      },
+      {
+        "id": "clamp_bolt_coordinates",
+        "requirement": "Deck-side clamp bolt pattern measured on the mating datum; full deck CAD not required",
+        "inputs": [
+          "clamp_bolt_pitch"
+        ],
+        "status": "pending",
+        "evidence_state": "pending",
+        "pending_inputs": [
+          "clamp_bolt_pitch"
+        ],
+        "release_requirement": {
+          "clamp_bolt_pitch": "Measure deck-side mating datum; full deck CAD not required"
+        },
+        "unit": "mm"
+      },
+      {
+        "id": "tip_assembly_interface",
+        "requirement": "Sensor bracket bolt pattern and optical-centre offset from the exact purchased sensor revision and bracket drawing",
+        "inputs": [
+          "lidar_bracket_bolt_pitch",
+          "optical_center_offset"
+        ],
+        "status": "pending",
+        "evidence_state": "pending",
+        "pending_inputs": [
+          "lidar_bracket_bolt_pitch",
+          "optical_center_offset"
+        ],
+        "release_requirement": {
+          "lidar_bracket_bolt_pitch": "Identify exact sensor and bracket drawing",
+          "optical_center_offset": "Measure actual optical-center offset from tube tip"
+        },
+        "unit": "mm"
+      },
+      {
+        "id": "tip_moving_mass",
+        "requirement": "Tip assembly mass used by the reference model equals the weighed body + bracket + moving cable; no heat-sink plate or hardware added silently",
+        "inputs": [
+          "tip_total_mass"
+        ],
+        "status": "evaluable",
+        "evidence_state": "model_assumption",
+        "value": 0.175,
+        "unit": "kg",
+        "verification": "Sum body plus bracket and cable assumptions; not weighed assembly",
+        "note": "Register value is a summed allowance (model_assumption), not a weighed assembly."
+      }
+    ],
+    "evaluable_clauses": [
+      "effective_free_length",
+      "specimen_bending_stiffness",
+      "fixture_translational_stiffness_min",
+      "indicator_resolution",
+      "ideal_tip_signal_range",
+      "tip_moving_mass"
+    ],
+    "pending_clauses": [
+      "root_rotation_observation",
+      "load_line_height",
+      "clamp_engagement",
+      "clamp_bolt_coordinates",
+      "tip_assembly_interface"
+    ],
+    "not_generated_pending_owner_inputs": [
+      "actual_load_height",
+      "clamp_bolt_pitch",
+      "clamp_engagement",
+      "lidar_bracket_bolt_pitch",
+      "optical_center_offset",
+      "root_rotation_station_spacing"
+    ],
+    "evidence_note": "Derived values are model quantities from design_choice/model_assumption rows; matching a geometry against them means the fixture model matches the intended design, not that an as-built fixture is stiff enough or that the campaign is ready."
+  }
 }
