@@ -51,3 +51,41 @@ hand, not the rejected 174.7 Hz baseline) changes here.
 Verification: `python cad/fixture_contract.py --check` current; `--release` REFUSED with 16
 named blockers; `--check-draft` DRAFT_BLOCKED; `pytest cad/tests/test_fixture_contract.py` 33
 passed. `test_geometry.py` needs the pinned CadQuery environment and is unaffected.
+
+### Same-day repair after review (2026-09-12)
+
+The review reproduced `--release` returning RELEASABLE with `evidence_state=not_evidence` rows carrying
+empty sources, placeholder review strings (`TBD`, `?`, `x`), all indicator positions missing and no bolt
+tolerance. Reproduced here. Cause: `release_blockers` checked presence, not validity, and `--geometry`
+ran its own, different field checks.
+
+Fix: one `complete_contract_blockers()` shared by `--release` and `--geometry`. It rejects placeholder
+strings in every review field and source, requires every indicator position and a positive bolt
+tolerance, checks tolerances are positive and smaller than their targets, checks the tube targets are
+numerically consistent (wall < OD/2, volume matches OD/wall/length within tolerance), validates bolt
+coordinates as x/y/z, and requires every register row to be at a release-grade evidence state
+(`inspection`, `drawing`, `calibration_record`, `owner_decision`, `protocol`). The register loader
+refuses evidence states outside an explicit allowed set and any non-pending row without a source.
+The passing verdict is renamed `CONTRACT_COMPLETE` and printed with the statement that geometry
+comparison and physical validation are separate gates and not claimed. 44 tests pass, including six on
+the review's reproductions and five byte-pin-free ledger rules (`test_cad_ledger_rules.py`) that carry
+the purpose of the embedded validator without pinning `SPRINT_TASKS.csv` to a snapshot.
+
+### Review 2 repair (2026-09-13)
+
+Review 2 supplied a register mast length of 100 mm with a contract and matching CAD observations at
+1000 mm (volume adjusted); the checker reported no blockers and accepted the geometry comparison,
+because it checked consistency within each representation, not agreement between them. It also found
+`--geometry` ignoring `--parameters`, and revision `A3` rejected merely for being short.
+
+Fix: `SHARED_QUANTITIES` (mast length, OD, wall, clamp engagement, bolt pitches, optical offset, load
+height, station spacing) are bound — the contract target must equal the register value within the
+contract's own tolerance, in `complete_contract_blockers()` and therefore in both `--release` and
+`--geometry`; `--geometry` passes the selected register through; placeholder detection is an explicit
+vocabulary only. Tests: the review's 100/1000 mm case fails; a valid custom register passes `--geometry`
+from the CLI while the same contract fails against the committed pending register; `A3` is accepted.
+
+The shared CAD-ledger validator is consolidated into `cad/ledger_validator.py` (`live` = every old
+semantic rule including cycle detection and the old negative controls, plus the review's cycle between
+two done tasks; `historical` = the SPRINT_TASKS.csv byte comparison as a report). The weaker
+`test_cad_ledger_rules.py` from the first repair is removed; `test_ledger_validator.py` replaces it.

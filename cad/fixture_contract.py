@@ -93,6 +93,13 @@ UNITS = {
 }
 STATE_RANK = ["pending", "model_assumption", "reported_vendor_nominal", "design_choice",
               "committed_simulation", "protocol"]
+ALLOWED_STATES = {"pending", "model_assumption", "reported_vendor_nominal", "design_choice", "committed_simulation",
+                  "inspection", "drawing", "calibration_record", "owner_decision", "protocol"}
+RELEASE_GRADE = {"inspection", "drawing", "calibration_record", "owner_decision", "protocol"}
+# Quantities present in both cad/roboracer/parameters.csv and the contract's `dimensions`.
+SHARED_QUANTITIES = ("mast_length", "mast_outer_diameter", "mast_wall_thickness", "clamp_engagement", "clamp_bolt_pitch",
+                     "lidar_bracket_bolt_pitch", "optical_center_offset", "actual_load_height", "root_rotation_station_spacing")
+PLACEHOLDERS = {"", "tbd", "todo", "x", "?", "n/a", "na", "none", "null", "placeholder", "pending", "unknown", "-", "synthetic", "test"}
 
 
 class ContractInputError(ValueError):
@@ -115,6 +122,10 @@ def load_register(path=REGISTER):
         if r["unit"].strip() != unit:
             raise ContractInputError(f"unit mismatch for {name}: register {r['unit']!r}, contract expects {unit!r}")
         state = r["evidence_state"].strip(); raw = r["value"].strip()
+        if state not in ALLOWED_STATES:
+            raise ContractInputError(f"unsupported evidence_state {state!r} for {name}; allowed: {sorted(ALLOWED_STATES)}")
+        if state != "pending" and r["source"].strip().lower() in PLACEHOLDERS:
+            raise ContractInputError(f"{name} carries evidence_state {state!r} with no source; a value without provenance is not evidence")
         if state == "pending":
             if raw:
                 raise ContractInputError("pending parameter carries a value; refuse to treat it as measured: " + name)
@@ -195,29 +206,80 @@ def derived_is_current(contract, register_path=REGISTER):
     return contract.get("derived_from_register") == build_derived(load_register(register_path))
 
 
-def release_blockers(contract, register_path=REGISTER):
-    """Everything that stops this contract from releasing a fixture model. Empty list = releasable."""
+def _is_placeholder(value):
+    # Explicit placeholder vocabulary only. Short identifiers such as revision "A3" are legitimate
+    # (review 2, 2026-09-12); length is not evidence of a placeholder.
+    return not isinstance(value, str) or not value.strip() or value.strip().lower() in PLACEHOLDERS
+
+
+def complete_contract_blockers(contract, register_path=REGISTER):
+    """Everything that stops this contract from being a COMPLETE reviewed contract. The same list
+    gates --release and --geometry, so the two modes cannot disagree about what a complete
+    contract is (review 2026-09-12). Empty list = complete; it says nothing about geometry match
+    or physical validation."""
     out = []
     if contract.get("status") != "reviewed_model_contract":
         out.append(f"status is {contract.get('status')!r}, not reviewed_model_contract")
     for key in ("datum", "drawing_revision", "reviewed_by", "bolt_source"):
-        if not (isinstance(contract.get(key), str) and contract[key].strip()): out.append(f"{key} unfilled")
-    for key, item in (contract.get("dimensions") or {}).items():
-        if item.get("value") is None or item.get("tolerance_abs") is None or not item.get("source"): out.append(f"dimension {key} has no reviewed target/tolerance/source")
-    if not contract.get("bolt_coordinates_mm"): out.append("bolt_coordinates_mm unfilled")
+        if _is_placeholder(contract.get(key)): out.append(f"{key} unfilled or placeholder ({contract.get(key)!r})")
+    dims = contract.get("dimensions") or {}
+    for key, item in dims.items():
+        if item.get("value") is None or item.get("tolerance_abs") is None: out.append(f"dimension {key} has no reviewed target/tolerance")
+        elif not (isinstance(item["tolerance_abs"], (int, float)) and 0 < item["tolerance_abs"] <= abs(item["value"]) + 1e-9 if item["value"] else True):
+            out.append(f"dimension {key} tolerance {item['tolerance_abs']} is not positive and smaller than the target")
+        if _is_placeholder(item.get("source")): out.append(f"dimension {key} source unfilled or placeholder ({item.get('source')!r})")
+    # numerical consistency of the targets themselves, not just presence
+    try:
+        od, wall, L, vol = (dims[k]["value"] for k in ("mast_outer_diameter", "mast_wall_thickness", "mast_length", "tube_volume"))
+        if None not in (od, wall, L, vol):
+            if not 2 * wall < od: out.append(f"tube targets inconsistent: 2*wall {2*wall} >= OD {od}")
+            expect = math.pi / 4 * (od**2 - (od - 2 * wall)**2) * L
+            tol = dims["tube_volume"]["tolerance_abs"] or 0
+            if abs(vol - expect) > tol: out.append(f"tube_volume target {vol:.6g} inconsistent with OD/wall/length ({expect:.6g}) beyond tolerance {tol}")
+    except (KeyError, TypeError):
+        pass
+    bolts = contract.get("bolt_coordinates_mm")
+    if not bolts: out.append("bolt_coordinates_mm unfilled")
+    else:
+        try: coordinates(bolts)
+        except AssertionError as e: out.append(f"bolt_coordinates_mm malformed: {e}")
+        except Exception as e: out.append(f"bolt_coordinates_mm malformed: {e}")
+    bt = contract.get("bolt_coordinate_tolerance_mm")
+    if not (isinstance(bt, (int, float)) and bt > 0): out.append(f"bolt_coordinate_tolerance_mm missing or non-positive ({bt!r})")
+    for key, value in (contract.get("indicator_access") or {}).items():
+        if _is_placeholder(value): out.append(f"indicator_access.{key} unfilled or placeholder ({value!r})")
     if not derived_is_current(contract, register_path): out.append("derived_from_register is stale relative to the register; run --refresh")
     for cid in (contract.get("derived_from_register") or {}).get("pending_clauses", []):
         out.append(f"derived clause pending: {cid}")
+    try:
+        reg = load_register(register_path)
+        weak = sorted(n for n, v in reg.items() if v["state"] not in RELEASE_GRADE and v["state"] != "pending")
+        if weak: out.append("register rows not release-grade (" + ", ".join(f"{n}:{reg[n]['state']}" for n in weak) + ")")
+        # Bind the quantities that exist in BOTH representations (review 2): the contract target
+        # must equal the register value within the contract's own tolerance. Two internally
+        # consistent halves are not a contract if they describe different masts.
+        for key in SHARED_QUANTITIES:
+            item = dims.get(key) or {}
+            rv = reg.get(key, {}).get("value")
+            if item.get("value") is None or rv is None:
+                continue
+            tol = item.get("tolerance_abs") or 0.0
+            if abs(float(item["value"]) - float(rv)) > tol:
+                out.append(f"{key}: contract target {item['value']} differs from register value {rv} beyond tolerance {tol}")
+    except ContractInputError as e:
+        out.append(f"register unsupported: {e}")
     return out
 
 
-def compare_geometry(contract, observations):
+def release_blockers(contract, register_path=REGISTER):
+    """Kept for callers; identical to complete_contract_blockers."""
+    return complete_contract_blockers(contract, register_path)
+
+
+def compare_geometry(contract, observations, register_path=REGISTER):
     check_draft(contract)
-    require(contract["status"] == "reviewed_model_contract", "unresolved: contract is not reviewed")
-    for key in ("datum", "drawing_revision", "reviewed_by", "bolt_source"):
-        filled(contract.get(key))
-    for value in contract["indicator_access"].values():
-        filled(value)
+    blockers = complete_contract_blockers(contract, register_path)
+    require(not blockers, "unresolved: contract is not complete: " + "; ".join(blockers[:4]) + (" ..." if len(blockers) > 4 else ""))
     require(type(observations) is dict, "missing geometry observations")
     for key in ("datum", "drawing_revision"):
         require(observations.get(key) == contract[key], "geometry identity/datum mismatch")
@@ -272,16 +334,18 @@ def main():
             print("derived_from_register current"); return
         if args.release:
             check_draft(contract)
-            blockers = release_blockers(contract, args.parameters)
+            blockers = complete_contract_blockers(contract, args.parameters)
             if blockers:
-                parser.exit(2, "REFUSED: fixture contract cannot release:\n  - " + "\n  - ".join(blockers) + "\n")
-            print("RELEASABLE: every target reviewed and every derived clause evaluable (geometry comparison still required)"); return
+                parser.exit(2, "REFUSED CONTRACT_INCOMPLETE:\n  - " + "\n  - ".join(blockers) + "\n")
+            print("OK CONTRACT_COMPLETE: every target, tolerance, review field, indicator position and register row is filled and\n"
+                  "  release-grade, and the targets are numerically consistent. This is an INPUT-REVIEW verdict only: geometry\n"
+                  "  comparison (--geometry) and physical validation are separate gates and are not claimed."); return
         if args.check_draft:
             require(args.geometry is None, "draft check cannot compare geometry")
             print(check_draft(contract))
         else:
             require(args.geometry is not None, "missing --geometry observations")
-            print(compare_geometry(contract, json.loads(args.geometry.read_text())))
+            print(compare_geometry(contract, json.loads(args.geometry.read_text()), args.parameters))
     except (ValueError, OSError, TypeError, KeyError) as exc:
         parser.exit(2, f"BLOCKED: {exc}\n")
 
