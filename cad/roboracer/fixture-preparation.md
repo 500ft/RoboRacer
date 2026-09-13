@@ -48,6 +48,8 @@ exists as DRAFT/BLOCKED, not the previously deferred frozen protocol.
 ```sh
 python cad/fixture_contract.py --check-draft
 python cad/fixture_contract.py --geometry path/to/cad-observations.json
+python cad/fixture_contract.py --check      # derived_from_register matches parameters.csv
+python cad/fixture_contract.py --release    # exit 2 REFUSED while any target or register row is pending
 ```
 
 Draft schema checking prints `DRAFT_BLOCKED`; exit 0 does not release geometry.
