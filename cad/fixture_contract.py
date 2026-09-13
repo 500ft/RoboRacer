@@ -96,6 +96,9 @@ STATE_RANK = ["pending", "model_assumption", "reported_vendor_nominal", "design_
 ALLOWED_STATES = {"pending", "model_assumption", "reported_vendor_nominal", "design_choice", "committed_simulation",
                   "inspection", "drawing", "calibration_record", "owner_decision", "protocol"}
 RELEASE_GRADE = {"inspection", "drawing", "calibration_record", "owner_decision", "protocol"}
+# Quantities present in both cad/roboracer/parameters.csv and the contract's `dimensions`.
+SHARED_QUANTITIES = ("mast_length", "mast_outer_diameter", "mast_wall_thickness", "clamp_engagement", "clamp_bolt_pitch",
+                     "lidar_bracket_bolt_pitch", "optical_center_offset", "actual_load_height", "root_rotation_station_spacing")
 PLACEHOLDERS = {"", "tbd", "todo", "x", "?", "n/a", "na", "none", "null", "placeholder", "pending", "unknown", "-", "synthetic", "test"}
 
 
@@ -204,7 +207,9 @@ def derived_is_current(contract, register_path=REGISTER):
 
 
 def _is_placeholder(value):
-    return not isinstance(value, str) or value.strip().lower() in PLACEHOLDERS or len(value.strip()) < 4
+    # Explicit placeholder vocabulary only. Short identifiers such as revision "A3" are legitimate
+    # (review 2, 2026-09-12); length is not evidence of a placeholder.
+    return not isinstance(value, str) or not value.strip() or value.strip().lower() in PLACEHOLDERS
 
 
 def complete_contract_blockers(contract, register_path=REGISTER):
@@ -250,6 +255,17 @@ def complete_contract_blockers(contract, register_path=REGISTER):
         reg = load_register(register_path)
         weak = sorted(n for n, v in reg.items() if v["state"] not in RELEASE_GRADE and v["state"] != "pending")
         if weak: out.append("register rows not release-grade (" + ", ".join(f"{n}:{reg[n]['state']}" for n in weak) + ")")
+        # Bind the quantities that exist in BOTH representations (review 2): the contract target
+        # must equal the register value within the contract's own tolerance. Two internally
+        # consistent halves are not a contract if they describe different masts.
+        for key in SHARED_QUANTITIES:
+            item = dims.get(key) or {}
+            rv = reg.get(key, {}).get("value")
+            if item.get("value") is None or rv is None:
+                continue
+            tol = item.get("tolerance_abs") or 0.0
+            if abs(float(item["value"]) - float(rv)) > tol:
+                out.append(f"{key}: contract target {item['value']} differs from register value {rv} beyond tolerance {tol}")
     except ContractInputError as e:
         out.append(f"register unsupported: {e}")
     return out
@@ -329,7 +345,7 @@ def main():
             print(check_draft(contract))
         else:
             require(args.geometry is not None, "missing --geometry observations")
-            print(compare_geometry(contract, json.loads(args.geometry.read_text())))
+            print(compare_geometry(contract, json.loads(args.geometry.read_text()), args.parameters))
     except (ValueError, OSError, TypeError, KeyError) as exc:
         parser.exit(2, f"BLOCKED: {exc}\n")
 
