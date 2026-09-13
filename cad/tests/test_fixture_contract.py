@@ -44,13 +44,16 @@ def test_committed_draft_is_not_geometry_acceptance():
         module.compare_geometry(contract, {})
 
 
-def _release_grade_register(tmp_path):
+def _release_grade_register(tmp_path, contract=None):
     """A synthetic register with every row filled at a release-grade state, for tests that need a
-    COMPLETE contract. Nothing in it is a measurement."""
+    COMPLETE contract. Shared quantities take the synthetic contract's own targets so the two
+    representations agree by construction. Nothing in it is a measurement."""
+    contract = contract or complete()[0]
     rows = list(_csv.DictReader(module.REGISTER.open(encoding="utf-8", newline="")))
     for r in rows:
         if r["evidence_state"] == "pending":
-            r["value"], r["evidence_state"], r["source"] = "25", "inspection", "synthetic inspection record"
+            shared = contract["dimensions"].get(r["parameter"], {}).get("value")
+            r["value"], r["evidence_state"], r["source"] = (str(shared) if shared is not None else "25"), "inspection", "synthetic inspection record"
         elif r["evidence_state"] in ("model_assumption", "design_choice", "reported_vendor_nominal", "committed_simulation"):
             r["evidence_state"], r["source"] = "inspection", "synthetic inspection record"
     p = tmp_path / "parameters.csv"
@@ -61,7 +64,7 @@ def _release_grade_register(tmp_path):
 
 def _complete_with_register(tmp_path):
     contract, observations = complete()
-    reg = _release_grade_register(tmp_path)
+    reg = _release_grade_register(tmp_path, contract)
     contract["derived_from_register"] = module.build_derived(module.load_register(reg))
     return contract, observations, reg
 
@@ -268,3 +271,30 @@ def test_release_cli_complete_verdict_is_input_review_only(tmp_path):
     cp = tmp_path / "c.json"; cp.write_text(json.dumps(contract))
     p = subprocess.run([sys.executable, str(ROOT / "cad/fixture_contract.py"), "--release", "--contract", str(cp), "--parameters", str(reg)], capture_output=True, text=True)
     assert p.returncode == 0 and "CONTRACT_COMPLETE" in p.stdout and "not claimed" in p.stdout, p.stdout + p.stderr
+
+
+
+# ── review 2 (2026-09-12): halves consistent within themselves but not with each other; --geometry ignored --parameters ──
+def test_contract_target_must_agree_with_register_value(tmp_path):
+    contract, observations, reg = _complete_with_register(tmp_path)
+    contract["dimensions"]["mast_length"]["value"] = 1000.0; observations["dimensions"]["mast_length"] = 1000.0
+    contract["dimensions"]["tube_volume"]["value"] = math.pi / 4 * (20**2 - 17**2) * 1000; observations["dimensions"]["tube_volume"] = contract["dimensions"]["tube_volume"]["value"]
+    b = module.complete_contract_blockers(contract, reg)
+    assert any(x.startswith("mast_length: contract target 1000.0 differs from register value 100") for x in b), b
+    with pytest.raises(ValueError, match="differs from register"):
+        module.compare_geometry(contract, observations, reg)
+
+
+def test_geometry_cli_honours_parameters_and_accepts_a_valid_custom_register(tmp_path):
+    contract, observations, reg = _complete_with_register(tmp_path)
+    contract["drawing_revision"] = "A3"; observations["drawing_revision"] = "A3"      # short identifiers are not placeholders
+    cp, op = tmp_path / "c.json", tmp_path / "o.json"; cp.write_text(json.dumps(contract)); op.write_text(json.dumps(observations))
+    ok = subprocess.run([sys.executable, str(ROOT / "cad/fixture_contract.py"), "--geometry", str(op), "--contract", str(cp), "--parameters", str(reg)], capture_output=True, text=True)
+    assert ok.returncode == 0 and "MODEL_GEOMETRY_MATCH_ONLY" in ok.stdout, ok.stdout + ok.stderr
+    default = subprocess.run([sys.executable, str(ROOT / "cad/fixture_contract.py"), "--geometry", str(op), "--contract", str(cp)], capture_output=True, text=True)
+    assert default.returncode != 0, "with the committed (pending) register the same contract must not pass"
+
+
+def test_short_revision_identifier_is_not_a_placeholder():
+    assert not module._is_placeholder("A3") and not module._is_placeholder("R2")
+    assert module._is_placeholder("TBD") and module._is_placeholder("") and module._is_placeholder("?")
