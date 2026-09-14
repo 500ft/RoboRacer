@@ -194,10 +194,10 @@ def live(root=ROOT):
 
 def historical(base, root=ROOT):
     """Report (never a live gate): does docs/SPRINT_TASKS.csv still equal its bytes at `base`?"""
-    then = subprocess.check_output(["git", "-C", str(root), "show", base + ":docs/SPRINT_TASKS.csv"])
+    then = subprocess.run(["git", "-C", str(root), "show", base + ":docs/SPRINT_TASKS.csv"], capture_output=True).stdout
     now = (root / "docs/SPRINT_TASKS.csv").read_bytes()
-    return dict(base=base, sprint_ledger_unchanged_since_base=(then == now),
-                note="Historical preservation evidence. Divergence means the sprint ledger evolved after the base commit; it is not a defect of the CAD ledger.")
+    return dict(base=base, sprint_ledger_unchanged_since_base=(then == now) if then else None,
+                note="Historical preservation evidence. Divergence means the sprint ledger evolved after the base commit; it is not a defect of the CAD ledger. None means the base commit is not in this clone (shallow checkout).")
 
 
 def main(argv=None):

@@ -40,7 +40,8 @@ def test_a_legitimate_new_row_passes():
 def test_historical_is_a_report_not_a_gate():
     rep = V.historical(V.HISTORICAL_BASE)
     assert set(rep) == {"base", "sprint_ledger_unchanged_since_base", "note"}
-    assert isinstance(rep["sprint_ledger_unchanged_since_base"], bool)
+    assert rep["sprint_ledger_unchanged_since_base"] in (True, False, None)
+    assert V.historical("0" * 40)["sprint_ledger_unchanged_since_base"] is None  # missing base reports, never raises
 
 
 def test_cli_live_exit_codes():
